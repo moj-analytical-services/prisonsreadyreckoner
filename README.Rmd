@@ -1,0 +1,146 @@
+---
+output: github_document
+---
+
+<!--
+
+INSTRUCTIONS:
+
+Render `README.Rmd` regularly, to keep `README.md` up-to-date:
+
+devtools::build_readme()
+
+You could also use GitHub Actions to re-render README.Rmd every time you push.
+An example workflow can be found here:
+<https://github.com/r-lib/actions/tree/v1/examples>.
+
+You can also embed plots, for example:
+
+#```{r pressure, echo = FALSE}
+#plot(pressure)
+#```
+
+In that case, commit and push the resulting figure files so they display on
+GitHub and CRAN.
+
+-->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+
+# Prison Flowcast
+
+<!-- badges: start -->
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+<!-- badges: end -->
+
+**A packaged stock-flow model built in R to estimate the cumulative impact to
+prison population of adding a given number of extra offender receptions each
+month.**
+
+
+## Basic Structure
+
+The model is set up as follows:
+
+* Packaged .R scripts which contain core functionality for running the model.
+This includes data import, samples, historical profiles, outflow creation,
+summarising for output.
+
+* A separate .Rmd file is maintained for each 'scenario' or 'run' of the model.
+This can be tweaked for specifics of each scenario, e.g. changes in affected
+sentence bands or offences.
+
+* The package is also exported externally to the `impactrr` model for CJS Demand
+scenarios. See https://github.com/moj-analytical-services/impactrr for details.
+
+![model image](https://github.com/moj-analytical-services/prisonflowcast/blob/master/images/Prisonflowcast%20(2).svg)
+
+To see a bigger (more readable) version of this diagram, right click the diagram
+and select 'Open image in new tab'. A larger copy of the diagram will open in
+your browser.
+
+
+## Installation
+
+`prisonflowcast` relies on various packages, which you must install before installing `prisonflowcast`. To install these packages, type the following commands in the RStudio console:
+
+```r
+renv::install("moj-analytical-services/Rdbtools")
+
+renv::install("git@github.com:moj-analytical-services/fullsample.git")
+
+renv::install("git@github.com:moj-analytical-services/mojmetr.git@v0.2.1")
+```
+
+Once these packages are installed, install `prisonflowcast` by typing the following in the RStudio console:
+
+```r
+renv::install("git@github.com:moj-analytical-services/prisonflowcast.git@<packageversion>")
+```
+
+where `@<packageversion>` is the latest release. For example, if the latest
+release were v0.99.0, you would use `@v0.99.0`.
+
+`prisonflowcast` relies on the `botor` package, which relies on the `boto3`
+Python package. To install `boto3`, run the following:
+
+```r
+# Tell renv that Python will be used. By default this will point to a default
+# Python binary file. Your lock file will be updated with details of the
+# Python version used.
+renv::use_python()
+  
+# Install the reticulate library to interface with Python, if not already
+installed with # the package itself).
+renv::install("reticulate")
+  
+# Install boto3.
+reticulate::py_install("boto3")
+
+```
+
+## Running the model
+
+You will need access to the `alpha-prison-forecasting-data` bucket of
+S3 to be able to run the model.
+
+To call the model, use the `run_model` function.
+
+<!-- At its most basic version (using default -->
+<!-- inputs), this can just be run with no arguments; and a list of six dataframes -->
+<!-- will be exported - monthly population impact by a) age/gender group and b) -->
+<!-- sentence band; c) inflow and outflow by cohorts; d) inflow and outflow by -->
+<!-- sentence band; e) licence caseload and recall impacts; f) sample sizes by cohort -->
+<!-- for each modelling cohort. -->
+
+<!-- *For detail of how the package works, refer to documentation and the repository -->
+<!-- Wiki page (partly remains in development)* -->
+
+## Folders
+
+Key folders are as follows
+
+1. flowcast_inflow_files/ Forecast prison inflows by month (columns) and
+modelling cohorts (rows, usually sentence band and offence group)
+
+
+### Deprecated folders
+
+The following folders were last used for modelling in v1.2.0
+('Han Solo's tomb') and are now deprecated:
+
+1. flowcast_offence_mappings/ For files of the list of offences that were in
+scope for old scenarios. And files of scenario prevalences (relative frequencies
+of scenario and EDS cohorts, as determined by offline sentence data
+2. flowcast_standard_values/ Not cited in v1.2.0. Appears to be saved versions
+of key tables.
+3. flowcast_outflow_files/ Not cited in v1.2.0. Appears to hold key output
+files.
