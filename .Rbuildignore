@@ -1,0 +1,13 @@
+^requirements\.txt$
+^renv$
+^renv\.lock$
+^.*\.Rproj$
+^\.Rproj\.user$
+
+^README\.Rmd$
+^NEWS\.md$
+^R/dev-
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^upload\.R$

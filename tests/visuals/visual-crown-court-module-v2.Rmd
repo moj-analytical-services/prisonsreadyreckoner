@@ -1,0 +1,319 @@
+---
+title: "Sense checking of outputs from Crown Court module. Part I. Lever responses."
+author: "Alex Dickinson"
+date: "11/04/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+devtools::load_all()
+```
+
+
+`prisonflowcast` explores how changes in Crown Court capacity affect the number
+of Crown Court disposals relative to a baseline number of disposals. The user
+can change the modelled Crown Court capacity by changing the variable
+`params$extra_sitting_days`. Changes in Crown Court capacity take place
+beginning on the date specified by the parameter `params$capacity_impact_date`.
+The baseline number of disposals is an output from the xxxx model.
+
+If `params$extra_sitting_days = 0`, it is expected that `prisonflowcast` will
+calculate no change to the number of Crown Court disposals.
+
+```{r echo=FALSE, out.width="100%"}
+  params$extra_sitting_days      <- 0
+  params$ringfenced_lookup_file  <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-ringfenced-lookup.csv"
+  params$crown_output_file    <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_io_res_12m_taper_230406_1019/crown-output-apr23_s4.csv"
+  params$capacity_file        <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sd_htpsd_adjusted_apr23_s4.csv"
+  params$capacity_impact_date    <- as.Date("2023-06-01")
+  params$start_date              <- as.Date("2022-11-01")    # First month of the forecast. Used for verifying inputs.
+  cc_disposals <- run_crown_court_module(params)
+  
+  cc_disposals_united <- tidyr::unite(cc_disposals, receipt_type_route, c(receipt_type_desc, route), sep = " ")
+  
+  cc_disposals_pivoted <- cc_disposals_united %>%
+    dplyr::select(c("date", "receipt_type_route", "n_disposals_delta")) %>%
+    tidyr::pivot_wider(
+      names_from = date,
+      values_from = n_disposals_delta,
+      values_fill = 0,
+      names_sort = TRUE
+    )
+  
+  x <- as.Date(names(dplyr::select(cc_disposals_pivoted, -c("receipt_type_route"))))
+  y <- dplyr::select(cc_disposals_pivoted, -c("receipt_type_route"))
+  
+  matplot(x,
+          t(y),
+          type = 'l',
+          xlab = "Date",
+          main = "Change in number of disposals due to changes to number of sitting day",
+          ylab = "Change in number of disposals",
+          lty = c(4,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2),
+          col = c(1,1,2,3,4,5,6,7,1,1,2,3,4,5,6,7)
+          )
+  
+  legend("topright",
+         inset = 0.02,
+         legend = paste0(cc_disposals_pivoted$receipt_type_route),
+         lty = c(4,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2),
+         col = c(1,1,2,3,4,5,6,7,1,1,2,3,4,5,6,7),
+         cex = 0.5
+  )
+  
+  #print(cc_disposals_pivoted)
+```
+
+
+
+
+### Example: Add 500 extra sitting days (per month) starting on 2022-11-01
+
+If the number of sitting days is increased, the number of disposals increases,
+as expected. (In this example, `params$extra_sitting_days = 500` and
+`params$capacity_impact_date = 2022-11-01`.)
+
+```{r echo=FALSE, out.width="100%"}
+  params$extra_sitting_days      <- 500
+  params$capacity_impact_date    <- as.Date("2022-11-01")
+  cc_disposals <- run_crown_court_module(params)
+  
+  cc_disposals_united <- tidyr::unite(cc_disposals, receipt_type_route, c(receipt_type_desc, route), sep = " ")
+  
+  cc_disposals_pivoted <- cc_disposals_united %>%
+    dplyr::select(c("date", "receipt_type_route", "n_disposals_delta")) %>%
+    tidyr::pivot_wider(
+      names_from = date,
+      values_from = n_disposals_delta,
+      values_fill = 0,
+      names_sort = TRUE
+    )
+  
+  x <- as.Date(names(dplyr::select(cc_disposals_pivoted, -c("receipt_type_route"))))
+  y <- dplyr::select(cc_disposals_pivoted, -c("receipt_type_route"))
+  
+  matplot(x,
+          t(y),
+          type = 'l',
+          xlab = "Date",
+          main = "Change in number of disposals due to changes to number of sitting day",
+          ylab = "Change in number of disposals",
+          lty = c(4,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2),
+          col = c(1,1,2,3,4,5,6,7,1,1,2,3,4,5,6,7)
+          )
+  
+  legend("topright",
+         inset = 0.02,
+         legend = paste0(cc_disposals_pivoted$receipt_type_route),
+         lty = c(4,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2),
+         col = c(1,1,2,3,4,5,6,7,1,1,2,3,4,5,6,7),
+         cex = 0.5
+  )
+  
+  #print(cc_disposals_pivoted)
+```
+
+
+
+
+### Example: Add 500 extra sitting days (per month) starting on 2023-06-01
+
+If the number of sitting days increases at a later date, the number of disposals
+is unaffected until that date. (In this example, `params$extra_sitting_days =
+500` and `params$capacity_impact_date = 2023-06-01`.) Note that the plotted
+lines after 2023-06-01 are identical to those for the same dates in the above
+graph.
+
+```{r echo=FALSE, out.width="100%"}
+  params$extra_sitting_days      <- 500
+  params$capacity_impact_date    <- as.Date("2023-06-01")
+  cc_disposals <- run_crown_court_module(params)
+  
+  cc_disposals_united <- tidyr::unite(cc_disposals, receipt_type_route, c(receipt_type_desc, route), sep = " ")
+  
+  cc_disposals_pivoted <- cc_disposals_united %>%
+    dplyr::select(c("date", "receipt_type_route", "n_disposals_delta")) %>%
+    tidyr::pivot_wider(
+      names_from = date,
+      values_from = n_disposals_delta,
+      values_fill = 0,
+      names_sort = TRUE
+    )
+  
+  x <- as.Date(names(dplyr::select(cc_disposals_pivoted, -c("receipt_type_route"))))
+  y <- dplyr::select(cc_disposals_pivoted, -c("receipt_type_route"))
+  
+  matplot(x,
+          t(y),
+          type = 'l',
+          xlab = "Date",
+          main = "Change in number of disposals due to changes to number of sitting day",
+          ylab = "Change in number of disposals",
+          lty = c(4,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2),
+          col = c(1,1,2,3,4,5,6,7,1,1,2,3,4,5,6,7)
+          )
+  
+  legend("topright",
+         inset = 0.02,
+         legend = paste0(cc_disposals_pivoted$receipt_type_route),
+         lty = c(4,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2),
+         col = c(1,1,2,3,4,5,6,7,1,1,2,3,4,5,6,7),
+         cex = 0.5
+  )
+  
+  #print(cc_disposals_pivoted)
+```
+
+
+### Example: Remove 500 sitting days (per month) starting on 2023-06-01
+
+If the number of sitting days is decreased, the number of disposals decreases,
+as expected. (In this example, `params$extra_sitting_days = -500` and
+`params$capacity_impact_date = 2023-06-01`.)
+
+```{r echo=FALSE, out.width="100%"}
+  params$extra_sitting_days      <- -500
+  params$capacity_impact_date    <- as.Date("2023-06-01")
+  cc_disposals <- run_crown_court_module(params)
+  
+  cc_disposals_united <- tidyr::unite(cc_disposals, receipt_type_route, c(receipt_type_desc, route), sep = " ")
+  
+  cc_disposals_pivoted <- cc_disposals_united %>%
+    dplyr::select(c("date", "receipt_type_route", "n_disposals_delta")) %>%
+    tidyr::pivot_wider(
+      names_from = date,
+      values_from = n_disposals_delta,
+      values_fill = 0,
+      names_sort = TRUE
+    )
+  
+  x <- as.Date(names(dplyr::select(cc_disposals_pivoted, -c("receipt_type_route"))))
+  y <- dplyr::select(cc_disposals_pivoted, -c("receipt_type_route"))
+  
+  matplot(x,
+          t(y),
+          type = 'l',
+          xlab = "Date",
+          main = "Change in number of disposals due to changes to number of sitting day",
+          ylab = "Change in number of disposals",
+          lty = c(4,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2),
+          col = c(1,1,2,3,4,5,6,7,1,1,2,3,4,5,6,7)
+          )
+  
+  legend("topright",
+         inset = 0.02,
+         legend = paste0(cc_disposals_pivoted$receipt_type_route),
+         lty = c(4,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2),
+         col = c(1,1,2,3,4,5,6,7,1,1,2,3,4,5,6,7),
+         cex = 0.5
+  )
+  
+  #print(cc_disposals_pivoted)
+```
+
+
+
+### Example: Add 100 extra sitting days (per month) starting on 2023-06-01
+
+If the number of sitting days is increased by a smaller number, the number of
+disposals increases by a smaller number, as expected. (In this example,
+`params$extra_sitting_days = 100` and `params$capacity_impact_date =
+2023-06-01`.) Note that the graph below is identical to the graph for
+`params$extra_sitting_days = 500` and `params$capacity_impact_date = 2023-06-01`
+(see above), apart from the y-axis values are smaller by a factor of five.
+
+```{r echo=FALSE, out.width="100%"}
+  params$extra_sitting_days      <- 100
+  params$capacity_impact_date    <- as.Date("2023-06-01")
+  cc_disposals <- run_crown_court_module(params)
+  
+  cc_disposals_united <- tidyr::unite(cc_disposals, receipt_type_route, c(receipt_type_desc, route), sep = " ")
+  
+  cc_disposals_pivoted <- cc_disposals_united %>%
+    dplyr::select(c("date", "receipt_type_route", "n_disposals_delta")) %>%
+    tidyr::pivot_wider(
+      names_from = date,
+      values_from = n_disposals_delta,
+      values_fill = 0,
+      names_sort = TRUE
+    )
+  
+  x <- as.Date(names(dplyr::select(cc_disposals_pivoted, -c("receipt_type_route"))))
+  y <- dplyr::select(cc_disposals_pivoted, -c("receipt_type_route"))
+  
+  matplot(x,
+          t(y),
+          type = 'l',
+          xlab = "Date",
+          main = "Change in number of disposals due to changes to number of sitting day",
+          ylab = "Change in number of disposals",
+          lty = c(4,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2),
+          col = c(1,1,2,3,4,5,6,7,1,1,2,3,4,5,6,7)
+          )
+  
+  legend("topright",
+         inset = 0.02,
+         legend = paste0(cc_disposals_pivoted$receipt_type_route),
+         lty = c(4,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2),
+         col = c(1,1,2,3,4,5,6,7,1,1,2,3,4,5,6,7),
+         cex = 0.5
+  )
+  
+  #print(cc_disposals_pivoted)
+```
+
+
+# Example: Remove 100 sitting days (per month) starting on 2023-06-01
+
+If the number of sitting days is decreased by a smaller number, the number of
+disposals decreases by a smaller number, as expected. (In this example,
+`params$extra_sitting_days = -100` and `params$capacity_impact_date =
+2023-06-01`.) Note that the graph below is identical to the graph for
+`params$extra_sitting_days = -500` and `params$capacity_impact_date =
+2023-06-01` (see above), apart from the y-axis values are smaller by a factor of
+five.
+
+```{r echo=FALSE, out.width="100%"}
+  params$extra_sitting_days      <- -100
+  params$capacity_impact_date    <- "2023-06-01"
+  # Format params - normally carried out using function format_params(), but don't necessarily have all variables in list params loaded here, so format_params() may not work. Format necessary parameters in this code chunk instead.
+  params$start_date              <- as.Date(params$start_date)
+  params$capacity_impact_date    <- as.Date(params$capacity_impact_date)
+  cc_disposals <- run_crown_court_module(params)
+  
+  cc_disposals_united <- tidyr::unite(cc_disposals, receipt_type_route, c(receipt_type_desc, route), sep = " ")
+  
+  cc_disposals_pivoted <- cc_disposals_united %>%
+    dplyr::select(c("date", "receipt_type_route", "n_disposals_delta")) %>%
+    tidyr::pivot_wider(
+      names_from = date,
+      values_from = n_disposals_delta,
+      values_fill = 0,
+      names_sort = TRUE
+    )
+  
+  x <- as.Date(names(dplyr::select(cc_disposals_pivoted, -c("receipt_type_route"))))
+  y <- dplyr::select(cc_disposals_pivoted, -c("receipt_type_route"))
+  
+  matplot(x,
+          t(y),
+          type = 'l',
+          xlab = "Date",
+          main = "Change in number of disposals due to changes to number of sitting day",
+          ylab = "Change in number of disposals",
+          lty = c(4,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2),
+          col = c(1,1,2,3,4,5,6,7,1,1,2,3,4,5,6,7)
+          )
+  
+  legend("topright",
+         inset = 0.02,
+         legend = paste0(cc_disposals_pivoted$receipt_type_route),
+         lty = c(4,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2),
+         col = c(1,1,2,3,4,5,6,7,1,1,2,3,4,5,6,7),
+         cex = 0.5
+  )
+  
+  #print(cc_disposals_pivoted)
+```

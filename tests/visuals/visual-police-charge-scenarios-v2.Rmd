@@ -1,0 +1,146 @@
+---
+title: "Police charge comparison"
+author: "Brian Burton"
+date: "05/06/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+devtools::load_all()
+```
+
+## Aim
+
+To demonstrate that, when package functions are applied to prison discharge
+scenario files, as provided by the Court team, the forecast Crown Court receipts
+are similar to those predicted by the CJST.
+
+A close match would confirm that our calculations of receipt volumes by
+`receipt_type_desc` and `actual_route` correctly capture the relationship
+between police charge scenarios and court receipts.
+
+
+## Method
+
+* Given an example police charge court receipts scenario file, call package
+  functions to read in the file contents and apply the
+  relevant mapping to convert the receipts from a format split by
+  `receipt_type_desc` and offence group to one split by `receipt_type_desc` and
+  `route`
+  
+* Read in the equivalent receipts provided by the same team, join to the first
+  table and compare.
+  
+
+```{r include = FALSE}
+
+plot_receipts_delta <- function(cc_receipts_delta_actual, cc_receipts_delta_expected, receipt_type) {
+  
+  label_act <- paste0("Model, ", receipt_type)
+  
+  cc_receipts_delta_actual <- dplyr::select(cc_receipts_delta_actual, date, n_receipts_delta) %>%
+                                tidyr::pivot_wider(names_from = date,
+                                                   values_from = n_receipts_delta,
+                                                   values_fill = 0,
+                                                   names_sort = TRUE
+                              )
+
+  label_exp <- paste0("CJST, ", receipt_type)
+
+  cc_receipts_delta_expected <- dplyr::select(cc_receipts_delta_expected, date, n_receipts_delta) %>%
+                                  tidyr::pivot_wider(names_from = date,
+                                                     values_from = n_receipts_delta,
+                                                     values_fill = 0,
+                                                     names_sort = TRUE
+                                  )
+
+
+  cc_receipts_plot <- rbind(cc_receipts_delta_actual, cc_receipts_delta_expected)
+
+  x <- as.Date(names(cc_receipts_plot))
+  y <- cc_receipts_plot
+  main <- paste0("Comparison of receipts, ", receipt_type)
+  matplot(x,
+          t(y),
+          type = 'l',
+          xlab = "Date",
+          main = main,
+          ylab = "Number of receipts",
+          lty = c(1, 2),
+          col = c(1, 1)
+          )
+  legend("topright",
+         inset = 0.02,
+         legend = c(label_act, label_exp),
+         lty = c(1, 2),
+         col = c(1, 1)
+    )
+
+}
+
+```
+
+```{r include = FALSE}
+
+  start_date          <- "2022-11-01"    # First month of the forecast. Used for verifying inputs.
+  forecast_start_date <- "2022-11-01"
+  forecast_end_date   <- "2030-03-01"
+  
+  
+  # Example receipts by receipt_type_desc and offence from police charge scenarios.
+  police_charges_cc_files <- list(# central = "s3://alpha-prison-forecasting-data/flowcast/data/police-demand-scenarios/April23_mid_pandemic_real_for_ready_reckoner.csv", # Records the total number of Crown Court receipts used as a baseline in the April 2023 projections. Includes background values from various sources, and an increase in charge numbers over a 24-month period.
+                                  # ramp_12m = "s3://alpha-prison-forecasting-data/flowcast/data/police-demand-scenarios/April23_mid_pandemic_real_12m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 12-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
+                                  # ramp_36m = "s3://alpha-prison-forecasting-data/flowcast/data/police-demand-scenarios/April23_mid_pandemic_real_36m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 36-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
+                                  ramp_48m = "s3://alpha-prison-forecasting-data/flowcast/data/police-demand-scenarios/April23_mid_pandemic_real_48m_ramp_for_ready_reckoner.csv" # Records how Crown Court receipts would change if police charge numbers were increased over a 48-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
+  )   # '20230525 - David Verry - RE_ Next steps on the CJS ready reckoner.eml'
+
+  
+  # Table from Chun-Yee for converting police charge tables to Court receipts by
+  # court_route_desc and route.
+  police_charges_cc_route_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/crown_court_modelling/ccs_snapshot_20230125_jan23version/routes.csv"   # '20230518 - Chun-yee Cheng - cjst pre-covid route distribution.msg'  
+
+    
+  # Crown Court receipts generated by CJST when supplied with the same
+  # inflows as above.
+  path_target_central  <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_RR_receipts_check_baseline_230606_1005/crown-output-apr23_s4.csv"
+  path_target_ramp_48m <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_RR_receipts_check_48m_230606_1005/crown-output-apr23_s4.csv"
+ 
+ 
+  
+  # Create model receipts delta and that expected from files read in.
+  cc_receipts_delta_loaded_list <- load_police_charges_cc_data_list(police_charges_cc_route_file, police_charges_cc_files, start_date, forecast_start_date, forecast_end_date)
+    cc_receipts_delta_actual <- cc_receipts_delta_loaded_list$ramp_48m
+    
+  target_central <- import_s3_file(path_target_central) %>%
+    dplyr::rename(route = actual_route) %>%
+    dplyr::select(date, receipt_type_desc, route, n_receipts)
+  target_ramp_48m <- import_s3_file(path_target_ramp_48m) %>%
+    dplyr::rename(route = actual_route) %>%
+    dplyr::select(date, receipt_type_desc, route, n_receipts)
+  cc_receipts_delta_expected <- dplyr::left_join(target_central, target_ramp_48m, by = c("date", "receipt_type_desc", "route")) %>%
+    dplyr::mutate(n_receipts_delta = n_receipts.y - n_receipts.x, .keep = "unused")
+  
+  # Create a 'receipt type' for plotting
+  cc_receipts_delta_actual <- dplyr::mutate(cc_receipts_delta_actual, receipt_type = paste(receipt_type_desc, route, sep = "_"))
+  cc_receipts_delta_expected <- dplyr::mutate(cc_receipts_delta_expected, receipt_type = paste(receipt_type_desc, route, sep = "_"))
+  
+
+```
+
+
+## Results
+
+```{r echo = FALSE}
+
+receipt_types <- unique(cc_receipts_delta_expected$receipt_type)
+for (receipt_type in receipt_types)
+  plot_receipts_delta(dplyr::filter(cc_receipts_delta_actual, receipt_type == !!receipt_type),
+                        dplyr::filter(cc_receipts_delta_expected, receipt_type == !!receipt_type),
+                        receipt_type)
+
+```
+
+
+

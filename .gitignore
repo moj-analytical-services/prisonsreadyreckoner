@@ -1,0 +1,15 @@
+# If you make a change here, update the tracked list by typing at the terminal:
+#
+#> git rm -r --cached .
+#> git add .
+#
+# Then delete any files now excluded and commit changes.
+
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+inst/doc
+core
+tests/visuals/*.html
+tests/sandbox/*.html
