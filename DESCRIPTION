@@ -16,16 +16,16 @@ LazyData: true
 Depends: R (>= 4.0.0)
 Imports:
     botor (>= 0.3.0),
-    dplyr (>= 1.1.0),
+    dplyr (>= 1.0.8),
     logger (>= 0.2.2),
-    lubridate (>= 1.9.2),
-    magrittr (>= 2.0.3),
-    readr (>= 2.1.4),
-    readxl (>= 1.4.2),
-    reticulate (>= 1.28),
-    stringr (>= 1.5.0),
-    tibble (>= 3.1.8),
-    tidyr (>= 1.3.0),
+    lubridate (>= 1.8.0),
+    magrittr (>= 2.0.2),
+    readr (>= 2.1.2),
+    readxl (>= 1.3.1),
+    reticulate (>= 1.24),
+    stringr (>= 1.4.0),
+    tibble (>= 3.1.6),
+    tidyr (>= 1.2.0),
     withr (>= 2.5.0),
     rlang
 Suggests: 
