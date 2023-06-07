@@ -1,0 +1,180 @@
+---
+title: "Prison receptions statistical model"
+author: "Brian Burton"
+date: "29/03/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+devtools::load_all()
+```
+
+```{r include=FALSE}
+library(magrittr)
+library(fullsample)
+
+source("../../dev/dev-make-test-files.R")
+
+params <- make_test_receptions_model_data(mode = 'report')
+
+plot_scatter <- function(model_data, xvar, yvar) {
+
+  x <- model_data[xvar]
+  y <- model_data[yvar]
+
+  matplot(x,
+          y,
+          'p',
+          pch = 21,
+          xlab = xvar, ylab = yvar
+  )
+}
+```
+
+
+## Aim
+
+To construct a fit-for-purpose regression model of prison receptions with
+court disposal volumes as predictors.
+
+## Method
+
+We obtain data from:
+
+1. An RDO data file for magistrates' court data
+2. A Crown Court disposal file for Crown Court data
+3. FULLSAMPLE for prison reception data.
+
+from the interval, `r params$period_start` to `r params$period_end`.
+
+```{r include=FALSE}
+model_data  <- botor::s3_read(params$path_receptions_model_data, readr::read_csv)
+
+# Prepare abridged data for scatterplotting and statistical modelling. We avoid
+# extreme Covid impacts and the period of temporarly raised magistrates'
+# sentencing powers.
+#model_data2 <- dplyr::filter(model_data, date < "2020-04-01" | (date > "2020-06-01" & date < "2022-06-01") | date > "2023-03-31")
+model_data2 <- dplyr::filter(model_data, date < "2022-06-01" | date > "2023-03-31")
+```
+
+These contain the following input time series (note magistrates' court (mc)
+triable either way and summary figures have been divided by 10):
+
+```{r echo=FALSE}
+x <- dplyr::select(model_data, date)
+y <- dplyr::select(model_data, -c("date", "mc_s", "cc_elgp", "cc_lcgp", "cc_gp", "senband1", "senband2", "senband3", "senband4")) %>%
+  dplyr::mutate(mc_tew = mc_tew / 10, mc_sm = mc_sm / 10, mc_snm = mc_snm / 10)
+matplot(x$date,
+        y,
+       'l',
+        lty = 1,
+        col = seq(1, 10),
+        xlab = "Date", main = "Explanatory variables: Court disposals by route", ylab = expression("Disposals [month"^-1*"]"))
+legend("topright",
+   inset = 0.02,
+   legend = names(y),
+    lty = 1,
+    col = seq(1, 10)
+)
+```
+
+... and the following sentence bands:
+
+```{r echo=FALSE}
+x <- dplyr::select(model_data, date)
+y <- dplyr::select(model_data, c("senband1", "senband2", "senband3", "senband4"))
+matplot(x$date,
+        y,
+       'l',
+        lty = 1,
+        col = seq(1, 10),
+        xlab = "Date", main = "Dependent variables: Prison receptions", ylab = expression("Receptions [month"^-1*"]"))
+legend("topright",
+   inset = 0.02,
+   legend = names(y),
+    lty = 1,
+    col = seq(1, 10)
+)
+```
+
+Scatter plots indicate the degree of correlation between predictors and sentence
+bands (April to June, 2020 have been removed as volumes went down globally in
+this period owing to Covid):
+
+### Sentence band 1
+
+```{r echo=FALSE, fig.width = 4, fig.asp = 1}
+
+xvars <- names(dplyr::select(model_data2, -c("date", "senband1", "senband2", "senband3", "senband4")))
+for (xvar in xvars) {
+  plot_scatter(model_data2, xvar, "senband1")
+}
+
+```
+
+### Sentence band 2
+
+```{r echo=FALSE, fig.width = 4, fig.asp = 1}
+
+xvars <- names(dplyr::select(model_data2, -c("date", "senband1", "senband2", "senband3", "senband4")))
+for (xvar in xvars) {
+  plot_scatter(model_data2, xvar, "senband2")
+}
+
+```
+
+### Sentence band 3
+
+```{r echo=FALSE, fig.width = 4, fig.asp = 1}
+
+xvars <- names(dplyr::select(model_data2, -c("date", "senband1", "senband2", "senband3", "senband4")))
+for (xvar in xvars) {
+  plot_scatter(model_data2, xvar, "senband3")
+}
+
+```
+
+### Sentence band 4
+
+```{r echo=FALSE, fig.width = 4, fig.asp = 1}
+
+xvars <- names(dplyr::select(model_data2, -c("date", "senband1", "senband2", "senband3", "senband4")))
+for (xvar in xvars) {
+  plot_scatter(model_data2, xvar, "senband4")
+}
+
+```
+
+Based on discussions of the sentencing powers of magistrates' court, an
+understanding of which magistrates' court disposals are double-counted in Crown
+Court disposals and the merits of separating guilty plea predictors gleaned from
+the above scatergrams, we will try the following models:
+
+* band1 ~ $a_1\, $cc_effective + $a_2\, $cc_egp + $a_3\, $cc_lcgp + $a_4\, $cc_sent + $a_5\, $mc_sm + $a_6\, $mc_snm + $a_7\, $mc_tew
+* band2 ~ $a_1\, $cc_effective + $a_2\, $cc_egp + $a_3\, $cc_lcgp + $a_4\, $cc_sent + $a_5\, $mc_tew
+* band3 ~ $a_1\, $cc_effective + $a_2\, $cc_gp + $a_3\, $cc_sent
+* band4 ~ $a_1\, $cc_effective + $a_2\, $cc_gp + $a_3\, $cc_sent
+
+
+## Results
+
+```{r}
+lm_sb1 <- lm(senband1 ~ 0 + cc_effective + cc_egp + cc_lcgp + cc_sent + mc_sm + mc_snm + mc_tew, model_data2)
+lm_sb2 <- lm(senband2 ~ 0 + cc_effective + cc_egp + cc_lcgp + cc_sent + mc_tew, model_data2)
+lm_sb3 <- lm(senband3 ~ 0 + cc_effective + cc_gp + cc_sent, model_data2)
+lm_sb4 <- lm(senband4 ~ 0 + cc_effective + cc_gp + cc_sent, model_data2)
+
+summary(lm_sb1)
+matplot(model_data2$date, data.frame(y = model_data2$senband1, y_hat = lm_sb1$fitted.values), type="l", main = "Model fit: Sentence band 1", xlab = "Date", ylab = expression("Volume [month"^-1*"]"))
+
+summary(lm_sb2)
+matplot(model_data2$date, data.frame(y = model_data2$senband2, y_hat = lm_sb2$fitted.values), type="l", main = "Model fit: Sentence band 2", xlab = "Date", ylab = expression("Volume [month"^-1*"]"))
+
+summary(lm_sb3)
+matplot(model_data2$date, data.frame(y = model_data2$senband3, y_hat = lm_sb3$fitted.values), type="l", main = "Model fit: Sentence band 3", xlab = "Date", ylab = expression("Volume [month"^-1*"]"))
+
+summary(lm_sb4)
+matplot(model_data2$date, data.frame(y = model_data2$senband4, y_hat = lm_sb4$fitted.values), type="l", main = "Model fit: Sentence band 4", xlab = "Date", ylab = expression("Volume [month"^-1*"]"))
+```
+
