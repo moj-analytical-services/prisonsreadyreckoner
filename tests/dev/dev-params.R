@@ -102,7 +102,7 @@ dev_set_params <- function() {
     "app",                         0,
     "sent",                        0)   # 20230503 - Charlotte Wallace - RE_ Gender split and remand ratio_.msg
   
-  params$sentencing_rates_file  <- "s3://alpha-prison-forecasting-data/flowcast/data/reception-rates-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  params$sentencing_rates_file  <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/reception-rates-20230502-shiny-v0.0.0-OFFICIAL.csv"
   
   
   # Prison and licence parameters
