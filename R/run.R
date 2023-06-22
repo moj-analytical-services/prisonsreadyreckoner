@@ -172,7 +172,6 @@ run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disp
   # case mix.
   cc_disposals <- calculate_cc_disposals(cc_output, cc_capacity)
   
-  
   # Calculate remand population and determinate inflows from court disposals.
   pop_remand_delta  <- calculate_pop_remand_delta(cc_disposals)
   inflows_det_delta <- calculate_inflows_det_delta(cc_disposals, mc_disposals, sentencing_rates)

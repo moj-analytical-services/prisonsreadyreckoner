@@ -1,6 +1,3 @@
----
-output: github_document
----
 
 <!--
 
@@ -25,34 +22,27 @@ GitHub and CRAN.
 
 -->
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.path = "man/figures/README-",
-  out.width = "100%"
-)
-```
-
-
 # prisonsreadyreckoner
 
 <!-- badges: start -->
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
 THIS README IS A DRAFT. NONE OF THE TEXT BELOW IS UP TO DATE.
 
-**A packaged stock-flow model built in R to estimate the cumulative impact to
-prison population of adding a given number of extra offender receptions each
-month.**
-
+**A packaged stock-flow model built in R to estimate the cumulative
+impact to prison population of adding a given number of extra offender
+receptions each month.**
 
 ## Installation
 
-`prisonsreadyreckoner` relies on various packages, which you must install before installing `prisonsreadyreckoner`. To install these packages, type the following commands in the RStudio console:
+`prisonsreadyreckoner` relies on various packages, which you must
+install before installing `prisonsreadyreckoner`. To install these
+packages, type the following commands in the RStudio console:
 
-```r
+``` r
 renv::install("moj-analytical-services/Rdbtools")
 
 renv::install("git@github.com:moj-analytical-services/fullsample.git")
@@ -60,19 +50,20 @@ renv::install("git@github.com:moj-analytical-services/fullsample.git")
 renv::install("git@github.com:moj-analytical-services/mojmetr.git@v0.2.1")
 ```
 
-Once these packages are installed, install `prisonsreadyreckoner` by typing the following in the RStudio console:
+Once these packages are installed, install `prisonsreadyreckoner` by
+typing the following in the RStudio console:
 
-```r
+``` r
 renv::install("git@github.com:moj-analytical-services/prisonsreadyreckoner.git@<packageversion>")
 ```
 
-where `@<packageversion>` is the latest release. For example, if the latest
-release were v0.99.0, you would use `@v0.99.0`.
+where `@<packageversion>` is the latest release. For example, if the
+latest release were v0.99.0, you would use `@v0.99.0`.
 
-`prisonsreadyreckoner` relies on the `botor` package, which relies on the `boto3`
-Python package. To install `boto3`, run the following:
+`prisonsreadyreckoner` relies on the `botor` package, which relies on
+the `boto3` Python package. To install `boto3`, run the following:
 
-```r
+``` r
 # Tell renv that Python will be used. By default this will point to a default
 # Python binary file. Your lock file will be updated with details of the
 # Python version used.
@@ -84,16 +75,11 @@ renv::install("reticulate")
   
 # Install boto3.
 reticulate::py_install("boto3")
-
 ```
 
 ## Running the model
 
-You will need access to the `alpha-prison-forecasting-data` bucket of
-S3 to be able to run the model.
+You will need access to the `alpha-prison-forecasting-data` bucket of S3
+to be able to run the model.
 
 To call the model, use the `run_prisonflowcast()` function.
-
-
-
-

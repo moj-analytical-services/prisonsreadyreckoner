@@ -23,6 +23,8 @@ If `params$extra_sitting_days = 0`, it is expected that `prisonflowcast` will
 calculate no change to the number of Crown Court disposals.
 
 ```{r echo=FALSE, out.width="100%"}
+  params <- list()
+
   params$extra_sitting_days      <- 0
   params$ringfenced_lookup_file  <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-ringfenced-lookup.csv"
   params$crown_output_file    <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_io_res_12m_taper_230406_1019/crown-output-apr23_s4.csv"
