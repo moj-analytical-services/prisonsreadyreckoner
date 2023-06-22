@@ -12,415 +12,8 @@ devtools::load_all()
 
 ```{r echo=FALSE}
 
-plot_disposals <- function(series, title, ylim, ylab, diff = FALSE) {
-  
-  if (diff == FALSE) {
-    ggplot2::ggplot(data = series) +
-    ggplot2::geom_line(ggplot2::aes(x = date, y = RR_test_high_disposals)) + 
-    ggplot2::geom_line(ggplot2::aes(x = date, y = RR_test_low_disposals)) +
-    ggplot2::geom_line(ggplot2::aes(x = date, y = sensitivity_baseline_uncalib))
-  } else if (diff == TRUE) {
-    ggplot2::ggplot(data = series) +
-    ggplot2::geom_line(ggplot2::aes(x = date, y = RR_test_high_diff)) + 
-    ggplot2::geom_line(ggplot2::aes(x = date, y = RR_test_low_diff))
-  }
-  
-  #+
-  #ggplot2::ylim(ylim) +
-  #ggplot2::labs(x = "Date",
-   # y = ylab,
-  #  title = title,
-  #  subtitle = "")
-  
-}
-
-```
-
-## Load data from Charlotte
-
-### Court disposals
-
-
-```{r echo=FALSE}
-# See email 20230612 - RE_ Charlotte's RR sense checks.eml
-
-# We load the data in disp_plea_impactrr_out_apr23_s4 sheet. Not sure how familiar you are with these outputs from the crown model? Not all of those columns will be relevant to you (since we consider a few other disposal types/plea routes which you ignore), and you would want to sum the _0 and _1 cols (which indicate baseline demand and the additional impact of 23k extra police officers).
-charlotte_baseline_cc_disposals_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sentencing_outputs_apr23_s4.xlsx"
-
-# Mags disposals are in this spreadsheet (we just use the column without 23k):
-charlotte_baseline_mc_disposals_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0901/mags_projections/projections_from_mags_model_built_2022_02/2022_06/apr23_test_output_mags_med.csv"
-
-
-
-charlotte_baseline_cc_disposals <- import_s3_file(charlotte_baseline_cc_disposals_file, sheet = "disp_plea_impactrr_out_apr23_s4")
-
-charlotte_baseline_mc_disposals_file <- import_s3_file(charlotte_baseline_mc_disposals_file)
-
-
-print(charlotte_baseline_cc_disposals)
-print(charlotte_baseline_mc_disposals_file)
-
-```
-
-
-
-
-
-### Court disposals
-
-Use Charlotte's figures (see email for comparison)
-
-```{r echo=FALSE}
-
-path_target <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-RR_test_230612.xlsx"
-
-court_disposals_target <- botor::s3_read(path_target,
-                           readxl::read_excel,
-                           range = "population!G5:V54") %>%
-  dplyr::mutate(date = lubridate::floor_date(as.Date(`Row Labels`), "month"), .keep = "unused")
-
-# print("colnames")
-# print(colnames(court_disposals_target))
-# print(court_disposals_target)
-
-prison_receptions_determinate_target <- court_disposals_target %>%
-  dplyr::select(c("RR_test_high_disposals...2", "RR_test_low_disposals...3", "sensitivity_baseline_uncalib...4", "date")) %>%
-  dplyr::rename(RR_test_high_disposals = RR_test_high_disposals...2,
-                RR_test_low_disposals = RR_test_low_disposals...3,
-                sensitivity_baseline_uncalib = sensitivity_baseline_uncalib...4) %>%
-  dplyr::mutate(RR_test_high_diff = RR_test_high_disposals - sensitivity_baseline_uncalib,
-                RR_test_low_diff = RR_test_low_disposals - sensitivity_baseline_uncalib)
-
-plot_disposals(prison_receptions_determinate_target, "prison_receptions_determinate_target", c(0,100), "Population")
-plot_disposals(prison_receptions_determinate_target, "prison_receptions_determinate_target", c(0,100), "Population", diff = TRUE)
-
-
-prison_receptions_indeterminate_target <- court_disposals_target %>%
-  dplyr::select(c("RR_test_high_disposals...5", "RR_test_low_disposals...6", "sensitivity_baseline_uncalib...7", "date")) %>%
-  dplyr::rename(RR_test_high_disposals = RR_test_high_disposals...5,
-                RR_test_low_disposals = RR_test_low_disposals...6,
-                sensitivity_baseline_uncalib = sensitivity_baseline_uncalib...7)
-
-#print(prison_receptions_indeterminate_target)
-
-
-prison_receptions_recall_target <- court_disposals_target %>%
-  dplyr::select(c("RR_test_high_disposals...11", "RR_test_low_disposals...12", "sensitivity_baseline_uncalib...13", "date")) %>%
-  dplyr::rename(RR_test_high_disposals = RR_test_high_disposals...11,
-                RR_test_low_disposals = RR_test_low_disposals...12,
-                sensitivity_baseline_uncalib = sensitivity_baseline_uncalib...13)
-
-#print(prison_receptions_recall_target)
-
-
-prison_receptions_remand_target <- court_disposals_target %>%
-  dplyr::select(c("RR_test_high_disposals...14", "RR_test_low_disposals...15", "sensitivity_baseline_uncalib...16", "date")) %>%
-  dplyr::rename(RR_test_high_disposals = RR_test_high_disposals...14,
-                RR_test_low_disposals = RR_test_low_disposals...15,
-                sensitivity_baseline_uncalib = sensitivity_baseline_uncalib...16)
-
-#print(prison_receptions_remand_target)
-
-```
-
-
-
-
-
-### Prison receptions
-
-```{r echo=FALSE}
-
-prison_receptions_target <- botor::s3_read(path_target,
-                           readxl::read_excel,
-                           range = "receptions!A5:M55") %>%
-  dplyr::mutate(date = lubridate::floor_date(as.Date(`Row Labels`), "month"), .keep = "unused")
-
-# print("colnames")
-# print(colnames(prison_receptions_target))
-# print(prison_receptions_target)
-
-prison_receptions_senband1_target <- prison_receptions_target %>%
-  dplyr::select(c("RR_test_high_disposals...2", "RR_test_low_disposals...3", "sensitivity_baseline_uncalib...4", "date")) %>%
-  dplyr::rename(RR_test_high_disposals = RR_test_high_disposals...2,
-                RR_test_low_disposals = RR_test_low_disposals...3,
-                sensitivity_baseline_uncalib = sensitivity_baseline_uncalib...4) #%>%
-  #dplyr::mutate(RR_test_high_diff = RR_test_high_disposals - sensitivity_baseline_uncalib,
-                #RR_test_low_diff = RR_test_low_disposals - sensitivity_baseline_uncalib)
-
-#print(prison_receptions_senband1_target)
-
-
-prison_receptions_senband2_target <- prison_receptions_target %>%
-  dplyr::select(c("RR_test_high_disposals...5", "RR_test_low_disposals...6", "sensitivity_baseline_uncalib...7", "date")) %>%
-  dplyr::rename(RR_test_high_disposals = RR_test_high_disposals...5,
-                RR_test_low_disposals = RR_test_low_disposals...6,
-                sensitivity_baseline_uncalib = sensitivity_baseline_uncalib...7) #%>%
-  #dplyr::mutate(RR_test_high_diff = RR_test_high_disposals - sensitivity_baseline_uncalib,
-                #RR_test_low_diff = RR_test_low_disposals - sensitivity_baseline_uncalib)
-
-#print(prison_receptions_senband2_target)
-
-
-prison_receptions_senband1_target <- prison_receptions_target %>%
-  dplyr::select(c("RR_test_high_disposals...8", "RR_test_low_disposals...9", "sensitivity_baseline_uncalib...10", "date")) %>%
-  dplyr::rename(RR_test_high_disposals = RR_test_high_disposals...8,
-                RR_test_low_disposals = RR_test_low_disposals...9,
-                sensitivity_baseline_uncalib = sensitivity_baseline_uncalib...10) #%>%
-  #dplyr::mutate(RR_test_high_diff = RR_test_high_disposals - sensitivity_baseline_uncalib,
-                #RR_test_low_diff = RR_test_low_disposals - sensitivity_baseline_uncalib)
-
-#print(prison_receptions_senband1_target)
-
-
-prison_receptions_senband1_target <- prison_receptions_target %>%
-  dplyr::select(c("RR_test_high_disposals...11", "RR_test_low_disposals...12", "sensitivity_baseline_uncalib...13", "date")) %>%
-  dplyr::rename(RR_test_high_disposals = RR_test_high_disposals...11,
-                RR_test_low_disposals = RR_test_low_disposals...12,
-                sensitivity_baseline_uncalib = sensitivity_baseline_uncalib...13) #%>%
-  #dplyr::mutate(RR_test_high_diff = RR_test_high_disposals - sensitivity_baseline_uncalib,
-                #RR_test_low_diff = RR_test_low_disposals - sensitivity_baseline_uncalib)
-
-#print(prison_receptions_senband1_target)
-```
-
-
-### Using same inputs in `prisonflowcast`
-
-Charlotte added monthly number of court disposals as follows:
-
-|Disposal type|  mpg| Central | Low |  High |
-|:-----------------|----:|---:|----:|---:|
-|cc_effective       | |   6|  160| 110|
-|cc_egp    | |   6|  160| 110|
-|cc_gp_cracked        | |   4|  108|  93|
-|Hornet 4 Drive    | |   6|  258| 110|
-|Hornet Sportabout | |   8|  360| 175|
-|Valiant           | |   6|  225| 105|
-
-```{r echo=FALSE} 
-
-add_charlotte_disposals <- function(cc_disposals, charlotte_scenario)
-  if (charlotte_scenario == "low") {
-    cc_disposals <- cc_disposals %>%
-      dplyr::mutate(n_disposals_delta = dplyr::if_else(receipt_type_desc == "ind" & route == "effective", 56, n_disposals_delta),
-                    n_disposals_delta = dplyr::if_else(receipt_type_desc == "tew" & route == "effective", 37, n_disposals_delta),
-                    n_disposals_delta = dplyr::if_else(receipt_type_desc == "ind" & route == "egp", 144, n_disposals_delta),
-                    n_disposals_delta = dplyr::if_else(receipt_type_desc == "tew" & route == "egp", 277, n_disposals_delta),
-                    n_disposals_delta = dplyr::if_else(receipt_type_desc == "ind" & route == "gp_cracked", 149, n_disposals_delta),
-                    n_disposals_delta = dplyr::if_else(receipt_type_desc == "tew" & route == "gp_cracked", 241, n_disposals_delta),
-                    n_disposals_delta = dplyr::if_else(receipt_type_desc == "ind" & route == "lgp", 172, n_disposals_delta),
-                    n_disposals_delta = dplyr::if_else(receipt_type_desc == "tew" & route == "lgp", 277, n_disposals_delta),
-                    n_disposals_delta = dplyr::if_else(receipt_type_desc == "sent" & route == "sent", 1076, n_disposals_delta)
-                    )
-  } else if (charlotte_scenario == "high") {
-    cc_disposals <- cc_disposals %>%
-    dplyr::mutate(n_disposals_delta = dplyr::if_else(receipt_type_desc == "ind" & route == "effective", 857, n_disposals_delta),
-                  n_disposals_delta = dplyr::if_else(receipt_type_desc == "tew" & route == "effective", 935, n_disposals_delta),
-                  n_disposals_delta = dplyr::if_else(receipt_type_desc == "ind" & route == "egp", 566, n_disposals_delta),
-                  n_disposals_delta = dplyr::if_else(receipt_type_desc == "tew" & route == "egp", 1140, n_disposals_delta),
-                  n_disposals_delta = dplyr::if_else(receipt_type_desc == "ind" & route == "gp_cracked", 544, n_disposals_delta),
-                  n_disposals_delta = dplyr::if_else(receipt_type_desc == "tew" & route == "gp_cracked", 948, n_disposals_delta),
-                  n_disposals_delta = dplyr::if_else(receipt_type_desc == "ind" & route == "lgp", 838, n_disposals_delta),
-                  n_disposals_delta = dplyr::if_else(receipt_type_desc == "tew" & route == "lgp", 1818, n_disposals_delta),
-                  n_disposals_delta = dplyr::if_else(receipt_type_desc == "sent" & route == "sent", 3049, n_disposals_delta)
-                  )
-  }
-
-
-```
-
-```{r echo=FALSE}
-
-load_central_cc_receipts <- function(police_charges_cc_route_file, start_date, forecast_start_date, forecast_end_date) {
-  
-  # Load file of ratios from Chun-Yee
-  police_charges_cc_route <- load_police_charges_cc_route(police_charges_cc_route_file)
-  
-  ### Load data from David
-  # Suppress message about adding a new column name.
-  police_charges_cc_file_central <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_for_ready_reckoner.csv"
-  police_charges_cc_central <- suppressMessages(import_s3_file(police_charges_cc_file_central))
-  
-  police_charges_cc_central <- dplyr::rename(police_charges_cc_central, date = month_year) %>%
-    trim_dates(start_date, forecast_start_date, forecast_end_date) %>%
-    dplyr::select(-c("...1", "scenario", "forecast_id", "forecast_round")) %>%
-    dplyr::mutate(type = dplyr::if_else(type == "app_All", "app_app", type),
-                  type = dplyr::if_else(type == "sent_bb_All", "sent_sent", type),
-                  type = dplyr::if_else(type == "sent_cs_All", "sent_sent", type))
-  
-  police_charges_cc_central <- calculate_police_charge_routes(police_charges_cc_route, police_charges_cc_central)
-  
-}
-
-```
-
-
-```{r echo=FALSE}
-
-plot_cc_disposals <- function(cc_disposals) {
-  
-  cc_disposals_united <- tidyr::unite(cc_disposals, receipt_type_route, c(receipt_type_desc, route), sep = " ")
-  
-  cc_disposals_pivoted <- cc_disposals_united %>%
-    dplyr::select(c("date", "receipt_type_route", "n_disposals_delta")) %>%
-    tidyr::pivot_wider(
-      names_from = date,
-      values_from = n_disposals_delta,
-      values_fill = 0,
-      names_sort = TRUE
-    )
-  
-  x <- as.Date(names(dplyr::select(cc_disposals_pivoted, -c("receipt_type_route"))))
-  y <- dplyr::select(cc_disposals_pivoted, -c("receipt_type_route"))
-  
-  matplot(x,
-          t(y),
-          type = 'l',
-          xlab = "Date",
-          main = "Crown Court disposals",
-          ylab = "Number of disposals",
-          lty = c(4,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2),
-          col = c(1,1,2,3,4,5,6,7,1,1,2,3,4,5,6,7)
-          )
-  
-  legend("topright",
-         inset = 0.02,
-         legend = paste0(cc_disposals_pivoted$receipt_type_route),
-         lty = c(4,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2),
-         col = c(1,1,2,3,4,5,6,7,1,1,2,3,4,5,6,7),
-         cex = 0.5
-         )
-}
-
-```
-
-
-```{r echo=FALSE}
-
-run_charlotte_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, sentencing_rates_loaded,
-                         inflows_det_loaded, profiles_det_loaded,
-                         nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall, charlotte_scenario = "low") {
-  
-  
-  cc_receipts_delta  <- load_central_cc_receipts(params$police_charges_cc_route_file, params$start_date, params$forecast_start_date, params$forecast_end_date)
-  mc_disposals_delta <- mc_disposals_delta_loaded_list[[params$lever_police_charges_scenario]]
-  
-  
-  
-  
-  # LEVER: Add (or subtract) sitting days.
-  cc_capacity_levered  <- add_cc_sitting_days(cc_capacity_loaded, params$lever_extra_cc_sitting_days, params$lever_extra_cc_sitting_days_impact_date)
-  
-  # run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, sentencing_rates_loaded, inflows_det_loaded)
-  
-  #cc_output <- add_cc_receipts_delta_placeholder(cc_output, 0)   # TO BE REPLACED BY A FUNCTION ADJUSTING THE DELTA RINGFENCED COLUMN
-  cc_output <- add_cc_receipts_delta(cc_output_loaded, cc_receipts_delta)
-  # print("cc_output")
-  # print(cc_output)
-  # 
-  # Add extra ring-fenced hours to the capacity table.
-  cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity_levered)
-  check_cc_capacity(cc_capacity)
-  
-  # Join the capacity table with the crown output table and calculate disposals
-  # delta for non-ring-fenced cases, assuming current non-ring-fenced disposal
-  # case mix.
-  ### Get into this format
-  ### ADD HERE ###
-  cc_disposals <- calculate_cc_disposals(cc_output, cc_capacity)
-  print("prisonsreadyreckoner cc_disposals")
-  print(dplyr::select(cc_disposals, -c("date")), n = 1000)
-  
-  # print("cc_disposals")
-  # print(cc_disposals)
-  
-  
-  # print("cc_disposals")
-  # print(dplyr::select(cc_disposals, -c("n_receipts_delta")), n = 1000)
-  # print("mc_disposals_delta")
-  # print(mc_disposals_delta)
-  
-  cc_disposals_central <- cc_disposals
-  cc_disposals_charlotte_low <- add_charlotte_disposals(cc_disposals, "low")
-  cc_disposals_charlotte_high <- add_charlotte_disposals(cc_disposals, "high")
-  
-  # print("cc_disposals")
-  # plot_cc_disposals(cc_disposals)
-  
-  print("cc_disposals_central")
-  print(cc_disposals_central)
-  plot_cc_disposals(cc_disposals_central)
-  
-  print("cc_disposals_charlotte_low")
-  print(cc_disposals_charlotte_low)
-  plot_cc_disposals(cc_disposals_charlotte_low)
-  
-  print("cc_disposals_charlotte_high")
-  print(cc_disposals_charlotte_high)
-  plot_cc_disposals(cc_disposals_charlotte_high)
-  
-  # print("cc_disposals")
-  # print(dplyr::select(cc_disposals, -c("n_receipts_delta")), n = 1000)
-  
-  
-  # Calculate remand population and determinate inflows from court disposals.
-  pop_remand_delta  <- calculate_pop_remand_delta(cc_disposals)
-  
-  # print("pop_remand_delta")
-  # print(pop_remand_delta)
-  
-  inflows_det_delta <- calculate_inflows_det_delta(cc_disposals, mc_disposals_delta, sentencing_rates_loaded)
-  
-  # Add delta from court disposals to background inflows.
-  inflows_det_adj <- add_inflows_det_delta_courts(inflows_det_loaded, inflows_det_delta)
-  
-  
-  
-  
-  # LEVER: Add delta from extra inflows lever to other inflows
-  inflows_det_levered <- add_inflows_det_delta_lever(inflows_det_adj, params$lever_extra_inflows_det, params$lever_extra_inflows_det_impact_date)
-  
-  # LEVER: Change distribution of time served by sentence band
-  #t0_stretch <- Sys.time()
-  profiles_det_levered <- stretch_profiles(profiles_det_loaded, params$lever_profiles_det_stretch_factors, params$lever_profiles_det_stretch_factor_min, params$lever_profiles_det_stretch_factor_max, params$projection_length_months)
-  profiles_det_stretch_impact_date_levered <- params$lever_profiles_det_stretch_impact_date
-  #print(paste0("stretch_profiles took ", Sys.time() - t0_stretch, " seconds"))
-  
-  prison_det_outputs <- run_prison_determinate_module(inflows_det_levered, profiles_det_stretch_impact_date_levered, profiles_det_levered)
-    outflows_det     <- prison_det_outputs$outflows_det
-    pop_det          <- prison_det_outputs$pop_det
-  
-  month_names        <- names(dplyr::select(inflows_det_loaded, -c("senband")))
-  pop_indet          <- run_prison_indeterminate_module(month_names, params$inflows_indet_mean)
-  
-  
-  
-  # LEVER: Set recall rates
-  recall_rate_levered             <- params$lever_recall_rate
-  recall_rate_impact_date_levered <- params$lever_recall_rate_impact_date
-  
-  pop_recall         <- run_prison_recall_module(outflows_det, nomis_out_delius_in_ratio, profiles_lic,
-                                                 recall_rate_exclPSS, recall_rate_levered, recall_rate_impact_date_levered, profiles_recall)
-  
-  
-  pop_scenario <- combine_casetypes(pop_remand_delta, pop_det, pop_indet, pop_recall, "scenario")
-  
-  
-  # # Combine with the baseline and pivot for ease of splitting by gender.
-  # pop_combined <- rbind(pop_baseline, pop_scenario) %>%
-  #                   tidyr::pivot_longer(-c("run", "casetype", "senband"), names_to = "date", values_to = "population") %>%
-  #                   dplyr::mutate(date = as.Date(date))
-  # 
-  # # Add splits by gender
-  # pop_combined <- split_populations_by_gender(pop_combined, gender_splits)
-  
-}
-
-```
-
-
-```{r echo=FALSE}
+###-----------------------------------------------------------------------------
+# LOAD BACKGROUND VARIABLES FOR PRISONFLOWCAST
 
 ### PUT PARAMS HERE
 params <- list()
@@ -486,9 +79,9 @@ params$police_charges_mc_sheet <- "020623_mags_sensitivity_output-"
 
 # Crown Court
 params$police_charges_cc_files <- list(central = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_for_ready_reckoner.csv", # Records the total number of Crown Court receipts used as a baseline in the April 2023 projections. Includes background values from various sources, and an increase in charge numbers over a 24-month period. It has non-zero values throughout.
-                                    ramp_12m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_12m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 12-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
-                                    ramp_36m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_36m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 36-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
-                                    ramp_48m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_48m_ramp_for_ready_reckoner.csv" # Records how Crown Court receipts would change if police charge numbers were increased over a 48-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
+                                       ramp_12m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_12m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 12-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
+                                       ramp_36m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_36m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 36-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
+                                       ramp_48m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_48m_ramp_for_ready_reckoner.csv" # Records how Crown Court receipts would change if police charge numbers were increased over a 48-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
 )   # '20230525 - David Verry - RE_ Next steps on the CJS ready reckoner.eml'
 
 # Table from Chun-Yee for converting Crown Court police charge tables
@@ -546,10 +139,10 @@ params <- format_params(params)
 ### Load datasets that are fixed throughout the model ###
 loaded_datasets_list             <- load_datasets(params)
 
-cc_receipts_delta_loaded_list    <- loaded_datasets_list$cc_receipts_delta_loaded_list
-mc_disposals_delta_loaded_list   <- loaded_datasets_list$mc_disposals_delta_loaded_list
-cc_output_loaded                 <- loaded_datasets_list$cc_output
-cc_capacity_loaded               <- loaded_datasets_list$cc_capacity
+# cc_receipts_delta_loaded_list    <- loaded_datasets_list$cc_receipts_delta_loaded_list
+# mc_disposals_delta_loaded_list   <- loaded_datasets_list$mc_disposals_delta_loaded_list
+# cc_output_loaded                 <- loaded_datasets_list$cc_output
+# cc_capacity_loaded               <- loaded_datasets_list$cc_capacity
 sentencing_rates_loaded          <- loaded_datasets_list$sentencing_rates
 inflows_det_loaded               <- loaded_datasets_list$inflows_det
 profiles_det_loaded              <- loaded_datasets_list$profiles_det
@@ -562,109 +155,579 @@ average_time_on_recall           <- loaded_datasets_list$average_time_on_recall
 recall_profile_adjustments       <- loaded_datasets_list$recall_profile_adjustments
 gender_splits                    <- loaded_datasets_list$gender_splits
 
-# # Defaults not used by the package but made available for the Shiny app.
-defaults <- set_defaults(params, recall_rate_exclPSS)
-# Rachel to assign reactives to defaults here.
-
-
-# ### Calculate variables that are fixed throughout the model ###
-# # Make profiles of time on licence.
-# licence_time    <- multiply_two_named_vectors(average_time_on_licence_excl_ps, licence_profile_adjustments_exc, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
-# profiles_lic    <- make_lag_filters(licence_time)
 
 # Make profiles of time on recall.
 recall_time     <- multiply_two_named_vectors(average_time_on_recall, recall_profile_adjustments, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
 profiles_recall <- make_lag_filters(recall_time)
 
-
-# print("running baseline")
-# baseline <- run_prisonflowcast(params)
-# print(baseline)
+```
 
 
-# Load file of central police charge receipts
-central_cc_receipts <- load_central_cc_receipts(params$police_charges_cc_route_file, params$start_date, params$forecast_start_date, params$forecast_end_date)
 
-print("central_cc_receipts")
-print(central_cc_receipts)
+# Court disposals
+
+```{r echo=FALSE}
+
+format_charlotte_cc_disposals <- function(cc_disposals_charlotte_loaded, forecast_start_date, forecast_end_date, flag) {
+  
+  # Sum over receipt_type_desc as our linear model is based on route only.
+  cc_disposals_charlotte <- tidyr::pivot_longer(cc_disposals_charlotte_loaded, -c("date_value"), names_to = "route", values_to = "n_disposals") %>%
+    dplyr::mutate(date = as.Date(date_value), .keep = "unused") %>%
+    dplyr::mutate(route = dplyr::if_else(route == "0_app_app", "app", route),
+                  route = dplyr::if_else(route == "0_ind_e_other", "e_other", route),
+                  route = dplyr::if_else(route == "0_ind_effective", "effective", route),
+                  route = dplyr::if_else(route == "0_ind_egp", "egp", route),
+                  route = dplyr::if_else(route == "0_ind_gp_cracked", "gp_cracked", route),
+                  route = dplyr::if_else(route == "0_ind_l_other", "l_other", route),
+                  route = dplyr::if_else(route == "0_ind_lgp", "lgp", route),
+                  route = dplyr::if_else(route == "0_ind_other_cracked", "other_cracked", route),
+                  route = dplyr::if_else(route == "0_sent_sent", "sent", route),
+                  route = dplyr::if_else(route == "0_tew_e_other", "e_other", route),
+                  route = dplyr::if_else(route == "0_tew_effective", "effective", route),
+                  route = dplyr::if_else(route == "0_tew_egp", "egp", route),
+                  route = dplyr::if_else(route == "0_tew_gp_cracked", "gp_cracked", route),
+                  route = dplyr::if_else(route == "0_tew_l_other", "l_other", route),
+                  route = dplyr::if_else(route == "0_tew_lgp", "lgp", route),
+                  route = dplyr::if_else(route == "0_tew_other_cracked", "other_cracked", route)
+    )
+  
+  
+  if (flag == "all") {
+    cc_disposals_charlotte <- cc_disposals_charlotte %>%
+      dplyr::mutate(route = dplyr::if_else(route == "1_ind_e_other", "e_other", route),
+                    route = dplyr::if_else(route == "1_ind_effective", "effective", route),
+                    route = dplyr::if_else(route == "1_ind_egp", "egp", route),
+                    route = dplyr::if_else(route == "1_ind_gp_cracked", "gp_cracked", route),
+                    route = dplyr::if_else(route == "1_ind_l_other", "l_other", route),
+                    route = dplyr::if_else(route == "1_ind_lgp", "lgp", route),
+                    route = dplyr::if_else(route == "1_ind_other_cracked", "other_cracked", route),
+                    route = dplyr::if_else(route == "1_sent_sent", "sent", route),
+                    route = dplyr::if_else(route == "1_tew_e_other", "e_other", route),
+                    route = dplyr::if_else(route == "1_tew_effective", "effective", route),
+                    route = dplyr::if_else(route == "1_tew_egp", "egp", route),
+                    route = dplyr::if_else(route == "1_tew_gp_cracked", "gp_cracked", route),
+                    route = dplyr::if_else(route == "1_tew_l_other", "l_other", route),
+                    route = dplyr::if_else(route == "1_tew_lgp", "lgp", route),
+                    route = dplyr::if_else(route == "1_tew_other_cracked", "other_cracked", route)
+      )
+  }
+  
+  
+  cc_disposals_charlotte <- cc_disposals_charlotte %>%
+    dplyr::mutate(disposal_type = paste0("cc_", route)) %>%
+    dplyr::group_by(date, disposal_type) %>%
+    dplyr::summarise(n_disposals = sum(n_disposals, na.rm = TRUE), .groups = "drop")
+  
+  cc_disposals_charlotte <- cc_disposals_charlotte %>%
+    dplyr::mutate(date = lubridate::floor_date(date, "month")) %>% 
+    dplyr::filter(date >= forecast_start_date, date <= forecast_end_date)
+  
+  if (min(cc_disposals_charlotte$date) != forecast_start_date || max(cc_disposals_charlotte$date) != forecast_end_date)
+    stop("Input file did not cover the full date range requested. Dates must exist for the interval, ", forecast_start_date, ", to ", forecast_end_date, ".")
+  
+  return(cc_disposals_charlotte)
+  
+}
 
 
-# Calculate baseline with only original inflows.
-print("running baseline")
+format_charlotte_mc_disposals <- function(mc_disposals_charlotte_loaded, forecast_start_date, forecast_end_date) {
+  
+  mc_disposals_charlotte <- mc_disposals_charlotte_loaded %>%
+    dplyr::select(-c("disposals_forecast_23k")) %>%
+    dplyr::mutate(date = as.Date(year_month, "%d/%m/%Y"),
+                  disposal_type = type,
+                  n_disposals = disposals_forecast,
+                  .keep = "unused") %>%
+    dplyr::mutate(disposal_type = dplyr::if_else(disposal_type == "Indictable", "mc_ind", disposal_type),
+                  disposal_type = dplyr::if_else(disposal_type == "Summary Motoring - other", "mc_sm", disposal_type),
+                  disposal_type = dplyr::if_else(disposal_type == "Summary Non-motoring - other", "mc_snm", disposal_type),
+                  disposal_type = dplyr::if_else(disposal_type == "Either Way", "mc_tew", disposal_type))
+  
+  mc_disposals_charlotte <- mc_disposals_charlotte %>%
+    dplyr::mutate(date = lubridate::floor_date(date, "month")) %>% 
+    dplyr::filter(date >= forecast_start_date, date <= forecast_end_date)
+  
+  if (min(mc_disposals_charlotte$date) != forecast_start_date || max(mc_disposals_charlotte$date) != forecast_end_date)
+    stop("Input file did not cover the full date range requested. Dates must exist for the interval, ", forecast_start_date, ", to ", forecast_end_date, ".")
+  
+  return(mc_disposals_charlotte)
+}
+
+
+calculate_charlotte_disposals_delta <- function(disposals_charlotte, disposals_charlotte_baseline) {
+  disposals_charlotte_delta <- disposals_charlotte %>%
+    dplyr::left_join(disposals_charlotte_baseline, by = c("date", "disposal_type")) %>%
+    dplyr::mutate(n_disposals_delta = n_disposals.x - n_disposals.y, .keep = "unused")
+  
+}
+
+
+run_prisons_module_charlotte_inflows <- function(params, inflows_det_adj, profiles_det_loaded) {
+  
+  # LEVER: Add delta from extra inflows lever to other inflows
+  inflows_det_levered <- add_inflows_det_delta_lever(inflows_det_adj, params$lever_extra_inflows_det, params$lever_extra_inflows_det_impact_date)
+  
+  # LEVER: Change distribution of time served by sentence band
+  #t0_stretch <- Sys.time()
+  profiles_det_levered <- stretch_profiles(profiles_det_loaded, params$lever_profiles_det_stretch_factors, params$lever_profiles_det_stretch_factor_min, params$lever_profiles_det_stretch_factor_max, params$projection_length_months)
+  profiles_det_stretch_impact_date_levered <- params$lever_profiles_det_stretch_impact_date
+  #print(paste0("stretch_profiles took ", Sys.time() - t0_stretch, " seconds"))
+  
+  prison_det_outputs <- run_prison_determinate_module(inflows_det_levered, profiles_det_stretch_impact_date_levered, profiles_det_levered)
+  outflows_det     <- prison_det_outputs$outflows_det
+  pop_det          <- prison_det_outputs$pop_det
+  
+  pop_det <- pop_det %>%
+    dplyr::mutate(run = "scenario", casetype = "determinate")
+  
+  return(pop_det)
+}
+
+
+
+### Functions for formatting Charlotte's population data
+
+format_charlotte_population_data <- function(target_pop_det_loaded) {
+  
+  target_pop_det_formatted <- target_pop_det_loaded %>%
+    dplyr::select(c("RR_test_high_disposals...2", "RR_test_low_disposals...3", "sensitivity_baseline_uncalib...4", "date")) %>%
+    dplyr::rename(cjst_high_pop = RR_test_high_disposals...2,
+                  cjst_low_pop = RR_test_low_disposals...3,
+                  cjst_central_pop = sensitivity_baseline_uncalib...4) %>%
+    dplyr::mutate(
+      cjst_high_pop_diff = cjst_high_pop - cjst_central_pop,
+      cjst_low_pop_diff = cjst_low_pop - cjst_central_pop
+    )
+  
+  return(target_pop_det_formatted = target_pop_det_formatted)
+  
+}
+
+```
+
+
+<!-- ## Aim -->
+
+<!-- We aim to demonstrate that the `prisonsreadyreckoner` functions for sentencing and prison flows produce comparable forecasts of prison population as the  -->
+
+<!-- * our model functions for sentencing and prison flows are driven with the same court disposals  -->
+
+<!-- we get comparable forecasts of prison population. -->
+
+
+<!-- ## Method -->
+
+<!-- Example determinate data from the December 2022 prison projection were obtained -->
+<!-- from Charlotte Wallace and pivoted to generate time series of inflows, outflows -->
+<!-- and popuation. See -->
+<!-- `20230324 - QA - Dec-22 sentencing and receptions prepartion.xlsx` on DOM1. -->
+
+
+<!-- ### Plot Charlotte's population data -->
+
+```{r echo=FALSE}
+
+path_target <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-RR_test_230612.xlsx"
+
+court_disposals_target <- import_s3_file(path_target, range = "population!G5:V54") %>%
+  dplyr::mutate(date = lubridate::floor_date(as.Date(`Row Labels`), "month"), .keep = "unused")
+
+target_pop_det_formatted <- format_charlotte_population_data(court_disposals_target)
+
+```
+
+
+
+<!-- ### Calculate baseline of `prisonsreadyreckoner` -->
+
+```{r echo=FALSE}
+
 pop_baseline <- run_baseline(params, inflows_det_loaded, profiles_det_loaded,
                              nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall)
 
-
-print("running scenario")
-pop_scenario <- run_scenario(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, sentencing_rates_loaded, inflows_det_loaded, profiles_det_loaded, nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall)
-
-# Combine with the baseline and pivot for ease of splitting by gender.
-pop_combined_scenario <- rbind(pop_baseline, pop_scenario) %>%
-                  tidyr::pivot_longer(-c("run", "casetype", "senband"), names_to = "date", values_to = "population") %>%
-                  dplyr::mutate(date = as.Date(date))
-
-# Add splits by gender
-pop_combined_scenario <- split_populations_by_gender(pop_combined_scenario, gender_splits)
+```
 
 
-print("running charlotte scenario low")
-pop_charlotte_scenario_low <- run_charlotte_scenario(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, sentencing_rates_loaded, inflows_det_loaded, profiles_det_loaded, nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall, "low")
+<!-- CHECK with Charlotte: Summing _0 and _1 flags in baseline disposals (i.e. s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sentencing_outputs_apr23_s4.xlsx), but not in the RR differences files (i.e. s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sentencing_outputs_apr23_s4_RR_test_max.xlsx and  -->
+<!-- s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sentencing_outputs_apr23_s4_RR_test_min.xlsx). Is this correct? -->
 
-# Combine with the baseline and pivot for ease of splitting by gender.
-pop_combined_charlotte_scenario_low <- rbind(pop_baseline, pop_charlotte_scenario_low) %>%
-                  tidyr::pivot_longer(-c("run", "casetype", "senband"), names_to = "date", values_to = "population") %>%
-                  dplyr::mutate(date = as.Date(date))
+<!-- ### Calculate `prisonsreadyreckoner` outputs using extra court disposals -->
 
-# Add splits by gender
-pop_combined_charlotte_scenario_low <- split_populations_by_gender(pop_combined_charlotte_scenario_low, gender_splits)
+```{r echo=FALSE}
 
 
-print("running charlotte scenario high")
-pop_charlotte_scenario_high <- run_charlotte_scenario(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, sentencing_rates_loaded, inflows_det_loaded, profiles_det_loaded, nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall, "high")
+# Load Crown Court disposals data from Charlotte
+charlotte_baseline_cc_disposals_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sentencing_outputs_apr23_s4.xlsx"
+charlotte_baseline_cc_disposals_loaded <- import_s3_file(charlotte_baseline_cc_disposals_file, sheet = "disp_plea_impactrr_out_apr23_s4")
+charlotte_baseline_cc_disposals <- format_charlotte_cc_disposals(charlotte_baseline_cc_disposals_loaded, params$forecast_start_date, params$forecast_end_date, flag = "all")
 
-# Combine with the baseline and pivot for ease of splitting by gender.
-pop_combined_charlotte_scenario_high <- rbind(pop_baseline, pop_charlotte_scenario_high) %>%
-                  tidyr::pivot_longer(-c("run", "casetype", "senband"), names_to = "date", values_to = "population") %>%
-                  dplyr::mutate(date = as.Date(date))
+charlotte_low_cc_disposals_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sentencing_outputs_apr23_s4_RR_test_min.xlsx"
+charlotte_low_cc_disposals_loaded <- import_s3_file(charlotte_low_cc_disposals_file, sheet = "disp_plea_impactrr_out_apr23_s4")
+charlotte_low_cc_disposals <- format_charlotte_cc_disposals(charlotte_low_cc_disposals_loaded, params$forecast_start_date, params$forecast_end_date, flag = 0)
+charlotte_low_cc_disposals_delta <- calculate_charlotte_disposals_delta(charlotte_low_cc_disposals, charlotte_baseline_cc_disposals)
 
-# Add splits by gender
-pop_combined_charlotte_scenario_high <- split_populations_by_gender(pop_combined_charlotte_scenario_high, gender_splits)
+charlotte_high_cc_disposals_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sentencing_outputs_apr23_s4_RR_test_max.xlsx"
+charlotte_high_cc_disposals_loaded <- import_s3_file(charlotte_high_cc_disposals_file, sheet = "disp_plea_impactrr_out_apr23_s4")
+charlotte_high_cc_disposals <- format_charlotte_cc_disposals(charlotte_high_cc_disposals_loaded, params$forecast_start_date, params$forecast_end_date, flag = 0)
+charlotte_high_cc_disposals_delta <- calculate_charlotte_disposals_delta(charlotte_high_cc_disposals, charlotte_baseline_cc_disposals)
 
 
-# print("pop_baseline")
-# print(pop_baseline)
-# print("pop_charlotte_scenario_low")
-# print(pop_charlotte_scenario_low)
-# print("pop_charlotte_scenario_high")
-# print(pop_charlotte_scenario_high)
-# 
-# 
-# 
-# 
-# print("pop_combined_scenario")
-# dev_plot_population(pop_combined_scenario, "remand", "Remand delta")
-# dev_plot_population(pop_combined_scenario, "determinate", "Determinate")
-# dev_plot_population(pop_combined_scenario, "indeterminate", "Indeterminate")
-# dev_plot_population(pop_combined_scenario, "recall", "Recall")
-# 
-# print("pop_combined_charlotte_scenario_low")
-# dev_plot_population(pop_combined_charlotte_scenario_low, "remand", "Remand delta")
-# dev_plot_population(pop_combined_charlotte_scenario_low, "determinate", "Determinate")
-# dev_plot_population(pop_combined_charlotte_scenario_low, "indeterminate", "Indeterminate")
-# dev_plot_population(pop_combined_charlotte_scenario_low, "recall", "Recall")
-# 
-# print("pop_combined_charlotte_scenario_high")
-# dev_plot_population(pop_combined_charlotte_scenario_high, "remand", "Remand delta")
-# dev_plot_population(pop_combined_charlotte_scenario_high, "determinate", "Determinate")
-# dev_plot_population(pop_combined_charlotte_scenario_high, "indeterminate", "Indeterminate")
-# dev_plot_population(pop_combined_charlotte_scenario_high, "recall", "Recall")
+# Load magistrates' court disposals data from Charlotte
+charlotte_baseline_mc_disposals_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0901/mags_projections/projections_from_mags_model_built_2022_02/2022_06/apr23_test_output_mags_med.csv"
+charlotte_baseline_mc_disposals_loaded <- import_s3_file(charlotte_baseline_mc_disposals_file)
+charlotte_baseline_mc_disposals <- format_charlotte_mc_disposals(charlotte_baseline_mc_disposals_loaded, params$forecast_start_date, params$forecast_end_date)
+
+charlotte_low_mc_disposals_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0901/mags_projections/projections_from_mags_model_built_2022_02/2022_06/apr23_test_output_mags_med_RR_test_min.csv"
+charlotte_low_mc_disposals_loaded <- import_s3_file(charlotte_low_mc_disposals_file)
+charlotte_low_mc_disposals <- format_charlotte_mc_disposals(charlotte_low_mc_disposals_loaded, params$forecast_start_date, params$forecast_end_date)
+charlotte_low_mc_disposals_delta <- calculate_charlotte_disposals_delta(charlotte_low_mc_disposals, charlotte_baseline_mc_disposals)
+
+charlotte_high_mc_disposals_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0901/mags_projections/projections_from_mags_model_built_2022_02/2022_06/apr23_test_output_mags_med_RR_test_max.csv"
+charlotte_high_mc_disposals_loaded <- import_s3_file(charlotte_high_mc_disposals_file)
+charlotte_high_mc_disposals <- format_charlotte_mc_disposals(charlotte_high_mc_disposals_loaded, params$forecast_start_date, params$forecast_end_date)
+charlotte_high_mc_disposals_delta <- calculate_charlotte_disposals_delta(charlotte_high_mc_disposals, charlotte_baseline_mc_disposals)
+
+
+### LOW SCENARIO
+# Combine Crown Court disposals with magistrates' court disposals.
+charlotte_low_disposals_delta <- dplyr::bind_rows(charlotte_low_cc_disposals_delta, charlotte_low_mc_disposals_delta)
+
+# inflows_det_delta_low = 89 rows
+inflows_det_delta_low <- calculate_inflows_det_delta_SUB(charlotte_low_disposals_delta, sentencing_rates_loaded)
+
+# Run Charlotte's court disposals through the relevant prisonflowcast functions
+# Add Charlotte's delta inflows to the background inflows
+inflows_det_low_adj <- add_inflows_det_delta_courts(inflows_det_loaded, inflows_det_delta_low)
+
+pop_det_low <- run_prisons_module_charlotte_inflows(params, inflows_det_low_adj, profiles_det_loaded) 
+
+
+### HIGH SCENARIO
+# Combine Crown Court disposals with magistrates' court disposals.
+charlotte_high_disposals_delta <- dplyr::bind_rows(charlotte_high_cc_disposals_delta, charlotte_high_mc_disposals_delta)
+
+# inflows_det_delta_low = 89 rows
+inflows_det_delta_high <- calculate_inflows_det_delta_SUB(charlotte_high_disposals_delta, sentencing_rates_loaded)
+
+# Run Charlotte's court disposals through the relevant prisonflowcast functions
+# Add Charlotte's delta inflows to the background inflows
+inflows_det_high_adj <- add_inflows_det_delta_courts(inflows_det_loaded, inflows_det_delta_high)
+
+pop_det_high <- run_prisons_module_charlotte_inflows(params, inflows_det_high_adj, profiles_det_loaded) 
+
+
+### Combine baseline, low and high scenarios
+pop_baseline_long <- pop_baseline %>%
+  dplyr::filter(casetype == "determinate") %>%
+  tidyr::pivot_longer(-c("run", "casetype", "senband"), names_to = "date", values_to = "population") %>%
+  tidyr::pivot_wider(names_from = senband, values_from = population) %>%
+  dplyr::rename(prr_baseline_sb1 = senband1,
+                prr_baseline_sb2 = senband2,
+                prr_baseline_sb3 = senband3,
+                prr_baseline_sb4 = senband4) %>%
+  dplyr::mutate(date = as.Date(date)) %>%
+  dplyr::select(-c("run", "casetype"))
+
+
+pop_det_low_long <- pop_det_low %>%
+  tidyr::pivot_longer(-c("run", "casetype", "senband"), names_to = "date", values_to = "population") %>%
+  tidyr::pivot_wider(names_from = senband, values_from = population) %>%
+  dplyr::rename(prr_pop_det_low_sb1 = senband1,
+                prr_pop_det_low_sb2 = senband2,
+                prr_pop_det_low_sb3 = senband3,
+                prr_pop_det_low_sb4 = senband4) %>%
+  dplyr::mutate(date = as.Date(date)) %>%
+  dplyr::select(-c("run", "casetype"))
+
+
+pop_det_high_long <- pop_det_high %>%
+  tidyr::pivot_longer(-c("run", "casetype", "senband"), names_to = "date", values_to = "population") %>%
+  tidyr::pivot_wider(names_from = senband, values_from = population) %>%
+  dplyr::rename(prr_pop_det_high_sb1 = senband1,
+                prr_pop_det_high_sb2 = senband2,
+                prr_pop_det_high_sb3 = senband3,
+                prr_pop_det_high_sb4 = senband4) %>%
+  dplyr::mutate(date = as.Date(date)) %>%
+  dplyr::select(-c("run", "casetype"))
+
+
+### Bind CJST and prisonsreadyreckoner populations together, and calculate relevant measures
+pop_table <- target_pop_det_formatted %>%
+  dplyr::left_join(pop_baseline_long, by = c("date")) %>%
+  dplyr::left_join(pop_det_low_long, by = c("date")) %>%
+  dplyr::left_join(pop_det_high_long, by = c("date")) %>%
+  dplyr::mutate(cjst_high_pop_delta = cjst_high_pop - cjst_central_pop,
+                cjst_low_pop_delta = cjst_low_pop - cjst_central_pop,
+                prr_baseline_pop = prr_baseline_sb1 + prr_baseline_sb2 + prr_baseline_sb3 + prr_baseline_sb4,
+                prr_pop_det_high = prr_pop_det_high_sb1 + prr_pop_det_high_sb2 + prr_pop_det_high_sb3+ prr_pop_det_high_sb4,
+                prr_pop_det_low = prr_pop_det_low_sb1 + prr_pop_det_low_sb2 + prr_pop_det_low_sb3+ prr_pop_det_low_sb4,
+                prr_pop_det_high_delta = prr_pop_det_high - prr_baseline_pop,
+                prr_pop_det_low_delta = prr_pop_det_low - prr_baseline_pop,
+                cjst_prr_pop_high_diff = cjst_high_pop_delta - prr_pop_det_high_delta,
+                cjst_prr_pop_low_diff = cjst_low_pop_delta - prr_pop_det_low_delta)
+
+```
+
+
+```{r echo = FALSE}
+
+
+ggplot2::ggplot() +
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = cjst_central_pop, color = "cjst_central_pop", linetype = "cjst_central_pop")) +
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = cjst_high_pop, color = "cjst_high_pop", linetype = "cjst_high_pop")) + 
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = cjst_low_pop, color = "cjst_low_pop", linetype = "cjst_low_pop")) +
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = prr_baseline_pop, color = "prr_baseline_pop", linetype = "prr_baseline_pop")) +
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = prr_pop_det_high, color = "prr_pop_det_high", linetype = "prr_pop_det_high")) +
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = prr_pop_det_low, color = "prr_pop_det_low", linetype = "prr_pop_det_low")) +
+  ggplot2::scale_linetype_manual(name = " ", values = c("cjst_central_pop" = "solid", "cjst_high_pop" = "solid", "cjst_low_pop" = "solid", "prr_baseline_pop" = "dashed", "prr_pop_det_high" = "dashed", "prr_pop_det_low" = "dashed")) + 
+  ggplot2::scale_color_manual(name = " ", values = c("cjst_central_pop" = "black", "cjst_high_pop" = "blue", "cjst_low_pop" = "red", "prr_baseline_pop" = "black", "prr_pop_det_high" = "blue", "prr_pop_det_low" = "red")) +
+  ggplot2::labs(title = "axes_title", x = "axes_xlabel", y = "axes_ylabel", caption = "axes_caption") +
+  ggplot2::theme_classic()
+
+
+ggplot2::ggplot(data = pop_table) +
+  ggplot2::geom_line(ggplot2::aes(x = date, y = cjst_high_pop_delta, color = "cjst_high_pop_delta", linetype = "cjst_high_pop_delta")) + 
+  ggplot2::geom_line(ggplot2::aes(x = date, y = cjst_low_pop_delta, color = "cjst_low_pop_delta", linetype = "cjst_low_pop_delta")) +
+  ggplot2::geom_line(ggplot2::aes(x = date, y = prr_pop_det_high_delta, color = "prr_pop_det_high_delta", linetype = "prr_pop_det_high_delta")) +
+  ggplot2::geom_line(ggplot2::aes(x = date, y = prr_pop_det_low_delta, color = "prr_pop_det_low_delta", linetype = "prr_pop_det_low_delta")) +
+  ggplot2::scale_linetype_manual(name = " ", values = c("cjst_high_pop_delta" = "solid", "cjst_low_pop_delta" = "solid", "prr_pop_det_high_delta" = "dashed", "prr_pop_det_low_delta" = "dashed")) + 
+  ggplot2::scale_color_manual(name = " ", values = c("cjst_high_pop_delta" = "blue", "cjst_low_pop_delta" = "red", "prr_pop_det_high_delta" = "blue", "prr_pop_det_low_delta" = "red")) +
+  ggplot2::labs(title = "axes_title", x = "axes_xlabel", y = "axes_ylabel", caption = "axes_caption") +
+  ggplot2::theme_classic()
 
 
 ```
 
 
-NOTE: ignoring remand
 
 
 
 
+
+<!-- Plot: Charlotte baseline and Charlotte scenarios -->
+
+<!-- Plot: `prisonsreadyreckoner` baseline -->
+
+<!-- Low scenario -->
+
+<!-- Plot: `prisonsreadyreckoner` low scenario with baseline -->
+
+<!-- Plot: Difference 1: `prisonsreadyreckoner` difference between low scenario and baseline -->
+
+<!-- Plot: Difference 2: Difference between Charlotte baseline and Charlotte scenarios -->
+
+<!-- Plot: Difference between Difference 1 and Difference 2 -->
+
+
+
+# Receptions
+
+Plot receptions
+
+
+```{r echo=FALSE}
+
+path_target <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-RR_test_230612.xlsx"
+
+prison_inflows_low_high <- import_s3_file(path_target, range = "receptions!A5:M90") %>%
+  dplyr::mutate(date = lubridate::floor_date(as.Date(`Row Labels`), "month"), .keep = "unused") %>%
+  dplyr::filter(date >= params$forecast_start_date, date <= params$forecast_end_date)
+
+
+prison_inflows_central <- prison_inflows_low_high %>%
+  dplyr::select(c("date", "sensitivity_baseline_uncalib...4", "sensitivity_baseline_uncalib...7", "sensitivity_baseline_uncalib...10", "sensitivity_baseline_uncalib...13")) %>%
+  dplyr::rename(senband1 = sensitivity_baseline_uncalib...4,
+                senband2 = sensitivity_baseline_uncalib...7,
+                senband3 = sensitivity_baseline_uncalib...10,
+                senband4 = sensitivity_baseline_uncalib...13
+  ) %>%
+  tidyr::pivot_longer(cols=-1) %>%
+  tidyr::pivot_wider(names_from = date, values_from = value) %>%
+  dplyr::rename(senband = name)
+
+
+prison_inflows_low <- prison_inflows_low_high %>%
+  dplyr::select(c("date", "RR_test_low_disposals...3", "RR_test_low_disposals...6", "RR_test_low_disposals...9", "RR_test_low_disposals...12")) %>%
+  dplyr::rename(senband1 = RR_test_low_disposals...3,
+                senband2 = RR_test_low_disposals...6,
+                senband3 = RR_test_low_disposals...9,
+                senband4 = RR_test_low_disposals...12
+                ) %>%
+  tidyr::pivot_longer(cols=-1) %>%
+  tidyr::pivot_wider(names_from = date, values_from = value) %>%
+  dplyr::rename(senband = name)
+
+
+prison_inflows_high <- prison_inflows_low_high %>%
+  dplyr::select(c("date", "RR_test_high_disposals...2", "RR_test_high_disposals...5", "RR_test_high_disposals...8", "RR_test_high_disposals...11")) %>%
+  dplyr::rename(senband1 = RR_test_high_disposals...2,
+                senband2 = RR_test_high_disposals...5,
+                senband3 = RR_test_high_disposals...8,
+                senband4 = RR_test_high_disposals...11
+  ) %>%
+  tidyr::pivot_longer(cols=-1) %>%
+  tidyr::pivot_wider(names_from = date, values_from = value) %>%
+  dplyr::rename(senband = name)
+
+
+
+prison_det_outputs_central <- run_prison_determinate_module(prison_inflows_central, params$lever_profiles_det_stretch_impact_date, profiles_det_loaded)
+outflows_det_central     <- prison_det_outputs_central$outflows_det
+pop_det_central          <- prison_det_outputs_central$pop_det
+
+prison_det_outputs_low <- run_prison_determinate_module(prison_inflows_low, params$lever_profiles_det_stretch_impact_date, profiles_det_loaded)
+outflows_det_low     <- prison_det_outputs_low$outflows_det
+pop_det_low          <- prison_det_outputs_low$pop_det
+
+prison_det_outputs_high <- run_prison_determinate_module(prison_inflows_high, params$lever_profiles_det_stretch_impact_date, profiles_det_loaded)
+outflows_det_high     <- prison_det_outputs_high$outflows_det
+pop_det_high          <- prison_det_outputs_high$pop_det
+
+
+### Combine central, low and high scenarios
+pop_central_long <- pop_det_central %>%
+  tidyr::pivot_longer(-c("senband"), names_to = "date", values_to = "population") %>%
+  tidyr::pivot_wider(names_from = senband, values_from = population) %>%
+  dplyr::rename(prr_central_sb1 = senband1,
+                prr_central_sb2 = senband2,
+                prr_central_sb3 = senband3,
+                prr_central_sb4 = senband4) %>%
+  dplyr::mutate(date = as.Date(date))
+
+
+pop_det_low_long <- pop_det_low %>%
+  tidyr::pivot_longer(-c("senband"), names_to = "date", values_to = "population") %>%
+  tidyr::pivot_wider(names_from = senband, values_from = population) %>%
+  dplyr::rename(prr_pop_det_low_sb1 = senband1,
+                prr_pop_det_low_sb2 = senband2,
+                prr_pop_det_low_sb3 = senband3,
+                prr_pop_det_low_sb4 = senband4) %>%
+  dplyr::mutate(date = as.Date(date))
+
+
+pop_det_high_long <- pop_det_high %>%
+  tidyr::pivot_longer(-c("senband"), names_to = "date", values_to = "population") %>%
+  tidyr::pivot_wider(names_from = senband, values_from = population) %>%
+  dplyr::rename(prr_pop_det_high_sb1 = senband1,
+                prr_pop_det_high_sb2 = senband2,
+                prr_pop_det_high_sb3 = senband3,
+                prr_pop_det_high_sb4 = senband4) %>%
+  dplyr::mutate(date = as.Date(date))
+
+
+
+### Bind CJST and prisonsreadyreckoner populations together, and calculate relevant measures
+pop_table <- target_pop_det_formatted %>%
+  dplyr::left_join(pop_central_long, by = c("date")) %>%
+  dplyr::left_join(pop_det_low_long, by = c("date")) %>%
+  dplyr::left_join(pop_det_high_long, by = c("date")) %>%
+  dplyr::mutate(cjst_high_pop_delta = cjst_high_pop - cjst_central_pop,
+                cjst_low_pop_delta = cjst_low_pop - cjst_central_pop,
+                prr_central_pop = prr_central_sb1 + prr_central_sb2 + prr_central_sb3 + prr_central_sb4,
+                prr_pop_det_high = prr_pop_det_high_sb1 + prr_pop_det_high_sb2 + prr_pop_det_high_sb3+ prr_pop_det_high_sb4,
+                prr_pop_det_low = prr_pop_det_low_sb1 + prr_pop_det_low_sb2 + prr_pop_det_low_sb3+ prr_pop_det_low_sb4,
+                prr_pop_det_high_delta = prr_pop_det_high - prr_central_pop,
+                prr_pop_det_low_delta = prr_pop_det_low - prr_central_pop,
+                cjst_prr_pop_high_diff = cjst_high_pop_delta - prr_pop_det_high_delta,
+                cjst_prr_pop_low_diff = cjst_low_pop_delta - prr_pop_det_low_delta)
+
+```
+
+
+```{r echo = FALSE}
+
+
+ggplot2::ggplot() +
+  ggplot2::geom_line(data = pop_table, ggplot2::aes( x = date, y = cjst_central_pop, color = "cjst_central_pop", linetype = "cjst_central_pop")) +
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = cjst_high_pop, color = "cjst_high_pop", linetype = "cjst_high_pop")) + 
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = cjst_low_pop, color = "cjst_low_pop", linetype = "cjst_low_pop")) +
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = prr_central_pop, color = "prr_central_pop", linetype = "prr_central_pop")) +
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = prr_pop_det_high, color = "prr_pop_det_high", linetype = "prr_pop_det_high")) +
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = prr_pop_det_low, color = "prr_pop_det_low", linetype = "prr_pop_det_low")) +
+  ggplot2::scale_linetype_manual(name = " ", values = c("cjst_central_pop" = "solid", "cjst_high_pop" = "solid", "cjst_low_pop" = "solid", "prr_central_pop" = "dashed", "prr_pop_det_high" = "dashed", "prr_pop_det_low" = "dashed")) + 
+  ggplot2::scale_color_manual(name = " ", values = c("cjst_central_pop" = "black", "cjst_high_pop" = "blue", "cjst_low_pop" = "red", "prr_central_pop" = "black", "prr_pop_det_high" = "blue", "prr_pop_det_low" = "red")) +
+  ggplot2::labs(title = "axes_title", x = "axes_xlabel", y = "axes_ylabel", caption = "axes_caption") +
+  ggplot2::theme_classic()
+
+
+ggplot2::ggplot(data = pop_table) +
+  ggplot2::geom_line(ggplot2::aes(x = date, y = cjst_high_pop_delta, color = "cjst_high_pop_delta", linetype = "cjst_high_pop_delta")) + 
+  ggplot2::geom_line(ggplot2::aes(x = date, y = cjst_low_pop_delta, color = "cjst_low_pop_delta", linetype = "cjst_low_pop_delta")) +
+  ggplot2::geom_line(ggplot2::aes(x = date, y = prr_pop_det_high_delta, color = "prr_pop_det_high_delta", linetype = "prr_pop_det_high_delta")) +
+  ggplot2::geom_line(ggplot2::aes(x = date, y = prr_pop_det_low_delta, color = "prr_pop_det_low_delta", linetype = "prr_pop_det_low_delta")) +
+  ggplot2::scale_linetype_manual(name = " ", values = c("cjst_high_pop_delta" = "solid", "cjst_low_pop_delta" = "solid", "prr_pop_det_high_delta" = "dashed", "prr_pop_det_low_delta" = "dashed")) + 
+  ggplot2::scale_color_manual(name = " ", values = c("cjst_high_pop_delta" = "blue", "cjst_low_pop_delta" = "red", "prr_pop_det_high_delta" = "blue", "prr_pop_det_low_delta" = "red")) +
+  ggplot2::labs(title = "axes_title", x = "axes_xlabel", y = "axes_ylabel", caption = "axes_caption") +
+  ggplot2::theme_classic()
+
+
+```
+
+
+
+The inflow values in s3://alpha-prison-forecasting-data/flowcast/test-files/test-RR_test_230612.xlsx are slightly different to the inflows used in `prisonsreadyreckoner` (see s3://alpha-app-prisonsreadyreckonerapp/2023-04/detailed_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx)
+
+
+
+
+```{r echo=FALSE}
+
+### Comparing different inflows
+
+inflows_det_loaded_pivoted <- inflows_det_loaded %>%
+  tidyr::pivot_longer(-c("senband"), names_to = "date", values_to = "population") %>%
+  tidyr::pivot_wider(names_from = senband, values_from = population) %>%
+  dplyr::rename(prr_orig_inflows_sb1 = senband1,
+                prr_orig_inflows_sb2 = senband2,
+                prr_orig_inflows_sb3 = senband3,
+                prr_orig_inflows_sb4 = senband4) %>%
+  dplyr::mutate(date = as.Date(date))
+
+
+prison_inflows_comparison <- inflows_det_loaded_pivoted %>%
+  dplyr::left_join(prison_inflows_low_high, by = c("date")) %>%
+  dplyr::rename(central_inflows_sb1 = sensitivity_baseline_uncalib...4,
+                central_inflows_sb2 = sensitivity_baseline_uncalib...7,
+                central_inflows_sb3 = sensitivity_baseline_uncalib...10,
+                central_inflows_sb4 = sensitivity_baseline_uncalib...13,
+                high_inflows_sb1 = RR_test_high_disposals...2,
+                high_inflows_sb2 = RR_test_high_disposals...5,
+                high_inflows_sb3 = RR_test_high_disposals...8,
+                high_inflows_sb4 = RR_test_high_disposals...11,
+                low_inflows_sb1 = RR_test_low_disposals...3,
+                low_inflows_sb2 = RR_test_low_disposals...6,
+                low_inflows_sb3 = RR_test_low_disposals...9,
+                low_inflows_sb4 = RR_test_low_disposals...12)
+
+
+ggplot2::ggplot() +
+  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = prr_orig_inflows_sb1, color = "prr_orig_inflows_sb1", linetype = "prr_orig_inflows_sb1")) +
+  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = prr_orig_inflows_sb2, color = "prr_orig_inflows_sb2", linetype = "prr_orig_inflows_sb2")) + 
+  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = prr_orig_inflows_sb3, color = "prr_orig_inflows_sb3", linetype = "prr_orig_inflows_sb3")) +
+  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = prr_orig_inflows_sb4, color = "prr_orig_inflows_sb4", linetype = "prr_orig_inflows_sb4")) +
+  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = central_inflows_sb1, color = "central_inflows_sb1", linetype = "central_inflows_sb1")) +
+  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = central_inflows_sb2, color = "central_inflows_sb2", linetype = "central_inflows_sb2")) +
+  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = central_inflows_sb3, color = "central_inflows_sb3", linetype = "central_inflows_sb3")) +
+  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = central_inflows_sb4, color = "central_inflows_sb4", linetype = "central_inflows_sb4")) +
+  ggplot2::scale_linetype_manual(name = " ", values = c("central_inflows_sb1" = "solid",
+                                                        "central_inflows_sb2" = "solid",
+                                                        "central_inflows_sb3" = "solid",
+                                                        "central_inflows_sb4" = "solid",
+                                                        "prr_orig_inflows_sb1" = "dashed",
+                                                        "prr_orig_inflows_sb2" = "dashed",
+                                                        "prr_orig_inflows_sb3" = "dashed",
+                                                        "prr_orig_inflows_sb4" = "dashed"
+                                                        )) +
+  ggplot2::scale_color_manual(name = " ", values = c("central_inflows_sb1" = "black",
+                                                     "central_inflows_sb2" = "red",
+                                                     "central_inflows_sb3" = "green",
+                                                     "central_inflows_sb4" = "blue",
+                                                     "prr_orig_inflows_sb1" = "black",
+                                                     "prr_orig_inflows_sb2" = "red",
+                                                     "prr_orig_inflows_sb3" = "green",
+                                                     "prr_orig_inflows_sb4" = "blue"
+  )) +
+  ggplot2::theme_classic()
+
+
+```
