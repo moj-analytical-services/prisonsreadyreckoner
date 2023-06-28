@@ -14,7 +14,14 @@ add_cc_sitting_days <- function(cc_capacity, lever_extra_cc_sitting_days, capaci
 }
 
 
-#' Change number of prison receptions
+#' Add a constant number of monthly determinate sentence prison receptions
+#'
+#' \code{add_inflows_det_delta_lever} allows users to specify an additional
+#' monthly number of determinate sentence offenders who enter prison after being
+#' sentenced at court. (Note that this lever does not affect the number of
+#' offenders entering prison after being recalled from licence.) A separate
+#' additional number is set for each Sentence Band, and can be positive or
+#' negative. The lever affects all months after a user-specified impact date.
 #' 
 #' @export
 add_inflows_det_delta_lever <- function(inflows_det, lever_extra_inflows_det, lever_extra_inflows_det_impact_date, non_data_cols = "senband") {

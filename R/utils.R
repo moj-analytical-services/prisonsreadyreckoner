@@ -94,10 +94,20 @@ write_table <- function(table, path_output, ...) {
 #' the argument values together. If names are present in \code{vector1} but not
 #' \code{vector2}, the returned vector will contain \code{NA} values
 #' corresponding to those names. If names are present in \code{vector2} but not
-#' \code{vector1}, they will be dropped from \code{vector2} The optional
+#' \code{vector1}, they will be dropped from \code{vector2}. The optional
 #' argument \code{arguments to keep} can be used to specify which arguments to
 #' keep in the returned vector.
 #' 
+#' @param vector1 Vector.
+#' @param vector2 Vector.
+#' @param arguments_to_keep \emph{Optional.} Character vector. Specifies which
+#'   arguments to keep in the returned vector.
+#' @return A vector containing the multiplication of values in \code{vector1}
+#'   and \code{vector2}.
+#' @examples
+#' \dontrun{
+#' recall_time     <- multiply_two_named_vectors(average_time_on_recall, recall_profile_adjustments, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
+#' }
 #' @export
 multiply_two_named_vectors <- function(vector1, vector2, arguments_to_keep = NULL) {
   
@@ -108,4 +118,5 @@ multiply_two_named_vectors <- function(vector1, vector2, arguments_to_keep = NUL
   }
   
 }
+
 
