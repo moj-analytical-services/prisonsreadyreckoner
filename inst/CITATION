@@ -1,16 +1,16 @@
-citHeader("To cite prisonsreadyreckoner in publications use:")
+citHeader("To cite prisons-ready-reckoner-updater in publications use:")
 
 citEntry(entry = "Manual",
-         title = "prisonsreadyreckoner: A ready reckoner for the prison population",
+         title = "prisons-ready-reckoner-updater: Update functions for the prisons-ready-reckoner package, a ready reckoner for the prison population",
          author = "Model Redevelopment",
          organization = "Ministry of Justice, Data and Analysis",
          address      = "London, UK",
          year         = 2023,
-         url          = "https://github.com/moj-analytical-services/prisonsreadyreckoner",
+         url          = "https://github.com/moj-analytical-services/prisons-ready-reckoner-updater",
 
          textVersion =
          paste0("Model Redevelopment (2023). ",
-               "prisonsreadyreckoner: A ready reckoner for the prison population. ",
+               "prisons-ready-reckoner-updater: Update functions for the prisons-ready-reckoner package, a ready reckoner for the prison population. ",
                "Ministry of Justice, Data and Analysis, London, UK. ",
                "URL https://github.com/moj-analytical-services/prisonsreadyreckoner.")
 	)
