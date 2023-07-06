@@ -13,8 +13,8 @@ devtools::load_all()
 ```{r include=FALSE}
 library(magrittr)
 
-source("../../dev/dev-params.R")
-#source("~/prisonflowcast/dev/dev-params.R", local = TRUE)
+source("../dev/dev-params.R")
+#source("~/prisonflowcast/tests/dev-params.R", local = TRUE)
 
 params <- dev_set_params() %>% format_params()
 params$licence_profiles_file <- "s3://alpha-prison-forecasting-data/JC_test/recall/adjusted_license_profile.csv"
