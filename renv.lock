@@ -96,18 +96,6 @@
         "vroom"
       ]
     },
-    "V8": {
-      "Package": "V8",
-      "Version": "4.1.0",
-      "Source": "Repository",
-      "Repository": "RSPM",
-      "Hash": "c6bdc74e7e3a095102a6326d5a8f0224",
-      "Requirements": [
-        "Rcpp",
-        "curl",
-        "jsonlite"
-      ]
-    },
     "askpass": {
       "Package": "askpass",
       "Version": "1.1",
@@ -640,16 +628,6 @@
       "Hash": "d07e729b27b372429d42d24d503613a0",
       "Requirements": []
     },
-    "jsonvalidate": {
-      "Package": "jsonvalidate",
-      "Version": "1.3.2",
-      "Source": "Repository",
-      "Repository": "RSPM",
-      "Hash": "cdc2843ef7f44f157198bb99aea7552d",
-      "Requirements": [
-        "V8"
-      ]
-    },
     "knitr": {
       "Package": "knitr",
       "Version": "1.37",
@@ -747,27 +725,6 @@
       "Repository": "RSPM",
       "Hash": "18e9c28c1d3ca1560ce30658b22ce104",
       "Requirements": []
-    },
-    "mojmetr": {
-      "Package": "mojmetr",
-      "Version": "0.2.1",
-      "Source": "git",
-      "RemoteType": "git",
-      "RemoteUrl": "git@github.com:moj-analytical-services/mojmetr.git",
-      "RemoteRef": "",
-      "Hash": "e4e0b2f293223f3bef5315f814b61723",
-      "Requirements": [
-        "botor",
-        "hms",
-        "jsonlite",
-        "jsonvalidate",
-        "lubridate",
-        "readr",
-        "readxl",
-        "stringr",
-        "tibble",
-        "withr"
-      ]
     },
     "munsell": {
       "Package": "munsell",
@@ -1060,34 +1017,6 @@
       "Repository": "RSPM",
       "Hash": "95ef9167b75dde9d2ccc3c7528393e7e",
       "Requirements": []
-    },
-    "prisonsreadyreckonerupdater": {
-      "Package": "prisonsreadyreckonerupdater",
-      "Version": "0.0.0.0",
-      "Source": "git",
-      "RemoteType": "git",
-      "RemoteUrl": "git@github.com:moj-analytical-services/prisonsreadyreckonerupdater.git",
-      "RemoteRef": "",
-      "Remotes": "git::git@github.com:moj-analytical-services/fullsample.git,\n    git::git@github.com:moj-analytical-services/mojmetr.git,\n    git::git@github.com:moj-analytical-services/Rdbtools.git",
-      "Hash": "715698cb40e66272ac342fa9a82f5637",
-      "Requirements": [
-        "Rdbtools",
-        "botor",
-        "dplyr",
-        "fullsample",
-        "logger",
-        "lubridate",
-        "magrittr",
-        "mojmetr",
-        "readr",
-        "readxl",
-        "reticulate",
-        "rlang",
-        "stringr",
-        "tibble",
-        "tidyr",
-        "withr"
-      ]
     },
     "processx": {
       "Package": "processx",

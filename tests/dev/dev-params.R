@@ -22,7 +22,7 @@ dev_set_params <- function() {
   params$lever_police_charges_scenario           <- "central"
   
   # Number of extra court sitting days per month
-  params$lever_extra_cc_sitting_days             <- 20000 / 12             # [month^-1]
+  params$lever_extra_cc_sitting_days             <- 0 / 12             # [month^-1]
   params$lever_extra_cc_sitting_days_impact_date <- "2024-01-01"
   
   # Number of extra prison receptions per band per month

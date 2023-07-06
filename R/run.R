@@ -21,9 +21,7 @@ run_prisonflowcast <- function(params) {
   inflows_det_loaded               <- loaded_datasets_list$inflows_det
   profiles_det_loaded              <- loaded_datasets_list$profiles_det
   nomis_out_delius_in_ratio        <- loaded_datasets_list$nomis_out_delius_in_ratio
-  #average_time_on_licence_excl_ps  <- loaded_datasets_list$average_time_on_licence_excl_ps
   profiles_lic                     <- loaded_datasets_list$profiles_lic
-  #licence_profile_adjustments_exc  <- loaded_datasets_list$licence_profile_adjustments_exc
   recall_rate_exclPSS              <- loaded_datasets_list$recall_rate_exclPSS
   average_time_on_recall           <- loaded_datasets_list$average_time_on_recall
   recall_profile_adjustments       <- loaded_datasets_list$recall_profile_adjustments
@@ -35,10 +33,6 @@ run_prisonflowcast <- function(params) {
   
   
   # ### Calculate variables that are fixed throughout the model ###
-  # # Make profiles of time on licence.
-  # licence_time    <- multiply_two_named_vectors(average_time_on_licence_excl_ps, licence_profile_adjustments_exc, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
-  # profiles_lic    <- make_lag_filters(licence_time)
-  
   # Make profiles of time on recall.
   recall_time     <- multiply_two_named_vectors(average_time_on_recall, recall_profile_adjustments, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
   profiles_recall <- make_lag_filters(recall_time)
