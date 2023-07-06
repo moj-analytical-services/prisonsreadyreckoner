@@ -1,9 +1,9 @@
 
 
-#' Run \code{prisonflowcast} in its entirety.
+#' Run \code{prisonsreadyreckoner} in its entirety.
 #' 
 #' @export
-run_prisonflowcast <- function(params) {
+run_prisonsreadyreckoner <- function(params) {
   
   silence_botor()
   
@@ -28,19 +28,23 @@ run_prisonflowcast <- function(params) {
   gender_splits                    <- loaded_datasets_list$gender_splits
 
   # # Defaults not used by the package but made available for the Shiny app.
-  defaults <- set_defaults(params, recall_rate_exclPSS)
-  # Rachel to assign reactives to defaults here.
-  
+  # # Shiny equivalent to assign reactives to defaults here.
+  # defaults <- set_defaults(params, recall_rate_exclPSS)
+
   
   # ### Calculate variables that are fixed throughout the model ###
-  # Make profiles of time on recall.
+  # Make filters for recall outflows.
   recall_time     <- multiply_two_named_vectors(average_time_on_recall, recall_profile_adjustments, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
   profiles_recall <- make_lag_filters(recall_time)
-  
-  
+
+  # Make filters for remand population impacts.
+  profiles_remand_in  <- make_remand_filter_in(params$remand_rates[['receipts']], params$no_bail_rate, params$ctl, params$projection_length_months)
+  profiles_remand_out <- make_remand_filter_out(params$remand_rates[['disposals']], params$no_bail_prop, params$ctl, params$projection_length_months)
+
   # Calculate baseline with only original inflows.
   pop_baseline <- run_baseline(params, inflows_det_loaded, profiles_det_loaded,
                                nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall)
+
   
   t0 <- Sys.time()
   
@@ -57,10 +61,11 @@ run_prisonflowcast <- function(params) {
   
   print(paste0("pop_scenario and gender split took ", Sys.time() - t0, " seconds"))
 
-  dev_plot_population(pop_combined, "remand", "Remand delta")
-  dev_plot_population(pop_combined, "determinate", "Determinate")
-  dev_plot_population(pop_combined, "indeterminate", "Indeterminate")
-  dev_plot_population(pop_combined, "recall", "Recall")
+  # # Plotting routines to be used in development to assess model output.
+  # dev_plot_population(pop_combined, "remand", "Remand delta")
+  # dev_plot_population(pop_combined, "determinate", "Determinate")
+  # dev_plot_population(pop_combined, "indeterminate", "Indeterminate")
+  # dev_plot_population(pop_combined, "recall", "Recall")
 
   return(pop_combined)
 }
@@ -68,6 +73,11 @@ run_prisonflowcast <- function(params) {
 
 #' A baseline run without any levers.
 #' 
+#' 
+#' @return A tibble providing, for every date and case type (remand,
+#'   determinate, indeterminate and recall), a baseline
+#'   population based on baseline prison inflows. The exception is recall,
+#'   which is zero.
 #' @export
 run_baseline <- function(params, inflows_det_loaded, profiles_det_loaded,
                          nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall) {
@@ -154,7 +164,7 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
 #' @export
 run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disposals, sentencing_rates, inflows_det) {
   
-  #cc_output <- add_cc_receipts_delta_placeholder(cc_output, 0)   # TO BE REPLACED BY A FUNCTION ADJUSTING THE DELTA RINGFENCED COLUMN
+  # Add additional Crown Court receipts (and disposals for ring-fenced cases).
   cc_output <- add_cc_receipts_delta(cc_output, cc_receipts_delta)
   
   # Add extra ring-fenced hours to the capacity table.
@@ -229,7 +239,7 @@ combine_casetypes <- function(pop_remand_delta, pop_det, pop_indet, pop_recall, 
   pop_recall <- dplyr::mutate(pop_recall, casetype = "recall", .before = 1)
   
   pop <- rbind(pop_det, pop_nondet, pop_recall) %>%
-           #dplyr::arrange(casetype, senband) %>%     # Commented for speed.
+           #dplyr::arrange(casetype, senband) %>%     # Commented for speed. No need to sort here.
            dplyr::mutate(run = !!run, .before = 1)
   
 }

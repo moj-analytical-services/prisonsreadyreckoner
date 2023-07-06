@@ -3,6 +3,75 @@
 
 
 ################################################################################
+# Remand prisoners
+################################################################################
+
+
+#' Build population impact filters for use in remand modelling. Inflow impacts.
+#' 
+#' Function to generate a linear response function (filter) representing the  
+#' unit population impact of a receipt in the magistrates' court on remand
+#' population. It is assumed that only a fraction of relevant receipts will
+#' be associated with remand and that some proportion of these will leave remand
+#' after the custody time limit (CTL).
+#' 
+#' @param remand_rate The fraction of receipts, to which this filter will be
+#'   applied, being remanded in custody.
+#' @param no_bail_rate The fraction of those remanded in custody who will be
+#'   kept in prison after their CTL has exceeded.
+#' @param ctl The custody time limit in months.
+#' @return A tibble representing, for lags starting from zero, the unit remand
+#'   population impact of a magistrates' court receipt.
+#' @export
+make_remand_filter_in <- function(remand_rate, no_bail_rate, ctl, projection_length_months) {
+  
+  ctl <- min(ctl, projection_length_months)
+  
+  filter_remand <- tibble::tibble(casetype = "remand",
+                                  lag = seq(0, projection_length_months-1), 
+                                  impact = remand_rate * c(rep(1, ctl), rep(no_bail_rate, projection_length_months - ctl)))
+  
+  filter_remand <- tidyr::pivot_wider(filter_remand, names_from = .data$lag, names_prefix = "lag", values_from = .data$impact)
+  
+}
+
+
+#' Build population impact filters for use in remand modelling. Outflow impacts.
+#' 
+#' Function to generate a linear response function (filter) representing the
+#' unit population impact of a disposal in the Crown court on remand population.
+#' It is assumed that only a fraction of relevant disposals will be associated
+#' with remand and that some proportion of these will have left remand after the
+#' custody time limit (CTL) anyway. Additionally assuming that the disposal can
+#' occur any time within the individual's CTL, the filter is most negative at a
+#' lag of zero and declines linearly throughout a period equivalent to the CTL.
+#' A steady state is reached, represenying the probability that the individual's
+#' circumstances do not warrant release on bail.
+#' 
+#' @param remand_rate The fraction of disposals, to which this filter will be
+#'   applied, having been remanded in custody at disposal.
+#' @param no_bail_rate The fraction of those remanded in custody who will be
+#'   kept in prison after their CTL has exceeded.
+#' @param ctl The custody time limit in months.
+#' @return A tibble representing, for lags starting from zero, the unit remand
+#'   population impact of a Crown Court disposal.
+#' @export
+make_remand_filter_out <- function(remand_rate, no_bail_rate, ctl, projection_length_months) {
+  
+  bail_rate <- 1 - no_bail_rate
+  min_step <- max(1, ctl - projection_length_months + 1)
+
+  filter_remand <- tibble::tibble(casetype = "remand",
+                                  lag = seq(0, projection_length_months-1), 
+                                  impact = -remand_rate * c(no_bail_rate + bail_rate * seq(ctl, min_step, -1) / ctl, rep(no_bail_rate, max(0, projection_length_months - ctl))))
+
+  filter_remand <- tidyr::pivot_wider(filter_remand, names_from = .data$lag, names_prefix = "lag", values_from = .data$impact)
+  
+}
+
+
+
+################################################################################
 # Determinate prisoners
 ################################################################################
 

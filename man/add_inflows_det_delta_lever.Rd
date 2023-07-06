@@ -2,7 +2,7 @@
 % Please edit documentation in R/levers.R
 \name{add_inflows_det_delta_lever}
 \alias{add_inflows_det_delta_lever}
-\title{Change number of prison receptions}
+\title{Add a constant number of monthly determinate sentence prison receptions}
 \usage{
 add_inflows_det_delta_lever(
   inflows_det,
@@ -12,5 +12,10 @@ add_inflows_det_delta_lever(
 )
 }
 \description{
-Change number of prison receptions
+\code{add_inflows_det_delta_lever} allows users to specify an additional
+monthly number of determinate sentence offenders who enter prison after being
+sentenced at court. (Note that this lever does not affect the number of
+offenders entering prison after being recalled from licence.) A separate
+additional number is set for each Sentence Band, and can be positive or
+negative. The lever affects all months after a user-specified impact date.
 }

@@ -90,17 +90,21 @@ dev_set_params <- function() {
   
   
   # Sentencing parameters
-  # Remand rates. FYI, the Prisons team provided an intercept but this is not
-  # relevant for marginal changes. The following co-efficients were derived from
-  # backlog volumes calibrated to match HMCTS outstanding caseload but, for
-  # simplicity, we are applying them to unadjusted changes in non-ringfenced
-  # disposal volumes.
-  params$remand_rates <- tibble::tribble(
-    ~receipt_type_desc, ~remand_rate,
-    "ind",                     0.580,
-    "tew",                     0.277,
-    "app",                         0,
-    "sent",                        0)   # 20230503 - Charlotte Wallace - RE_ Gender split and remand ratio_.msg
+  params$remand_rates <- c(receipts = 0.188, disposals = 0.478)   # '2023076 - To Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
+  params$no_bail_rate <- 0.2
+  params$ctl          <- 6   # [months]
+  
+  # # Remand rates. FYI, the Prisons team provided an intercept but this is not
+  # # relevant for marginal changes. The following co-efficients were derived from
+  # # backlog volumes calibrated to match HMCTS outstanding caseload but, for
+  # # simplicity, we are applying them to unadjusted changes in non-ringfenced
+  # # disposal volumes.
+  # params$remand_rates <- tibble::tribble(
+  #   ~receipt_type_desc, ~remand_rate,
+  #   "ind",                     0.580,
+  #   "tew",                     0.277,
+  #   "app",                         0,
+  #   "sent",                        0)   # '20230503 - Charlotte Wallace - RE_ Gender split and remand ratio_.msg'
   
   params$sentencing_rates_file  <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/reception-rates-20230502-shiny-v0.0.0-OFFICIAL.csv"
   

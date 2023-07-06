@@ -149,14 +149,14 @@ add_cc_receipts_delta <- function(cc_output, receipts_delta) {
 }
 
 
-# TEMPORARY PLACEHOLDER PENDING POLICE CHARGE MODULE DEVELOPMENT.
-add_cc_receipts_delta_placeholder <- function(cc_output, delta) {
-  
-  cc_output$n_receipts_delta <- delta
-  cc_output$n_disposals_ringfenced_delta <- cc_output$ringfenced * delta
-  
-  return(cc_output)
-}
+# # TEMPORARY PLACEHOLDER PENDING POLICE CHARGE MODULE DEVELOPMENT.
+# add_cc_receipts_delta_placeholder <- function(cc_output, delta) {
+#   
+#   cc_output$n_receipts_delta <- delta
+#   cc_output$n_disposals_ringfenced_delta <- cc_output$ringfenced * delta
+#   
+#   return(cc_output)
+# }
 
 
 calculate_hours_ringfenced_delta <- function(cc_output, cc_capacity) {
