@@ -27,7 +27,7 @@ were increased, as in the December 2022 prison projection. The current test
 differs in that we are changing Crown Court receipts, not sitting days and our
 benchmark is the April 2023 forecast.
 
-This test is also closely related to visual-police-charge-scenarios-v3.Rmd,
+This test is also closely related to visual-police-charge-scenarios-v2.Rmd,
 which examined performance of our Crown Court receipts calculations when
 provided with the the same police scenario files used here. Our benchmark here,
 however, includes the impacts of various adjustments to Court receipts made by
