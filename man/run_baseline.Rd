@@ -14,6 +14,12 @@ run_baseline(
   profiles_recall
 )
 }
+\value{
+A tibble providing, for every date and case type (remand,
+determinate, indeterminate and recall), a baseline
+population based on baseline prison inflows. The exception is recall,
+which is zero.
+}
 \description{
 A baseline run without any levers.
 }

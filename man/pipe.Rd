@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{\%>\%}
 \alias{\%>\%}
-\title{Pipe operator}
+\title{Deploy the magrittr pipe operator}
 \usage{
 lhs \%>\% rhs
 }

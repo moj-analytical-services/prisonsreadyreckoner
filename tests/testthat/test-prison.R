@@ -15,7 +15,7 @@ test_that("make_lag_filters() will correctly construct a battery of fixed delay 
   lags <- c(senband1 = 0.77, senband2 = 1.25, senband3 = 3.06, senband4 = 6.72)
   
   h <- make_lag_filters(lags)
-
+  
   Mh <-
     matrix(c(
       c(0.23, 0.77, 0, 0, 0, 0, 0, 0),
@@ -25,8 +25,37 @@ test_that("make_lag_filters() will correctly construct a battery of fixed delay 
     ),
     4, 8, byrow = TRUE, dimnames = list(NULL, paste0("lag", seq(0, 7))))
   h_exp <- tibble::as_tibble(cbind(senband = paste0("senband", seq(1, 4)), Mh)) %>%
-             dplyr::mutate(across(-senband, as.numeric))
+    dplyr::mutate(across(-senband, as.numeric))
   
+  expect_equal(h, h_exp)
+  
+})
+
+
+
+# Testing remand population filter construction
+test_that("make_remand_filter_out() will correctly construct a linearly declining filter, settling at a basal value", {
+  
+  remand_rate  <- 0.1
+  no_bail_rate <- 0.2
+  ctl          <- 10   # [months]
+  N            <- 15
+  
+  h <- make_remand_filter_out(remand_rate, no_bail_rate, ctl, N)
+  h_exp <- tibble::tibble(casetype = "remand",
+                          lag = seq(0, N-1), 
+                          impact = -c(0.1, 0.092, 0.084, 0.076, 0.068, 0.060, 0.052, 0.044, 0.036, 0.028, 0.02, 0.02, 0.02, 0.02, 0.02)) %>%
+             tidyr::pivot_wider(names_from = .data$lag, names_prefix = "lag", values_from = .data$impact)
+  expect_equal(h, h_exp)
+  
+  
+  N            <- 5
+  
+  h <- make_remand_filter_out(remand_rate, no_bail_rate, ctl, N)
+  h_exp <- tibble::tibble(casetype = "remand",
+                          lag = seq(0, N-1), 
+                          impact = -c(0.1, 0.092, 0.084, 0.076, 0.068)) %>%
+    tidyr::pivot_wider(names_from = .data$lag, names_prefix = "lag", values_from = .data$impact)
   expect_equal(h, h_exp)
 
 })

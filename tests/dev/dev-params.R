@@ -68,7 +68,6 @@ dev_set_params <- function() {
   )
   params$police_charges_mc_sheet <- "020623_mags_sensitivity_output-"
 
-
   # Crown Court
   params$police_charges_cc_files <- list(central = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_for_ready_reckoner.csv", # Records the total number of Crown Court receipts used as a baseline in the April 2023 projections. Includes background values from various sources, and an increase in charge numbers over a 24-month period. It has non-zero values throughout.
                                       ramp_12m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_12m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 12-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
@@ -90,17 +89,27 @@ dev_set_params <- function() {
   
   
   # Sentencing parameters
-  # Remand rates. FYI, the Prisons team provided an intercept but this is not
-  # relevant for marginal changes. The following co-efficients were derived from
-  # backlog volumes calibrated to match HMCTS outstanding caseload but, for
-  # simplicity, we are applying them to unadjusted changes in non-ringfenced
-  # disposal volumes.
-  params$remand_rates <- tibble::tribble(
-    ~receipt_type_desc, ~remand_rate,
-    "ind",                     0.580,
-    "tew",                     0.277,
-    "app",                         0,
-    "sent",                        0)   # 20230503 - Charlotte Wallace - RE_ Gender split and remand ratio_.msg
+  # Remand rates.
+  # # FYI, the Prisons team provided an intercept but this is not relevant for
+  # # marginal changes. The following co-efficients were derived from backlog
+  # # volumes calibrated to match HMCTS outstanding caseload but, for simplicity,
+  # # we are applying them to unadjusted changes in non-ringfenced disposal
+  # # volumes.
+  # params$remand_rates <- tibble::tribble(
+  #   ~receipt_type_desc, ~remand_rate,
+  #   "ind",                     0.580,
+  #   "tew",                     0.277,
+  #   "app",                         0,
+  #   "sent",                        0)   # '20230503 - Charlotte Wallace - RE_ Gender split and remand ratio_.msg'
+  params$remand_rates <- c(receipts = 0.188, disposals = 0.478)   # '2023076 - To Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
+  params$no_bail_rate <- 0.2
+  params$ctl          <- 6   # [months]
+  params$mc_remand_lookup <- tibble::tribble(
+    ~disposal_type, ~remanded,
+    "mc_ind",       TRUE,
+    "mc_tew",       TRUE,
+    "mc_sm",        FALSE,
+    "mc_snm",       FALSE)   # '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
   
   params$sentencing_rates_file  <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/reception-rates-20230502-shiny-v0.0.0-OFFICIAL.csv"
   
