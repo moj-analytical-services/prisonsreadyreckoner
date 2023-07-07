@@ -1,20 +1,6 @@
-# IMPORTANT:
-# 2023-04-20: Note from Jatin: To note, we'll need to think about how we cope
-# with how prisons calibrate their modelling in the short term
+# This script provides functions for converting court disposals to determinate
+# sentence prisoner receptions.
 
-
-calculate_pop_remand_delta <- function(cc_disposals, remand_rates) {
-  
-  pop_remand_delta <- dplyr::mutate(cc_disposals, casetype = "remand", pop_remand_delta = (n_receipts_delta - n_disposals_delta) * remand_rate) %>%
-                        dplyr::group_by(date, casetype) %>%
-                        dplyr::summarise(pop_remand_delta = sum(pop_remand_delta), .groups = 'drop') %>%
-                        dplyr::mutate(pop_remand_delta = cumsum(pop_remand_delta)) %>%
-                        tidyr::pivot_wider(names_from = date,
-                          values_from = pop_remand_delta,
-                          values_fill = 0,
-                          names_sort = TRUE)
-
-}
 
 
 #' Calculate receptions by sentence band by applying reception rates to a series

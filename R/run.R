@@ -11,6 +11,8 @@ run_prisonsreadyreckoner <- function(params) {
   params <- format_params(params)
   
   ### Load datasets that are fixed throughout the model ###
+  # DEVELOPMENT NOTE: Apply nomis_out_delius_in_ratio to profiles_lic on reading
+  # so that the adjustment is only applied once.
   loaded_datasets_list             <- load_datasets(params)
   
   cc_receipts_delta_loaded_list    <- loaded_datasets_list$cc_receipts_delta_loaded_list
@@ -33,13 +35,15 @@ run_prisonsreadyreckoner <- function(params) {
 
   
   # ### Calculate variables that are fixed throughout the model ###
-  # Make filters for recall outflows.
-  recall_time     <- multiply_two_named_vectors(average_time_on_recall, recall_profile_adjustments, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
-  profiles_recall <- make_lag_filters(recall_time)
-
   # Make filters for remand population impacts.
   profiles_remand_in  <- make_remand_filter_in(params$remand_rates[['receipts']], params$no_bail_rate, params$ctl, params$projection_length_months)
-  profiles_remand_out <- make_remand_filter_out(params$remand_rates[['disposals']], params$no_bail_prop, params$ctl, params$projection_length_months)
+  profiles_remand_out <- make_remand_filter_out(params$remand_rates[['disposals']], params$no_bail_rate, params$ctl, params$projection_length_months)
+  
+  # Make filters for recall outflows.
+  # DEVELOPMENT NOTE: Bundle following into a make_recall_filter() function for
+  # consistency with remand.
+  recall_time     <- multiply_two_named_vectors(average_time_on_recall, recall_profile_adjustments, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
+  profiles_recall <- make_lag_filters(recall_time)
 
   # Calculate baseline with only original inflows.
   pop_baseline <- run_baseline(params, inflows_det_loaded, profiles_det_loaded,
@@ -49,8 +53,9 @@ run_prisonsreadyreckoner <- function(params) {
   t0 <- Sys.time()
   
   # Run scenario and find overall population changes.
-  pop_scenario <- run_scenario(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, sentencing_rates_loaded, inflows_det_loaded, profiles_det_loaded, nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall)
-
+  #pop_scenario <- run_scenario(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, sentencing_rates_loaded, inflows_det_loaded, profiles_det_loaded, nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall)
+  pop_scenario <- run_scenario(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, profiles_remand_in, profiles_remand_out, sentencing_rates_loaded, inflows_det_loaded, profiles_det_loaded, nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall)
+  
   # Combine with the baseline and pivot for ease of splitting by gender.
   pop_combined <- rbind(pop_baseline, pop_scenario) %>%
                     tidyr::pivot_longer(-c("run", "casetype", "senband"), names_to = "date", values_to = "population") %>%
@@ -106,10 +111,15 @@ run_baseline <- function(params, inflows_det_loaded, profiles_det_loaded,
 
 
 # A scenario run to be compared with the baseline.
-run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, sentencing_rates_loaded,
+# run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, sentencing_rates_loaded,
+#                          inflows_det_loaded, profiles_det_loaded,
+#                          nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall) {
+run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list,
+                         profiles_remand_in, profiles_remand_out,
+                         sentencing_rates_loaded,
                          inflows_det_loaded, profiles_det_loaded,
                          nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall) {
-  
+    
   # LEVER: Add police charges.
   cc_receipts_delta  <- cc_receipts_delta_loaded_list[[params$lever_police_charges_scenario]]
   mc_disposals_delta <- mc_disposals_delta_loaded_list[[params$lever_police_charges_scenario]]
@@ -121,12 +131,13 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
   # remaining capacity. Do what you want when a warning occurs. Here we are just
   # echoing it.
   withCallingHandlers(warning = function(msg) {},
-                      {courts_outputs <- run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, sentencing_rates_loaded, inflows_det_loaded)})
+                      #{courts_outputs <- run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, sentencing_rates_loaded, inflows_det_loaded)})
+                     {courts_outputs <- run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, profiles_remand_in, profiles_remand_out, params$mc_remand_lookup, sentencing_rates_loaded, inflows_det_loaded)})
     pop_remand_delta <- courts_outputs$pop_remand_delta
     inflows_det_adj  <- courts_outputs$inflows_det_adj
   
-  
-    
+
+
   # LEVER: Add delta from extra inflows lever to other inflows
   inflows_det_levered <- add_inflows_det_delta_lever(inflows_det_adj, params$lever_extra_inflows_det, params$lever_extra_inflows_det_impact_date)
   
@@ -162,11 +173,14 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
 #' inflows owing to changes in the number of court disposals.
 #'
 #' @export
-run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disposals, sentencing_rates, inflows_det) {
-  
+#run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disposals, sentencing_rates, inflows_det) {
+run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disposals,
+                              profiles_remand_in, profiles_remand_out, mc_remand_lookup,
+                              sentencing_rates, inflows_det) {
+
   # Add additional Crown Court receipts (and disposals for ring-fenced cases).
   cc_output <- add_cc_receipts_delta(cc_output, cc_receipts_delta)
-  
+
   # Add extra ring-fenced hours to the capacity table.
   cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity)
   check_cc_capacity(cc_capacity)
@@ -176,8 +190,11 @@ run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disp
   # case mix.
   cc_disposals <- calculate_cc_disposals(cc_output, cc_capacity)
   
-  # Calculate remand population and determinate inflows from court disposals.
-  pop_remand_delta  <- calculate_pop_remand_delta(cc_disposals)
+  # Calculate remand population from court disposals.
+  #pop_remand_delta  <- calculate_pop_remand_delta(cc_disposals)
+  pop_remand_delta  <- calculate_pop_remand_delta(mc_disposals, cc_disposals, profiles_remand_in, profiles_remand_out, mc_remand_lookup)
+  
+  # Calculate determinate inflows from court disposals.
   inflows_det_delta <- calculate_inflows_det_delta(cc_disposals, mc_disposals, sentencing_rates)
   
   # Add delta from court disposals to background inflows.
@@ -216,6 +233,8 @@ run_prison_indeterminate_module <- function(month_names, inflows_indet_mean) {
 run_prison_recall_module <- function(outflows_det, nomis_out_delius_in_ratio, profiles_lic,
                                      recall_rate_exclPSS, lever_recall_rate, lever_recall_rate_impact_date, profiles_recall) {
   
+  # DEVELOPMENT NOTE: If nomis_out_delius_in_ratio has already been applied to
+  # profiles_lic on reading, no need for next line.
   inflows_lic              <- apply_ratios(outflows_det, nomis_out_delius_in_ratio)
   outflows_lic             <- mojstockr_mconv(inflows_lic, profiles_lic, c("senband"))
   pop_lic                  <- mojstockr_build_stock(inflows_lic, outflows_lic, c("senband"))

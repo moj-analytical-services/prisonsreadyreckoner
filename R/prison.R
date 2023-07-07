@@ -45,7 +45,7 @@ make_remand_filter_in <- function(remand_rate, no_bail_rate, ctl, projection_len
 #' custody time limit (CTL) anyway. Additionally assuming that the disposal can
 #' occur any time within the individual's CTL, the filter is most negative at a
 #' lag of zero and declines linearly throughout a period equivalent to the CTL.
-#' A steady state is reached, represenying the probability that the individual's
+#' A steady state is reached, representing the probability that the individual's
 #' circumstances do not warrant release on bail.
 #' 
 #' @param remand_rate The fraction of disposals, to which this filter will be
@@ -67,6 +67,59 @@ make_remand_filter_out <- function(remand_rate, no_bail_rate, ctl, projection_le
 
   filter_remand <- tidyr::pivot_wider(filter_remand, names_from = .data$lag, names_prefix = "lag", values_from = .data$impact)
   
+}
+
+
+# calculate_pop_remand_delta <- function(cc_disposals) {
+#   
+#   pop_remand_delta <- dplyr::mutate(cc_disposals, casetype = "remand", pop_remand_delta = (n_receipts_delta - n_disposals_delta) * remand_rate) %>%
+#                         dplyr::group_by(date, casetype) %>%
+#                         dplyr::summarise(pop_remand_delta = sum(pop_remand_delta), .groups = 'drop') %>%
+#                         dplyr::mutate(pop_remand_delta = cumsum(pop_remand_delta)) %>%
+#                         tidyr::pivot_wider(names_from = date,
+#                           values_from = pop_remand_delta,
+#                           values_fill = 0,
+#                           names_sort = TRUE)
+# 
+# }
+
+
+calculate_pop_remand_delta <- function(mc_disposals, cc_disposals, profiles_remand_in, profiles_remand_out, mc_remand_lookup) {
+  
+  # Find change in receipts relevant for remand.
+  # As magistrates' court disposals are generated from receipts without
+  # adjustment, it is acceptable to use disposals as a proxy for receipts.
+  receipts_remand_delta <- dplyr::left_join(mc_disposals, mc_remand_lookup, by = "disposal_type", unmatched = "error") %>%
+    dplyr::filter(.data$remanded == TRUE) %>%
+    dplyr::group_by(.data$date) %>%
+    dplyr::summarise(n_disposals_delta = sum(.data$n_disposals_delta), .groups = "drop") %>%
+    tidyr::pivot_wider(names_from = .data$date,
+                       values_from = .data$n_disposals_delta,
+                       values_fill = 0,
+                       names_sort = TRUE) %>%
+    dplyr::mutate(casetype = "remand", .before = 1)
+  
+  # Convert change in receipts to population impact.
+  pop_remand_delta_in <- mojstockr_mconv(receipts_remand_delta, profiles_remand_in, c("casetype"))
+
+
+  # Find Crown Court disposals relevant for remand.
+  disposals_remand_delta <- dplyr::group_by(cc_disposals, .data$date) %>%
+    dplyr::summarise(n_disposals_delta = sum(.data$n_disposals_delta), .groups = "drop") %>%
+    tidyr::pivot_wider(names_from = .data$date,
+                       values_from = .data$n_disposals_delta,
+                       values_fill = 0,
+                       names_sort = TRUE) %>%
+    dplyr::mutate(casetype = "remand", .before = 1)
+  
+  # Convert Crown Court disposals to population impact.
+  pop_remand_delta_out <- mojstockr_mconv(disposals_remand_delta, profiles_remand_out, c("casetype"))
+  
+  
+  pop_remand_delta <- rbind(pop_remand_delta_in, pop_remand_delta_out) %>%
+    dplyr::group_by(.data$casetype) %>%
+    dplyr::summarise((dplyr::across(tidyselect::where(is.numeric), sum)), .groups = 'drop')
+
 }
 
 
@@ -140,7 +193,7 @@ add_inflows_det_delta_courts <- function(inflows, delta) {
   inflows_delta <- dplyr::bind_rows(inflows, delta) %>%
     dplyr::mutate(dplyr::across(c(all_of(names(dplyr::select(., -c("senband"))))), ~tidyr::replace_na(.,0))) %>%
     dplyr::group_by(senband) %>%
-    dplyr::summarise((dplyr::across(where(is.numeric), sum))) %>%
+    dplyr::summarise((dplyr::across(tidyselect::where(is.numeric), sum))) %>%
     dplyr::arrange(senband)
   
   return(inflows_delta)
