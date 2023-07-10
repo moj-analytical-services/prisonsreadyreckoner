@@ -20,6 +20,9 @@ mojstockr_calculate_proportions(
 \item{conditional_columns}{String. Columns on which to group data into
 subgroups.}
 
+\item{proportions_column_name}{\emph{Optional.} The name of the column
+containing the calculated proportions. Defaults to 'proportion'.}
+
 \item{weights_column}{\emph{Optional.} String. Column containing weights to
 use in calculation of proportions. Higher values correspond to higher
 weights.}

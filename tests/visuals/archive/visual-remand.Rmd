@@ -1,0 +1,120 @@
+---
+title: "Sense checking understanding of the Prisons Team's remand model"
+author: "Brian Burton"
+date: "03/05/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+devtools::load_all()
+```
+
+
+## Aim
+
+To test how well our application of linear regression coefficients produces
+remand volumes that match those used by the prisons team.
+
+## Method
+
+The Courts team produce a version of their crown output file (as used by the
+Crown parts of prisonflowcast), which has a backlog adjusted to match HMCTS
+outstanding caseload. The calibrated backlog is used by the Prisons team to
+forecast demand by application of co-efficients from a linear regression.
+
+We are using calibrated backlogs to forecast remand and test here that our
+approach produces remand forecasts similar to those provided by the Prisons
+team.
+
+```{r include = FALSE}
+#start_date <- as.Date("2022-11-01")    # First month of the forecast. Used for verifying inputs.
+
+cc_output_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/crown-output-os_adj-apr23_s4.csv"   # 20230427 - Chun-yee Cheng - RE_ Latest Crown files_.msg
+remand_file_target <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0901/model_outputs/_prison_outputs/_sensitivity/populations_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx"   # 20230503 - Charlotte Wallace - RE_ Gender split and remand ratio_.msg
+
+```
+
+
+## Results
+
+First, can we produce the same remand forecast when using the Prisons Team's
+regression co-efficients? In the following we have applied co-efficients
+provided by the Prisons Team (See '20230503 - Charlotte Wallace - RE_ Gender
+split and remand ratio_.msg') to backlog volumes provided by the Courts team
+(see 20230427 - Chun-yee Cheng - RE_ Latest Crown files_.msg).
+
+The match is virtually exact, possibly within rounding error. The exception is
+the early period when the Prison Team they apply an additional 'calibration' to
+ensure a smooth transition from remand population in the historical period.
+
+Although this graph does not rely on package functions, it proves that our
+interpretation of the co-efficients provided by the Prisons Team is correct.
+
+```{r echo = FALSE}
+# First calculate remand population from the Crown output file and the provided
+# co-efficients.
+col_types <-
+  readr::cols(
+    Time = readr::col_integer(),
+    date = readr::col_date(format = '%Y-%m-%d'),
+    FY = readr::col_character(),
+    receipt_type_desc = readr::col_character(),
+    region = readr::col_character(),
+    actual_route = readr::col_character(),
+    n_backlog = readr::col_integer(),
+    n_receipts = readr::col_integer(),
+    n_disposals = readr::col_integer(),
+    dur_backlog = readr::col_double(),
+    dur_receipts = readr::col_double(),
+    dur_disposals = readr::col_double(),
+    scenario = readr::col_character(),
+    dev = readr::col_character(),
+    scenario_dev = readr::col_character()
+  )
+cc_output <- import_s3_file(cc_output_file, col_types = col_types)
+ 
+remand_rates <- tibble::tribble(
+                        ~receipt_type_desc, ~remand_rate,
+                        "ind",                     0.580,
+                        "tew",                     0.277,
+                        "app",                         0,
+                        "sent",                        0)   # 20230503 - Charlotte Wallace - RE_ Gender split and remand ratio_.msg
+intercept <- - 5593.070 # 20230503 - Charlotte Wallace - RE_ Gender split and remand
+
+pop_remand_model <- dplyr::left_join(cc_output, remand_rates, by = c("receipt_type_desc")) %>%
+                      dplyr::filter(date >= "2023-03-01") %>%
+                      dplyr::group_by(date) %>%
+                      dplyr::summarise(pop_remand_model = sum(n_backlog * remand_rate) + !!intercept)
+
+
+
+# Load in expected population.
+pop_target <- import_s3_file(remand_file_target) %>%
+                dplyr::rename(date = Date) %>%
+                dplyr::mutate(date = lubridate::floor_date(date, "month"))
+pop_remand_target <- dplyr::filter(pop_target, DataType == "Forecast", Custody_Type == "Remand", date >= "2023-03-01") %>%
+                       dplyr::group_by(date) %>%
+                       dplyr::summarise(pop_remand_target = sum(Population))
+
+
+x <- pop_remand_model$date
+y <- data.frame(pop_remand_model = pop_remand_model$pop_remand_model, pop_remand_target = pop_remand_target$pop_remand_target)
+matplot(x, y,
+        type = 'l',
+        xlab = "Date",
+        main = "Comparison of remand population estimates",
+        ylab = "Remand population",
+        lty = c(1, 2),
+        col = 1
+)
+legend("topright",
+        inset = 0.02,
+        legend = c("Model", "Target"),
+        lty = c(1, 2),
+        col = 1
+)
+
+```
+

@@ -2,7 +2,11 @@
 # any particular section of the model.
 
 
-#' Pipe operator
+################################################################################
+# General
+################################################################################
+
+#' Deploy the magrittr pipe operator
 #'
 #' See \code{magrittr::\link[magrittr]{\%>\%}} for details.
 #'
@@ -12,6 +16,13 @@
 #' @export
 #' @importFrom magrittr %>%
 #' @usage lhs \%>\% rhs
+NULL
+
+
+#' Provide access to the .data object in calls to tidyverse functions
+#' 
+#' @name .data
+#' @importFrom rlang .data
 NULL
 
 

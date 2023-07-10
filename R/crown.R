@@ -97,18 +97,27 @@ check_cc_inputs <- function(cc_output, cc_capacity) {
 }
 
 
-augment_crown_output <- function(cc_output, ringfenced_lookup, remand_rates) {
-  
+# Add extra columns that will be needed in later calculations. Where values are
+# not known (at the point this function is called), set to appropriate dummy
+# values.
+#
+# Intended to be called immediately after loading the basic table from file. By
+# adding these columns on loading, the table structure is more transparent and
+# less CPU time will be spent manipulating the table, especially in contexts
+# where model runs are invoked iteratively, such as in a Shiny app.
+#augment_crown_output <- function(cc_output, ringfenced_lookup, remand_rates) {
+augment_crown_output <- function(cc_output, ringfenced_lookup) {
+    
   # Add ring-fenced status.
   cc_output <- dplyr::left_join(cc_output, ringfenced_lookup, by = c("receipt_type_desc", "route"), unmatched = "error")
 
-  # Add remand rates.
-  cc_output <- dplyr::left_join(cc_output, remand_rates, by = "receipt_type_desc", unmatched = "error")
+  # # Add remand rates.
+  # cc_output <- dplyr::left_join(cc_output, remand_rates, by = "receipt_type_desc", unmatched = "error")
     
   
-  # Calculate parameters that will be used in online calculations. All derived
-  # time parameters will be in hours.
-  cc_output <- dplyr::mutate(cc_output, remand_rate = remand_rate * !ringfenced)
+  # # Calculate parameters that will be used in online calculations. All derived
+  # # time parameters will be in hours.
+  # cc_output <- dplyr::mutate(cc_output, remand_rate = remand_rate * !ringfenced)
 
   cc_output <- dplyr::group_by(cc_output, date) %>%
                     dplyr::mutate(hours_non_ringfenced = sum((dur_disposals * !ringfenced) / 60)) %>%
@@ -123,6 +132,14 @@ augment_crown_output <- function(cc_output, ringfenced_lookup, remand_rates) {
 }
 
 
+# Add extra columns that will be needed in later calculations. Where values are
+# not known (at the point this function is called), set to appropriate dummy
+# values.
+#
+# Intended to be called immediately after loading the basic table from file. By
+# adding these columns on loading, the table structure is more transparent and
+# less CPU time will be spent manipulating the table, especially in contexts
+# where model runs are invoked iteratively, such as in a Shiny app.
 augment_cc_capacity <- function(cc_capacity, cc_output) {
   
   base_hours <- dplyr::group_by(cc_output, date) %>%
@@ -146,16 +163,6 @@ add_cc_receipts_delta <- function(cc_output, receipts_delta) {
                                n_disposals_ringfenced_delta = n_receipts_delta.y * ringfenced) %>%
                  dplyr::select(-n_receipts_delta.y)
   
-}
-
-
-# TEMPORARY PLACEHOLDER PENDING POLICE CHARGE MODULE DEVELOPMENT.
-add_cc_receipts_delta_placeholder <- function(cc_output, delta) {
-  
-  cc_output$n_receipts_delta <- delta
-  cc_output$n_disposals_ringfenced_delta <- cc_output$ringfenced * delta
-  
-  return(cc_output)
 }
 
 
@@ -184,7 +191,8 @@ calculate_cc_disposals <- function(cc_output, cc_capacity) {
   
   cc_disposals <- dplyr::left_join(cc_output, cc_capacity, by = c("date")) %>%
                     dplyr::mutate(n_disposals_delta = n_disposals_ringfenced_delta + (capacity_delta - hours_ringfenced_delta) * backlog_rate) %>%
-                    dplyr::select(date, receipt_type_desc, route, remand_rate, n_receipts_delta, n_disposals_delta)
+                    #dplyr::select(date, receipt_type_desc, route, remand_rate, n_receipts_delta, n_disposals_delta)
+                    dplyr::select(date, receipt_type_desc, route, n_receipts_delta, n_disposals_delta)
   
 }
 

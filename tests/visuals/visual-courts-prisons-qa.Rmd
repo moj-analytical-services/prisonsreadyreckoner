@@ -150,9 +150,7 @@ sentencing_rates_loaded          <- loaded_datasets_list$sentencing_rates
 inflows_det_loaded               <- loaded_datasets_list$inflows_det
 profiles_det_loaded              <- loaded_datasets_list$profiles_det
 nomis_out_delius_in_ratio        <- loaded_datasets_list$nomis_out_delius_in_ratio
-#average_time_on_licence_excl_ps  <- loaded_datasets_list$average_time_on_licence_excl_ps
 profiles_lic                     <- loaded_datasets_list$profiles_lic
-#licence_profile_adjustments_exc  <- loaded_datasets_list$licence_profile_adjustments_exc
 recall_rate_exclPSS              <- loaded_datasets_list$recall_rate_exclPSS
 average_time_on_recall           <- loaded_datasets_list$average_time_on_recall
 recall_profile_adjustments       <- loaded_datasets_list$recall_profile_adjustments
@@ -255,6 +253,7 @@ format_charlotte_mc_disposals <- function(mc_disposals_charlotte_loaded, forecas
 
 
 calculate_charlotte_disposals_delta <- function(disposals_charlotte, disposals_charlotte_baseline) {
+  
   disposals_charlotte_delta <- disposals_charlotte %>%
     dplyr::left_join(disposals_charlotte_baseline, by = c("date", "disposal_type")) %>%
     dplyr::mutate(n_disposals_delta = n_disposals.x - n_disposals.y, .keep = "unused")
@@ -274,8 +273,8 @@ run_prisons_module_charlotte_inflows <- function(params, inflows_det_adj, profil
   #print(paste0("stretch_profiles took ", Sys.time() - t0_stretch, " seconds"))
   
   prison_det_outputs <- run_prison_determinate_module(inflows_det_levered, profiles_det_stretch_impact_date_levered, profiles_det_levered)
-  outflows_det     <- prison_det_outputs$outflows_det
-  pop_det          <- prison_det_outputs$pop_det
+    outflows_det     <- prison_det_outputs$outflows_det
+    pop_det          <- prison_det_outputs$pop_det
   
   pop_det <- pop_det %>%
     dplyr::mutate(run = "scenario", casetype = "determinate")

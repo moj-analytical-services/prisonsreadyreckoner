@@ -28,6 +28,8 @@
 #' @param predicate_columns String. Columns on which to group data into groups.
 #' @param conditional_columns String. Columns on which to group data into
 #'   subgroups.
+#' @param proportions_column_name \emph{Optional.} The name of the column
+#'   containing the calculated proportions. Defaults to 'proportion'.
 #' @param weights_column \emph{Optional.} String. Column containing weights to
 #'   use in calculation of proportions. Higher values correspond to higher
 #'   weights.
@@ -56,18 +58,18 @@
 mojstockr_calculate_proportions <- function(df, predicate_columns, conditional_columns, proportions_column_name = "proportion", weights_column = NULL) {
   
   if (is.null(weights_column)) {
-    n_x <- dplyr::count(df, dplyr::across(dplyr::all_of(predicate_columns)), name = "group_total")
-    n_xy <- dplyr::count(df, dplyr::across(dplyr::all_of(append(predicate_columns,
+    n_x <- dplyr::count(df, dplyr::across(tidyselect::all_of(predicate_columns)), name = "group_total")
+    n_xy <- dplyr::count(df, dplyr::across(tidyselect::all_of(append(predicate_columns,
                                                                 conditional_columns))), name = "subgroup_total")
   } else {
-    n_x <- dplyr::count(df, dplyr::across(dplyr::all_of(predicate_columns)), name = "group_total", wt = .data[[weights_column]])
-    n_xy <- dplyr::count(df, dplyr::across(dplyr::all_of(append(predicate_columns,
+    n_x <- dplyr::count(df, dplyr::across(tidyselect::all_of(predicate_columns)), name = "group_total", wt = .data[[weights_column]])
+    n_xy <- dplyr::count(df, dplyr::across(tidyselect::all_of(append(predicate_columns,
                                                                 conditional_columns))), name = "subgroup_total", wt = .data[[weights_column]])
   }
 
   n_all <- merge(n_x, n_xy, by = predicate_columns)
   n_all[{{proportions_column_name}}] <- n_all["subgroup_total"] / n_all["group_total"]
-  n_all <- dplyr::select(n_all, !c(group_total, subgroup_total))
+  n_all <- dplyr::select(n_all, !c("group_total", "subgroup_total"))
   
   n_all <- tibble::as_tibble(n_all) # For consistency with other functions in this collection
   
@@ -265,10 +267,10 @@ mojstockr_make_lag_filter <- function(lag, N = NULL) {
 mojstockr_mconv <- function(x, h, non_data_cols = NULL) {
   
   # FYI, works with null non_data_cols fine.
-  non_data   <- dplyr::select(x, all_of(non_data_cols))
-  non_data_h <- dplyr::select(h, all_of(non_data_cols))
-  x <- dplyr::select(x, -all_of(non_data_cols)) %>% as.matrix()
-  h <- dplyr::select(h, -all_of(non_data_cols)) %>% as.matrix()
+  non_data   <- dplyr::select(x, tidyselect::all_of(non_data_cols))
+  non_data_h <- dplyr::select(h, tidyselect::all_of(non_data_cols))
+  x <- dplyr::select(x, -tidyselect::all_of(non_data_cols)) %>% as.matrix()
+  h <- dplyr::select(h, -tidyselect::all_of(non_data_cols)) %>% as.matrix()
   
   if (nrow(x) != nrow(h))
     stop("Inconsistent rows between time series and filter tables.")
@@ -333,12 +335,12 @@ mojstockr_build_stock <- function(inflows, outflows, non_data_cols = NULL) {
   inflows <- dplyr::mutate(inflows, flow = "in")
 
   outflows <- dplyr::mutate(outflows, flow = "out") %>% 
-    dplyr::mutate(dplyr::across(-c(dplyr::all_of(non_data_cols), "flow"), ~ -.x))
+    dplyr::mutate(dplyr::across(-c(tidyselect::all_of(non_data_cols), "flow"), ~ -.x))
 
   # Be careful. This also re-orders by character columns alphabetically and
   # converts to a tibble.
   stock <- rbind(inflows, outflows) %>%
-    dplyr::group_by(dplyr::across(dplyr::all_of((non_data_cols)))) %>%
+    dplyr::group_by(dplyr::across(tidyselect::all_of((non_data_cols)))) %>%
     dplyr::summarise(dplyr::across(-c("flow"), sum), .groups = 'drop')
 
   data_cols <- !names(stock) %in% non_data_cols

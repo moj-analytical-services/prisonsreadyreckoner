@@ -6,12 +6,29 @@
 \usage{
 multiply_two_named_vectors(vector1, vector2, arguments_to_keep = NULL)
 }
+\arguments{
+\item{vector1}{Vector.}
+
+\item{vector2}{Vector.}
+
+\item{arguments_to_keep}{\emph{Optional.} Character vector. Specifies which
+arguments to keep in the returned vector.}
+}
+\value{
+A vector containing the multiplication of values in \code{vector1}
+and \code{vector2}.
+}
 \description{
 Match the arguments of two vectors together based on name, and then multiply
 the argument values together. If names are present in \code{vector1} but not
 \code{vector2}, the returned vector will contain \code{NA} values
 corresponding to those names. If names are present in \code{vector2} but not
-\code{vector1}, they will be dropped from \code{vector2} The optional
+\code{vector1}, they will be dropped from \code{vector2}. The optional
 argument \code{arguments to keep} can be used to specify which arguments to
 keep in the returned vector.
+}
+\examples{
+\dontrun{
+recall_time     <- multiply_two_named_vectors(average_time_on_recall, recall_profile_adjustments, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
+}
 }
