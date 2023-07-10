@@ -11,8 +11,6 @@ run_prisonsreadyreckoner <- function(params) {
   params <- format_params(params)
   
   ### Load datasets that are fixed throughout the model ###
-  # DEVELOPMENT NOTE: Apply nomis_out_delius_in_ratio to profiles_lic on reading
-  # so that the adjustment is only applied once.
   loaded_datasets_list             <- load_datasets(params)
   
   cc_receipts_delta_loaded_list    <- loaded_datasets_list$cc_receipts_delta_loaded_list
@@ -40,8 +38,6 @@ run_prisonsreadyreckoner <- function(params) {
   profiles_remand_out <- make_remand_filter_out(params$remand_rates[['disposals']], params$no_bail_rate, params$ctl, params$projection_length_months)
   
   # Make filters for recall outflows.
-  # DEVELOPMENT NOTE: Bundle following into a make_recall_filter() function for
-  # consistency with remand.
   recall_time     <- multiply_two_named_vectors(average_time_on_recall, recall_profile_adjustments, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
   profiles_recall <- make_lag_filters(recall_time)
 
@@ -233,8 +229,6 @@ run_prison_indeterminate_module <- function(month_names, inflows_indet_mean) {
 run_prison_recall_module <- function(outflows_det, nomis_out_delius_in_ratio, profiles_lic,
                                      recall_rate_exclPSS, lever_recall_rate, lever_recall_rate_impact_date, profiles_recall) {
   
-  # DEVELOPMENT NOTE: If nomis_out_delius_in_ratio has already been applied to
-  # profiles_lic on reading, no need for next line.
   inflows_lic              <- apply_ratios(outflows_det, nomis_out_delius_in_ratio)
   outflows_lic             <- mojstockr_mconv(inflows_lic, profiles_lic, c("senband"))
   pop_lic                  <- mojstockr_build_stock(inflows_lic, outflows_lic, c("senband"))
