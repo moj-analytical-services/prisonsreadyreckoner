@@ -79,7 +79,7 @@ calculate_police_charge_routes <- function(police_charges_cc_route, police_charg
 
 ### NEW MAGISTRATES' COURT FUNCTIONS USING DATA FROM KATIE MAHON ###
 
-load_police_charges_mc_data <- function(police_charges_mc_file, police_charges_mc_scenarios, police_charges_mc_sheet, start_date, forecast_start_date, forecast_end_date) {
+load_police_charges_mc_data <- function(police_charges_mc_file, police_charges_mc_scenarios, police_charges_mc_sheet, mc_remand_lookup, start_date, forecast_start_date, forecast_end_date) {
   
   extra_police_charges_mc <- suppressMessages(import_s3_file(police_charges_mc_file, sheet = police_charges_mc_sheet)) %>%
     dplyr::filter(rdos_type == "DISPOSALS") %>%
@@ -98,6 +98,10 @@ load_police_charges_mc_data <- function(police_charges_mc_file, police_charges_m
     dplyr::filter(scenario == police_charges_mc_scenarios[["central"]]) %>%
     trim_dates(start_date, forecast_start_date, forecast_end_date)
   
+  
+  # Add flag for indicating which disposals are relevant for calculating remand.
+  extra_police_charges_mc <- dplyr::left_join(extra_police_charges_mc, mc_remand_lookup, by = "disposal_type", unmatched = "error")
+    
   
   extra_police_charges_mc_list <- list()
   
