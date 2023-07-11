@@ -62,11 +62,11 @@ run_prisonsreadyreckoner <- function(params) {
   
   print(paste0("pop_scenario and gender split took ", Sys.time() - t0, " seconds"))
 
-  # # Plotting routines to be used in development to assess model output.
-  # dev_plot_population(pop_combined, "remand", "Remand delta")
-  # dev_plot_population(pop_combined, "determinate", "Determinate")
-  # dev_plot_population(pop_combined, "indeterminate", "Indeterminate")
-  # dev_plot_population(pop_combined, "recall", "Recall")
+  # Plotting routines to be used in development to assess model output.
+  dev_plot_population(pop_combined, "remand", "Remand delta")
+  dev_plot_population(pop_combined, "determinate", "Determinate")
+  dev_plot_population(pop_combined, "indeterminate", "Indeterminate")
+  dev_plot_population(pop_combined, "recall", "Recall")
 
   return(pop_combined)
 }
@@ -170,7 +170,7 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
 #'
 #' @export
 #run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disposals, sentencing_rates, inflows_det) {
-run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disposals,
+run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disposals_delta,
                               profiles_remand_in, profiles_remand_out, mc_remand_lookup,
                               sentencing_rates, inflows_det) {
 
@@ -184,14 +184,14 @@ run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disp
   # Join the capacity table with the crown output table and calculate disposals
   # delta for non-ring-fenced cases, assuming current non-ring-fenced disposal
   # case mix.
-  cc_disposals <- calculate_cc_disposals(cc_output, cc_capacity)
+  cc_disposals_delta <- calculate_cc_disposals_delta(cc_output, cc_capacity)
   
   # Calculate remand population from court disposals.
-  #pop_remand_delta  <- calculate_pop_remand_delta(cc_disposals)
-  pop_remand_delta  <- calculate_pop_remand_delta(mc_disposals, cc_disposals, profiles_remand_in, profiles_remand_out, mc_remand_lookup)
+  #pop_remand_delta  <- calculate_pop_remand_delta(cc_disposals_delta)
+  pop_remand_delta  <- calculate_pop_remand_delta(mc_disposals_delta, cc_disposals_delta, profiles_remand_in, profiles_remand_out)
   
   # Calculate determinate inflows from court disposals.
-  inflows_det_delta <- calculate_inflows_det_delta(cc_disposals, mc_disposals, sentencing_rates)
+  inflows_det_delta <- calculate_inflows_det_delta(cc_disposals_delta, mc_disposals_delta, sentencing_rates)
   
   # Add delta from court disposals to background inflows.
   inflows_det_adj <- add_inflows_det_delta_courts(inflows_det, inflows_det_delta)

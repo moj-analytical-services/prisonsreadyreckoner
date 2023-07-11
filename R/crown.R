@@ -187,7 +187,7 @@ calculate_hours_ringfenced_delta <- function(cc_output, cc_capacity) {
 # via the Crown Court (e.g. receipt_type_desc = "ind" with route = "e_other" is
 # counted as the same route as receipt_type_desc = "tew" with route =
 # "e_other").
-calculate_cc_disposals <- function(cc_output, cc_capacity) {
+calculate_cc_disposals_delta <- function(cc_output, cc_capacity) {
   
   cc_disposals <- dplyr::left_join(cc_output, cc_capacity, by = c("date")) %>%
                     dplyr::mutate(n_disposals_delta = n_disposals_ringfenced_delta + (capacity_delta - hours_ringfenced_delta) * backlog_rate) %>%

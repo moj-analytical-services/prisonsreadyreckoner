@@ -84,13 +84,12 @@ make_remand_filter_out <- function(remand_rate, no_bail_rate, ctl, projection_le
 # }
 
 
-calculate_pop_remand_delta <- function(mc_disposals, cc_disposals, profiles_remand_in, profiles_remand_out, mc_remand_lookup) {
+calculate_pop_remand_delta <- function(mc_disposals, cc_disposals, profiles_remand_in, profiles_remand_out) {
   
   # Find change in receipts relevant for remand.
   # As magistrates' court disposals are generated from receipts without
   # adjustment, it is acceptable to use disposals as a proxy for receipts.
-  receipts_remand_delta <- dplyr::left_join(mc_disposals, mc_remand_lookup, by = "disposal_type", unmatched = "error") %>%
-    dplyr::filter(.data$remanded == TRUE) %>%
+  receipts_remand_delta <- dplyr::filter(mc_disposals, .data$remanded == TRUE) %>%
     dplyr::group_by(.data$date) %>%
     dplyr::summarise(n_disposals_delta = sum(.data$n_disposals_delta), .groups = "drop") %>%
     tidyr::pivot_wider(names_from = .data$date,
