@@ -29,6 +29,18 @@ make_ringfenced_lookup <- function(mode = 'save') {
 
 
 ################################################################################
+# Remand
+################################################################################
+
+# test-sitting-day-scenario-impacts.xlsx
+# Provided by Jordan Carroll to support testing of the remand model used in
+# prisonsreadyreckoner v1.0.0 (Shiny app v1.0.0).
+# Source: 20230710 - Jordan Carroll - RE_ Remand model comparison.msg
+
+
+
+
+################################################################################
 # Receptions
 ################################################################################
 

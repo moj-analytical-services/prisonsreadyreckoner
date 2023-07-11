@@ -59,12 +59,15 @@ make_remand_filter_in <- function(remand_rate, no_bail_rate, ctl, projection_len
 make_remand_filter_out <- function(remand_rate, no_bail_rate, ctl, projection_length_months) {
   
   bail_rate <- 1 - no_bail_rate
-  min_step <- max(1, ctl - projection_length_months + 1)
-
+  #min_step <- max(1, ctl - projection_length_months + 1)
+  min_step <- max(1, (ctl - 1) - projection_length_months + 1)
+  
+  # Calculations chosen to match Jordan's data.
   filter_remand <- tibble::tibble(casetype = "remand",
                                   lag = seq(0, projection_length_months-1), 
-                                  impact = -remand_rate * c(no_bail_rate + bail_rate * seq(ctl, min_step, -1) / ctl, rep(no_bail_rate, max(0, projection_length_months - ctl))))
-
+                                  #impact = -remand_rate * c(no_bail_rate + bail_rate * seq(ctl, min_step, -1) / ctl, rep(no_bail_rate, max(0, projection_length_months - ctl))))
+                                  impact = -remand_rate * c(no_bail_rate + bail_rate * seq(ctl - 1, min_step, -1) / ctl, rep(no_bail_rate, max(0, projection_length_months - (ctl - 1)))))
+  
   filter_remand <- tidyr::pivot_wider(filter_remand, names_from = .data$lag, names_prefix = "lag", values_from = .data$impact)
   
 }
