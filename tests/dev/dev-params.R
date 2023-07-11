@@ -101,9 +101,10 @@ dev_set_params <- function() {
   #   "tew",                     0.277,
   #   "app",                         0,
   #   "sent",                        0)   # '20230503 - Charlotte Wallace - RE_ Gender split and remand ratio_.msg'
-  params$remand_rates <- c(receipts = 0.188, disposals = 0.478)   # '2023076 - To Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
-  params$no_bail_rate <- 0.2
-  params$ctl          <- 6   # [months]
+  params$remand_rates <- c(receipts = 0.188,        # '20230706 - To Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg', 
+                           disposals = 0.4753537)   # '20230711 - To Jordan Carroll - RE_ Remand model comparison.msg'
+  params$no_bail_rate <- 0.2                                      # '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
+  params$ctl          <- 6                                        # [months] '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
   params$mc_remand_lookup <- tibble::tribble(
     ~disposal_type, ~remanded,
     "mc_ind",       TRUE,
