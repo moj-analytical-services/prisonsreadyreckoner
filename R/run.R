@@ -128,7 +128,7 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
   # echoing it.
   withCallingHandlers(warning = function(msg) {},
                       #{courts_outputs <- run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, sentencing_rates_loaded, inflows_det_loaded)})
-                     {courts_outputs <- run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, profiles_remand_in, profiles_remand_out, params$mc_remand_lookup, sentencing_rates_loaded, inflows_det_loaded)})
+                     {courts_outputs <- run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, profiles_remand_in, profiles_remand_out, sentencing_rates_loaded, inflows_det_loaded)})
     pop_remand_delta <- courts_outputs$pop_remand_delta
     inflows_det_adj  <- courts_outputs$inflows_det_adj
   
@@ -171,7 +171,7 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
 #' @export
 #run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disposals, sentencing_rates, inflows_det) {
 run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disposals_delta,
-                              profiles_remand_in, profiles_remand_out, mc_remand_lookup,
+                              profiles_remand_in, profiles_remand_out,
                               sentencing_rates, inflows_det) {
 
   # Add additional Crown Court receipts (and disposals for ring-fenced cases).
