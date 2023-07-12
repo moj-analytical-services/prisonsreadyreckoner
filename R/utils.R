@@ -117,7 +117,9 @@ write_table <- function(table, path_output, ...) {
 #'   and \code{vector2}.
 #' @examples
 #' \dontrun{
-#' recall_time     <- multiply_two_named_vectors(average_time_on_recall, recall_profile_adjustments, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
+#' recall_time <- multiply_two_named_vectors(average_time_on_recall,
+#'                  recall_profile_adjustments,
+#'                  arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
 #' }
 #' @export
 multiply_two_named_vectors <- function(vector1, vector2, arguments_to_keep = NULL) {

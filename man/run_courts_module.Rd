@@ -9,7 +9,9 @@ run_courts_module(
   cc_output,
   cc_capacity,
   cc_receipts_delta,
-  mc_disposals,
+  mc_disposals_delta,
+  profiles_remand_in,
+  profiles_remand_out,
   sentencing_rates,
   inflows_det
 )

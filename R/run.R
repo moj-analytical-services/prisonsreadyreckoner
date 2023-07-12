@@ -62,11 +62,11 @@ run_prisonsreadyreckoner <- function(params) {
   
   print(paste0("pop_scenario and gender split took ", Sys.time() - t0, " seconds"))
 
-  # Plotting routines to be used in development to assess model output.
-  dev_plot_population(pop_combined, "remand", "Remand delta")
-  dev_plot_population(pop_combined, "determinate", "Determinate")
-  dev_plot_population(pop_combined, "indeterminate", "Indeterminate")
-  dev_plot_population(pop_combined, "recall", "Recall")
+  # # Plotting routines to be used in development to assess model output.
+  # dev_plot_population(pop_combined, "remand", "Remand delta")
+  # dev_plot_population(pop_combined, "determinate", "Determinate")
+  # dev_plot_population(pop_combined, "indeterminate", "Indeterminate")
+  # dev_plot_population(pop_combined, "recall", "Recall")
 
   return(pop_combined)
 }

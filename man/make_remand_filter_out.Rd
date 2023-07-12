@@ -32,6 +32,6 @@ with remand and that some proportion of these will have left remand after the
 custody time limit (CTL) anyway. Additionally assuming that the disposal can
 occur any time within the individual's CTL, the filter is most negative at a
 lag of zero and declines linearly throughout a period equivalent to the CTL.
-A steady state is reached, represenying the probability that the individual's
+A steady state is reached, representing the probability that the individual's
 circumstances do not warrant release on bail.
 }
