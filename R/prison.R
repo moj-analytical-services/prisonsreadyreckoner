@@ -31,7 +31,7 @@ make_remand_filter_in <- function(remand_rate, no_bail_rate, ctl, projection_len
                                   lag = seq(0, projection_length_months-1), 
                                   impact = remand_rate * c(rep(1, ctl), rep(no_bail_rate, projection_length_months - ctl)))
   
-  filter_remand <- tidyr::pivot_wider(filter_remand, names_from = .data$lag, names_prefix = "lag", values_from = .data$impact)
+  filter_remand <- tidyr::pivot_wider(filter_remand, names_from = "lag", names_prefix = "lag", values_from = "impact")
   
 }
 
@@ -62,13 +62,13 @@ make_remand_filter_out <- function(remand_rate, no_bail_rate, ctl, projection_le
   #min_step <- max(1, ctl - projection_length_months + 1)
   min_step <- max(1, (ctl - 1) - projection_length_months + 1)
   
-  # Calculations chosen to match Jordan's data.
+  # Calculations chosen to match Jordan's.
   filter_remand <- tibble::tibble(casetype = "remand",
                                   lag = seq(0, projection_length_months-1), 
                                   #impact = -remand_rate * c(no_bail_rate + bail_rate * seq(ctl, min_step, -1) / ctl, rep(no_bail_rate, max(0, projection_length_months - ctl))))
-                                  impact = -remand_rate * c(no_bail_rate + bail_rate * seq(ctl - 1, min_step, -1) / ctl, rep(no_bail_rate, max(0, projection_length_months - (ctl - 1)))))
+                                  impact = -remand_rate * c(no_bail_rate + bail_rate * seq((ctl - 1), min_step, -1) / ctl, rep(no_bail_rate, max(0, projection_length_months - (ctl - 1)))))
   
-  filter_remand <- tidyr::pivot_wider(filter_remand, names_from = .data$lag, names_prefix = "lag", values_from = .data$impact)
+  filter_remand <- tidyr::pivot_wider(filter_remand, names_from = "lag", names_prefix = "lag", values_from = "impact")
   
 }
 
@@ -95,8 +95,8 @@ calculate_pop_remand_delta <- function(mc_disposals, cc_disposals, profiles_rema
   receipts_remand_delta <- dplyr::filter(mc_disposals, .data$remanded == TRUE) %>%
     dplyr::group_by(.data$date) %>%
     dplyr::summarise(n_disposals_delta = sum(.data$n_disposals_delta), .groups = "drop") %>%
-    tidyr::pivot_wider(names_from = .data$date,
-                       values_from = .data$n_disposals_delta,
+    tidyr::pivot_wider(names_from = "date",
+                       values_from = "n_disposals_delta",
                        values_fill = 0,
                        names_sort = TRUE) %>%
     dplyr::mutate(casetype = "remand", .before = 1)
@@ -108,8 +108,8 @@ calculate_pop_remand_delta <- function(mc_disposals, cc_disposals, profiles_rema
   # Find Crown Court disposals relevant for remand.
   disposals_remand_delta <- dplyr::group_by(cc_disposals, .data$date) %>%
     dplyr::summarise(n_disposals_delta = sum(.data$n_disposals_delta), .groups = "drop") %>%
-    tidyr::pivot_wider(names_from = .data$date,
-                       values_from = .data$n_disposals_delta,
+    tidyr::pivot_wider(names_from = "date",
+                       values_from = "n_disposals_delta",
                        values_fill = 0,
                        names_sort = TRUE) %>%
     dplyr::mutate(casetype = "remand", .before = 1)
@@ -363,7 +363,7 @@ make_lag_filters <- function(lags) {
   # Convert to tibble for consistency with other functions in this collection.
   lag_filters <- lag_filters %>%
     tibble::as_tibble() %>%
-    dplyr::mutate(across(-senband, as.numeric))
+    dplyr::mutate(dplyr::across(-senband, as.numeric))
 }
 
 
@@ -377,7 +377,8 @@ apply_ratios <- function(input_values, preimpact_ratios, column_to_match = "senb
     # In this command, convert output to dataframe and then back to tibble to
     # remove inner column names that have been added to mutate
     output <- input %>%
-      dplyr::mutate(across(-column_to_match, ~ .x * ratios)) %>%
+      #dplyr::mutate(across(-column_to_match, ~ .x * ratios)) %>%
+      dplyr::mutate(dplyr::across(-tidyselect::all_of(column_to_match), ~ .x * ratios)) %>%
       as.data.frame() %>%
       tibble::as_tibble()
     
@@ -413,7 +414,8 @@ apply_ratios <- function(input_values, preimpact_ratios, column_to_match = "senb
     output_values_post <- multiply_by_ratios(input_values, postimpact_ratios)
     
     input_values_values <- input_values %>%
-      dplyr::select(-c(column_to_match))
+      #dplyr::select(-c(column_to_match))
+      dplyr::select(-tidyselect::all_of(column_to_match))
     
     coldates_pre           <- c(FALSE, as.Date(names(input_values_values)) < as.Date(impact_date))
     coldates_post          <- c(FALSE, as.Date(names(input_values_values)) >= as.Date(impact_date))

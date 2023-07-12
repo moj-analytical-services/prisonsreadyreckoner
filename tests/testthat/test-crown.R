@@ -10,13 +10,6 @@ test_that("the Crown module will produce output compatible with intended functio
                            ringfenced = c(TRUE, FALSE, TRUE, FALSE, FALSE)
   )
   
-  remand_rates <- tibble::tribble(
-    ~receipt_type_desc, ~remand_rate,
-    "ind",                     0.5,
-    "tew",                     0.3,
-    "app",                       0)
-  
-  
   cc_output <- tibble::tibble(date = c("2023-01-01", "2023-01-01", "2023-01-01", "2023-01-01", "2023-01-01",
                                           "2023-02-01", "2023-02-01", "2023-02-01", "2023-02-01", "2023-02-01", 
                                           "2023-03-01", "2023-03-01", "2023-03-01", "2023-03-01", "2023-03-01"),
@@ -59,14 +52,11 @@ test_that("the Crown module will produce output compatible with intended functio
    
    
    # Test that the crown output table is agumented as expected.
-   cc_output_act <- augment_crown_output(cc_output, ringfenced_lookup, remand_rates)
+   cc_output_act <- augment_crown_output(cc_output, ringfenced_lookup)
    cc_output_exp <- cc_output
    cc_output_exp$ringfenced <- c(c(TRUE, FALSE, TRUE, FALSE, FALSE),
                                  c(TRUE, FALSE, TRUE, FALSE, FALSE),
                                  c(TRUE, FALSE, TRUE, FALSE, FALSE))
-   cc_output_exp$remand_rate <- c(c(0, 0.5, 0, 0.3, 0),
-                                  c(0, 0.5, 0, 0.3, 0),
-                                  c(0, 0.5, 0, 0.3, 0))
    cc_output_exp$hours_non_ringfenced <- c((2*50 + 2*60 + 5*10) * rep(1, 5),
                                            (2.5*60 + 2*70 + 7*20) * rep(1, 5),
                                            (3*70 + 1*80 + 3*50) * rep(1, 5))
@@ -108,7 +98,7 @@ test_that("the Crown module will produce output compatible with intended functio
    cc_capacity <- add_cc_sitting_days(cc_capacity_act, 100, "2023-02-01")
    cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity)
    
-   cc_disposals_act <- calculate_cc_disposals(cc_output, cc_capacity)
+   cc_disposals_act <- calculate_cc_disposals_delta(cc_output, cc_capacity)
    cc_disposals_exp <- tibble::tibble(date = c("2023-01-01", "2023-01-01", "2023-01-01", "2023-01-01", "2023-01-01",
                                                "2023-02-01", "2023-02-01", "2023-02-01", "2023-02-01", "2023-02-01", 
                                                "2023-03-01", "2023-03-01", "2023-03-01", "2023-03-01", "2023-03-01"),
@@ -118,9 +108,6 @@ test_that("the Crown module will produce output compatible with intended functio
                                       route = c("egp", "effective", "egp", "effective", "app",
                                                 "egp", "effective", "egp", "effective", "app",
                                                 "egp", "effective", "egp", "effective", "app"),
-                                      remand_rate = c(c(0, 0.5, 0, 0.3, 0),
-                                                      c(0, 0.5, 0, 0.3, 0),
-                                                      c(0, 0.5, 0, 0.3, 0)),
                                       n_receipts_delta = c(0, 0, 0, 0, 0,
                                                            10, 20, 30, 40, 10,
                                                            15, 25, 40, 10, 5),
@@ -130,18 +117,5 @@ test_that("the Crown module will produce output compatible with intended functio
    )
    
    expect_equal(cc_disposals_act, cc_disposals_exp)
-   
-   
-   
-   # Test that the remand is calculated from non-ringfenced receipts and
-   # disposal deltas only.
-   pop_remand_delta_act <- calculate_pop_remand_delta(cc_disposals_act)
-   pop_remand_delta_exp <- tibble::tibble(casetype = "remand",
-                                          `2023-01-01` = 0,
-                                          `2023-02-01` = 0.5 * (20 - ((5*100 - (0.4*10 + 0.6*30)) * 60 / (2.5*60 + 2*70 + 7*20))) + 0.3 * (40 - ((5*100 - (0.4*10 + 0.6*30)) * 70 / (2.5*60 + 2*70 + 7*20))),
-                                          `2023-03-01` = 0.5 * (25 - ((3*100 - (0.3*15 + 0.5*40)) * 70 / (3*70 + 1*80 + 3*50))) + 0.3 * (10 - ((3*100 - (0.3*15 + 0.5*40)) * 80 / (3*70 + 1*80 + 3*50)))
-   ) %>% dplyr::mutate(`2023-03-01` = `2023-03-01` + `2023-02-01`)
-   
-   expect_equal(pop_remand_delta_act, pop_remand_delta_exp)
    
 })

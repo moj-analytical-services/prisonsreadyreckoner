@@ -34,6 +34,9 @@ test_that("functions for reading receptions data will complete without error", {
 })
 
 
+# The following is commented only because it relies on functions in what is now
+# the updater package.
+
 # Applying a linear model to predict prison receptions.
 # The predicted prison receptions are compared with the model fit on which the
 # model is based. Equality demonstrates that the model has been applied

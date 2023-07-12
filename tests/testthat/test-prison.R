@@ -90,15 +90,14 @@ test_that("calculate_pop_remand_delta() generates the expected steady state rema
 # available
 test_that("calculate_pop_remand_delta() generates the expected steady state remand population", {
   
-  path_target <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-sitting-day-scenario-impacts.xlsx"
+  path_target <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-sitting-day-scenario-impacts.xlsx"
   sheet_disposals <- "Disposal Difference"
   sheet_remand <- "Net Remand Impact"
   
 
-  #remand_rates <- c(receipts = 0.187684259863295, disposals = 0.478118695083818)   # '20230706 - To Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
-  remand_rates <- c(receipts = 0.187684259863295, disposals = 0.4753537)            # Rates adjusted to create a match.
-  no_bail_rate <- 0.2                                      # '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
-  ctl          <- 6                                        # [months] '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
+  remand_rates <- c(receipts = 0.187429985453694, disposals = 0.475353729743915)   # '20230712 - To Jordan Carroll - RE_ Remand model comparison.msg'
+  no_bail_rate <- 0.2                                                              # '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
+  ctl          <- 6                                                                # [months] '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
 
 
   disposals_delta <- import_s3_file(path_target, sheet = sheet_disposals)
