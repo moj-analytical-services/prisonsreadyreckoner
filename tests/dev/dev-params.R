@@ -60,7 +60,7 @@ dev_set_params <- function() {
   
   # Police charge parameters
   # Magistrates' courts
-  params$police_charges_mc_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/020623_mags_sensitivity_output.xlsx"
+  params$police_charges_mc_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/020623_mags_sensitivity_output.xlsx"   # '202306026- Katie Mahon - RE_ mags outputs template.eml'
   params$police_charges_mc_scenarios <- list(central = "apr23_central",
                                              ramp_12m = "apr23_central_12m",
                                              ramp_36m = "apr23_central_36m",

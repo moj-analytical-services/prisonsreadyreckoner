@@ -14,10 +14,10 @@ library(magrittr)
 
 # File created on DOM1 by pivoting ad hoc prison flow forecasts from Charlotte
 # Wallace.
-path_target <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-determinate-population.xlsx"
+path_target <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-determinate-population.xlsx"   # This file is created from ad hoc data on DOM1.
 # Profiles file prepared with the old FULLSAMPLE (as used by Charlotte to create
 # the above)
-path_profiles <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-determinate-profiles-old-2022-01-01-to-2022-12-31.csv"
+path_profiles <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-determinate-profiles-old-2022-01-01-to-2022-12-31.csv"
 
 
 plot_series <- function(series, main, ylab) {
