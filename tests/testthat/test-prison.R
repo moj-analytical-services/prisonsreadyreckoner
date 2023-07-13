@@ -89,8 +89,8 @@ test_that("calculate_pop_remand_delta() generates the expected steady state rema
 # Note that, at the time of construction, only disposal-based scenarios were
 # available
 test_that("calculate_pop_remand_delta() generates the expected steady state remand population", {
-  
-  path_target <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-sitting-day-scenario-impacts.xlsx"
+
+  path_target <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-sitting-day-scenario-impacts.xlsx"   # '20230710 - Jordan Carroll - RE_ Remand model comparison.msg'
   sheet_disposals <- "Disposal Difference"
   sheet_remand <- "Net Remand Impact"
   

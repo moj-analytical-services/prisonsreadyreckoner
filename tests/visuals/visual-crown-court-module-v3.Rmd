@@ -40,14 +40,14 @@ original scenarios indicates the model is performing well.
 
 ```{r include = FALSE}
 # Files for the original April 2023 analysis.
-load_crown_scenario_data_apr23 <- function(remand_rates) {
+load_crown_scenario_data_apr23 <- function() {
   
   start_date <- as.Date("2022-11-01")    # cc_output start date
   forecast_start_date     <- start_date
   forecast_end_date       <- lubridate::add_with_rollback(start_date, months(7*12 - 1), roll_to_first = TRUE) 
   
   # File names
-  ringfenced_lookup_file  <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-ringfenced-lookup.csv"
+  ringfenced_lookup_file  <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup.csv"
 
   cc_output_file_base <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/crown-output-apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
   cc_output_file_high <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/crown-output-apr23_s1.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
@@ -59,9 +59,9 @@ load_crown_scenario_data_apr23 <- function(remand_rates) {
   # Reading
   ringfenced_lookup <- load_ringfenced_lookup(ringfenced_lookup_file)
 
-  cc_scenario_base <- load_crown_data_apr23(cc_output_file_base, cc_capacity_file_base, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup, remand_rates)
-  cc_scenario_high <- load_crown_data_apr23(cc_output_file_high, cc_capacity_file_base, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup, remand_rates)
-  cc_scenario_low  <- load_crown_data_apr23(cc_output_file_low, cc_capacity_file_base, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup, remand_rates)
+  cc_scenario_base <- load_crown_data_apr23(cc_output_file_base, cc_capacity_file_base, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup)
+  cc_scenario_high <- load_crown_data_apr23(cc_output_file_high, cc_capacity_file_base, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup)
+  cc_scenario_low  <- load_crown_data_apr23(cc_output_file_low, cc_capacity_file_base, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup)
 
   return(list(cc_output_base = cc_scenario_base$cc_output,
               cc_output_high = cc_scenario_high$cc_output,
@@ -73,7 +73,7 @@ load_crown_scenario_data_apr23 <- function(remand_rates) {
 
 
 # The equivalent of load_crown_data() but for October 2022 data.
-load_crown_data_apr23 <- function(cc_output_file, cc_capacity_file, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup, remand_rates) {
+load_crown_data_apr23 <- function(cc_output_file, cc_capacity_file, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup) {
 
   # Read baseline inputs, which are disposals for ring-fenced cases and time
   # series for sitting days and hours available per sitting day.
@@ -83,7 +83,7 @@ load_crown_data_apr23 <- function(cc_output_file, cc_capacity_file, start_date, 
 
 
   # Add ring-fenced status. Calculate backlog case rate and hours per disposal.
-  cc_output <- augment_crown_output(cc_output, ringfenced_lookup, remand_rates)
+  cc_output <- augment_crown_output(cc_output, ringfenced_lookup)
 
   # Make capacity monitor
   cc_capacity  <- augment_cc_capacity(cc_capacity, cc_output)
@@ -93,30 +93,30 @@ load_crown_data_apr23 <- function(cc_output_file, cc_capacity_file, start_date, 
 
 
 # Files for the the October 2022 analysis.
-load_crown_scenario_data_oct22 <- function(remand_rates) {
+load_crown_scenario_data_oct22 <- function() {
   
   start_date <- as.Date("2022-03-01")    # cc_output start date
   forecast_start_date     <- start_date
   forecast_end_date       <- lubridate::add_with_rollback(start_date, months(7*12 - 1), roll_to_first = TRUE) 
   
   # File names
-  ringfenced_lookup_file  <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-ringfenced-lookup.csv"
+  ringfenced_lookup_file  <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup.csv"
 
   cc_output_file_base <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0804/model_outputs/_latest2/sensitivity_baseline_221122_1226/crown-output-disposals-oct22_s4b.csv"   # '20230518 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
   cc_output_file_high <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0804/model_outputs/_latest2/sensitivity_sd_oct22_1013_104_104_221128_1631/crown-output-disposals-oct22_s4b.csv"   # '20230518 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
   cc_output_file_low  <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0804/model_outputs/_latest2/sensitivity_sd_oct22_97_99_99_221128_1631/crown-output-disposals-oct22_s4b.csv"   # '20230518 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
   
-  cc_capacity_file_base <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-sd_htpsd_adjusted_oct22_s4b_baseline_sd_99_1023.csv"   # '20230518 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
-  cc_capacity_file_high <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-sd_htpsd_adjusted_oct22_s4b_sd_1013_104.csv"   # '20230518 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
-  cc_capacity_file_low  <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-sd_htpsd_adjusted_oct22_s4b_sd_97_99.csv"   # '20230518 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
+  cc_capacity_file_base <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-sd_htpsd_adjusted_oct22_s4b_baseline_sd_99_1023.csv"   # '20230518 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
+  cc_capacity_file_high <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-sd_htpsd_adjusted_oct22_s4b_sd_1013_104.csv"   # '20230518 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
+  cc_capacity_file_low  <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-sd_htpsd_adjusted_oct22_s4b_sd_97_99.csv"   # '20230518 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
 
   
   # Reading
   ringfenced_lookup <- load_ringfenced_lookup(ringfenced_lookup_file)
 
-  cc_scenario_base <- load_crown_data_oct22(cc_output_file_base, cc_capacity_file_base, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup, remand_rates)
-  cc_scenario_high <- load_crown_data_oct22(cc_output_file_high, cc_capacity_file_high, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup, remand_rates)
-  cc_scenario_low  <- load_crown_data_oct22(cc_output_file_low, cc_capacity_file_low, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup, remand_rates)
+  cc_scenario_base <- load_crown_data_oct22(cc_output_file_base, cc_capacity_file_base, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup)
+  cc_scenario_high <- load_crown_data_oct22(cc_output_file_high, cc_capacity_file_high, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup)
+  cc_scenario_low  <- load_crown_data_oct22(cc_output_file_low, cc_capacity_file_low, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup)
 
   return(list(cc_output_base = cc_scenario_base$cc_output,
               cc_output_high = cc_scenario_high$cc_output,
@@ -128,7 +128,7 @@ load_crown_scenario_data_oct22 <- function(remand_rates) {
 
 
 # The equivalent of load_crown_data() but for October 2022 data.
-load_crown_data_oct22 <- function(cc_output_file, cc_capacity_file, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup, remand_rates) {
+load_crown_data_oct22 <- function(cc_output_file, cc_capacity_file, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup) {
 
   # Read baseline inputs, which are disposals for ring-fenced cases and time
   # series for sitting days and hours available per sitting day.
@@ -147,7 +147,7 @@ load_crown_data_oct22 <- function(cc_output_file, cc_capacity_file, start_date, 
 
   
   # Add ring-fenced status. Calculate backlog case rate and hours per disposal.
-  cc_output <- augment_crown_output(cc_output, ringfenced_lookup, remand_rates)
+  cc_output <- augment_crown_output(cc_output, ringfenced_lookup)
 
   # Make capacity monitor
   cc_capacity  <- augment_cc_capacity(cc_capacity, cc_output)
@@ -169,7 +169,7 @@ compare_disposals_delta <- function(cc_output, cc_capacity, cc_output_diff, cc_c
   # Join the capacity table with the crown output table and calculate disposals
   # delta for non-ring-fenced cases assuming current non-ring-fenced disposal
   # case mix.
-  cc_disposals <- calculate_cc_disposals(cc_output, cc_capacity)
+  cc_disposals <- calculate_cc_disposals_delta(cc_output, cc_capacity)
   
   cc_disposals_delta <- dplyr::mutate(cc_disposals, disposal_type = paste0("cc_", route)) %>%
                           dplyr::group_by(date, disposal_type) %>%
@@ -334,19 +334,8 @@ Below shows sitting days and changes in sitting days from the original
 scenarios.
 
 ```{r echo = FALSE}
-# The remand rates table is not important here, except to allow package
-# functions to run without an error. We are not testing remand rates so any
-# format-compliant file will do.
-remand_rates <- tibble::tribble(
-                        ~receipt_type_desc, ~remand_rate,
-                        "ind",                     0.580,
-                        "tew",                     0.277,
-                        "app",                         0,
-                        "sent",                        0)   # 20230503 - Charlotte Wallace - RE_ Gender split and remand ratio_.msg
-
-
-#scenario_data <- load_crown_scenario_data_apr23(remand_rates)
-scenario_data <- load_crown_scenario_data_oct22(remand_rates)
+#scenario_data <- load_crown_scenario_data_apr23()
+scenario_data <- load_crown_scenario_data_oct22()
 
 # x <- as.Date(scenario_data$cc_capacity_base$date)
 # y <- data.frame(base = scenario_data$cc_capacity_base$capacity_base, high = scenario_data$cc_capacity_high$capacity_base, low = scenario_data$cc_capacity_low$capacity_base)
