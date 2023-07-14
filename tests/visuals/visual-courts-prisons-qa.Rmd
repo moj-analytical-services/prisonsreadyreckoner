@@ -471,7 +471,7 @@ pop_table <- target_pop_det_formatted %>%
 ### Summary ###
 
 * Determinate sentence prison populations predicted using the Prisons Submodule and Courts Submodule of `prisonsreadyreckoner` are compared to populations predicted by the [CJS Modelling team](https://peoplefinder.service.gov.uk/teams/justice-system-modelling-criminal-justice) using the same input data
-* Comparions are carried out for a **Low** scenario (i.e. low rates of court receipts and disposals) and a **High** scenario (i.e. high rates of court receipts and disposals)
+* Comparisons are carried out for a **Low** scenario (i.e. low rates of court receipts and disposals) and a **High** scenario (i.e. high rates of court receipts and disposals)
 * The Prisons Submodule performs excellently
 * The Courts Submodule performs well for the **Low** scenario, but not as well for the **High** scenario
 * Worse performance of the Courts Submodule for the **High** scenario may be because regression used for sentencing rates is not trained on data that extend to such high volumes
