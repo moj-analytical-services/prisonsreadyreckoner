@@ -29,6 +29,8 @@ keep in the returned vector.
 }
 \examples{
 \dontrun{
-recall_time     <- multiply_two_named_vectors(average_time_on_recall, recall_profile_adjustments, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
+recall_time <- multiply_two_named_vectors(average_time_on_recall,
+                 recall_profile_adjustments,
+                 arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
 }
 }
