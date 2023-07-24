@@ -15,76 +15,73 @@ devtools::load_all()
 `prisonflowcast` explores how changes in Crown Court capacity affect the number
 of Crown Court disposals relative to a baseline number of disposals. The user
 can change the modelled Crown Court capacity by changing the variable
-`params$extra_sitting_days`. Changes in Crown Court capacity take place
-beginning on the date specified by the parameter `params$capacity_impact_date`.
+`params$lever_extra_cc_sitting_days`. Changes in Crown Court capacity take place
+beginning on the date specified by the parameter `params$lever_extra_cc_sitting_days_impact_date`.
 The baseline number of disposals is an output from the xxxx model.
 
-If `params$extra_sitting_days = 0`, it is expected that `prisonflowcast` will
+If `params$lever_extra_cc_sitting_days = 0`, it is expected that `prisonflowcast` will
 calculate no change to the number of Crown Court disposals.
 
 ```{r echo=FALSE, out.width="100%"}
+  
   params <- list()
-
-  params$extra_sitting_days      <- 0
-  params$ringfenced_lookup_file  <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-ringfenced-lookup.csv"
-  params$crown_output_file    <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_io_res_12m_taper_230406_1019/crown-output-apr23_s4.csv"
-  params$capacity_file        <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sd_htpsd_adjusted_apr23_s4.csv"
-  params$capacity_impact_date    <- as.Date("2023-06-01")
-  params$start_date              <- as.Date("2022-11-01")    # First month of the forecast. Used for verifying inputs.
-  cc_disposals <- run_crown_court_module(params)
   
-  cc_disposals_united <- tidyr::unite(cc_disposals, receipt_type_route, c(receipt_type_desc, route), sep = " ")
+  params$forecast_start_date <- as.Date("2023-03-01")
+  params$forecast_end_date <- as.Date("2027-03-01")
   
-  cc_disposals_pivoted <- cc_disposals_united %>%
-    dplyr::select(c("date", "receipt_type_route", "n_disposals_delta")) %>%
-    tidyr::pivot_wider(
-      names_from = date,
-      values_from = n_disposals_delta,
-      values_fill = 0,
-      names_sort = TRUE
-    )
+  # Load police charge scenario
+  # Crown Court
+  params$police_charges_cc_files <- list(central = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_for_ready_reckoner.csv", # Records the total number of Crown Court receipts used as a baseline in the April 2023 projections. Includes background values from various sources, and an increase in charge numbers over a 24-month period. It has non-zero values throughout.
+                                      ramp_12m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_12m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 12-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
+                                      ramp_36m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_36m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 36-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
+                                      ramp_48m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_48m_ramp_for_ready_reckoner.csv" # Records how Crown Court receipts would change if police charge numbers were increased over a 48-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
+  )   # '20230525 - David Verry - RE_ Next steps on the CJS ready reckoner.eml'
+  # Table from Chun-Yee for converting Crown Court police charge tables
+  params$police_charges_cc_route_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/routes.csv"   # '20230518 - Chun-yee Cheng - cjst pre-covid route distribution.msg'
+  params$start_date$police_charges_cc  <- as.Date("2022-11-01")    # First month of the forecast. Used for verifying inputs.
+  cc_receipts_delta_loaded_list  <- load_police_charges_cc_data_list(params$police_charges_cc_route_file, params$police_charges_cc_files, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
+  params$lever_police_charges_scenario           <- "central"
+  cc_receipts_delta  <- cc_receipts_delta_loaded_list[[params$lever_police_charges_scenario]]
   
-  x <- as.Date(names(dplyr::select(cc_disposals_pivoted, -c("receipt_type_route"))))
-  y <- dplyr::select(cc_disposals_pivoted, -c("receipt_type_route"))
   
-  matplot(x,
-          t(y),
-          type = 'l',
-          xlab = "Date",
-          main = "Change in number of disposals due to changes to number of sitting day",
-          ylab = "Change in number of disposals",
-          lty = c(4,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2),
-          col = c(1,1,2,3,4,5,6,7,1,1,2,3,4,5,6,7)
-          )
+  # Crown Court parameters
+  params$start_date$cc_files           <- as.Date("2022-11-01")
+  # Input paths
+  params$cc_output_file          <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/crown-output-apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
+  params$cc_capacity_file        <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/sd_htpsd_adjusted_apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
+  # Paths to parameter tables
+  params$ringfenced_lookup_file  <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/ringfenced-lookup-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  cc_data     <- load_crown_data(params$cc_output_file, params$cc_capacity_file, params$ringfenced_lookup_file, params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date)
+  cc_output_loaded                       <- cc_data$cc_output
+  cc_capacity_loaded                     <- cc_data$cc_capacity
   
-  legend("topright",
-         inset = 0.02,
-         legend = paste0(cc_disposals_pivoted$receipt_type_route),
-         lty = c(4,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2),
-         col = c(1,1,2,3,4,5,6,7,1,1,2,3,4,5,6,7),
-         cex = 0.5
-  )
   
-  #print(cc_disposals_pivoted)
 ```
 
-
-
-
-### Example: Add 500 extra sitting days (per month) starting on 2022-11-01
-
-If the number of sitting days is increased, the number of disposals increases,
-as expected. (In this example, `params$extra_sitting_days = 500` and
-`params$capacity_impact_date = 2022-11-01`.)
 
 ```{r echo=FALSE, out.width="100%"}
-  params$extra_sitting_days      <- 500
-  params$capacity_impact_date    <- as.Date("2022-11-01")
-  cc_disposals <- run_crown_court_module(params)
+
+  # Number of extra court sitting days per month
+  params$lever_extra_cc_sitting_days             <- 0 / 12             # [month^-1]
+  params$lever_extra_cc_sitting_days_impact_date <- "2023-03-01"
   
-  cc_disposals_united <- tidyr::unite(cc_disposals, receipt_type_route, c(receipt_type_desc, route), sep = " ")
+  cc_capacity_levered  <- add_cc_sitting_days(cc_capacity_loaded, params$lever_extra_cc_sitting_days, params$lever_extra_cc_sitting_days_impact_date)
+
+  # Add additional Crown Court receipts (and disposals for ring-fenced cases).
+  cc_output <- add_cc_receipts_delta(cc_output_loaded, cc_receipts_delta)
+
+  # Add extra ring-fenced hours to the capacity table.
+  cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity_levered)
+  check_cc_capacity(cc_capacity_levered)
   
-  cc_disposals_pivoted <- cc_disposals_united %>%
+  # Join the capacity table with the crown output table and calculate disposals
+  # delta for non-ring-fenced cases, assuming current non-ring-fenced disposal
+  # case mix.
+  cc_disposals_delta <- calculate_cc_disposals_delta(cc_output, cc_capacity_levered)
+  
+  
+  # Format for plotting
+  cc_disposals_pivoted <- tidyr::unite(cc_disposals_delta, receipt_type_route, c(receipt_type_desc, route), sep = " ") %>%
     dplyr::select(c("date", "receipt_type_route", "n_disposals_delta")) %>%
     tidyr::pivot_wider(
       names_from = date,
@@ -114,28 +111,104 @@ as expected. (In this example, `params$extra_sitting_days = 500` and
          cex = 0.5
   )
   
-  #print(cc_disposals_pivoted)
+```
+
+
+
+### Example: Add 500 extra sitting days (per month) starting on 2023-03-01
+
+If the number of sitting days is increased, the number of disposals increases,
+as expected. (In this example, `params$lever_extra_cc_sitting_days = 500` and
+`params$lever_extra_cc_sitting_days_impact_date = 2022-11-01`.)
+
+```{r echo=FALSE, out.width="100%"}
+
+  # Number of extra court sitting days per month
+  params$lever_extra_cc_sitting_days             <- 6000 / 12             # [month^-1]
+  params$lever_extra_cc_sitting_days_impact_date <- "2023-03-01"
+  
+  cc_capacity_levered  <- add_cc_sitting_days(cc_capacity_loaded, params$lever_extra_cc_sitting_days, params$lever_extra_cc_sitting_days_impact_date)
+
+  # Add additional Crown Court receipts (and disposals for ring-fenced cases).
+  cc_output <- add_cc_receipts_delta(cc_output_loaded, cc_receipts_delta)
+
+  # Add extra ring-fenced hours to the capacity table.
+  cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity_levered)
+  check_cc_capacity(cc_capacity_levered)
+  
+  # Join the capacity table with the crown output table and calculate disposals
+  # delta for non-ring-fenced cases, assuming current non-ring-fenced disposal
+  # case mix.
+  cc_disposals_delta <- calculate_cc_disposals_delta(cc_output, cc_capacity_levered)
+  
+  
+  # Format for plotting
+  cc_disposals_pivoted <- tidyr::unite(cc_disposals_delta, receipt_type_route, c(receipt_type_desc, route), sep = " ") %>%
+    dplyr::select(c("date", "receipt_type_route", "n_disposals_delta")) %>%
+    tidyr::pivot_wider(
+      names_from = date,
+      values_from = n_disposals_delta,
+      values_fill = 0,
+      names_sort = TRUE
+    )
+  
+  x <- as.Date(names(dplyr::select(cc_disposals_pivoted, -c("receipt_type_route"))))
+  y <- dplyr::select(cc_disposals_pivoted, -c("receipt_type_route"))
+  
+  matplot(x,
+          t(y),
+          type = 'l',
+          xlab = "Date",
+          main = "Change in number of disposals due to changes to number of sitting day",
+          ylab = "Change in number of disposals",
+          lty = c(4,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2),
+          col = c(1,1,2,3,4,5,6,7,1,1,2,3,4,5,6,7)
+          )
+  
+  legend("topright",
+         inset = 0.02,
+         legend = paste0(cc_disposals_pivoted$receipt_type_route),
+         lty = c(4,1,1,1,1,1,1,1,3,2,2,2,2,2,2,2),
+         col = c(1,1,2,3,4,5,6,7,1,1,2,3,4,5,6,7),
+         cex = 0.5
+  )
+  
 ```
 
 
 
 
-### Example: Add 500 extra sitting days (per month) starting on 2023-06-01
+### Example: Add 500 extra sitting days (per month) starting on 2024-01-01
 
 If the number of sitting days increases at a later date, the number of disposals
-is unaffected until that date. (In this example, `params$extra_sitting_days =
-500` and `params$capacity_impact_date = 2023-06-01`.) Note that the plotted
-lines after 2023-06-01 are identical to those for the same dates in the above
+is unaffected until that date. (In this example, `params$lever_extra_cc_sitting_days =
+500` and `params$lever_extra_cc_sitting_days_impact_date = 2024-01-01`.) Note that the plotted
+lines after 2024-01-01 are identical to those for the same dates in the above
 graph.
 
 ```{r echo=FALSE, out.width="100%"}
-  params$extra_sitting_days      <- 500
-  params$capacity_impact_date    <- as.Date("2023-06-01")
-  cc_disposals <- run_crown_court_module(params)
+
+  # Number of extra court sitting days per month
+  params$lever_extra_cc_sitting_days             <- 6000 / 12             # [month^-1]
+  params$lever_extra_cc_sitting_days_impact_date <- "2024-01-01"
   
-  cc_disposals_united <- tidyr::unite(cc_disposals, receipt_type_route, c(receipt_type_desc, route), sep = " ")
+  cc_capacity_levered  <- add_cc_sitting_days(cc_capacity_loaded, params$lever_extra_cc_sitting_days, params$lever_extra_cc_sitting_days_impact_date)
+
+  # Add additional Crown Court receipts (and disposals for ring-fenced cases).
+  cc_output <- add_cc_receipts_delta(cc_output_loaded, cc_receipts_delta)
+
+  # Add extra ring-fenced hours to the capacity table.
+  cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity_levered)
+  check_cc_capacity(cc_capacity_levered)
   
-  cc_disposals_pivoted <- cc_disposals_united %>%
+  # Join the capacity table with the crown output table and calculate disposals
+  # delta for non-ring-fenced cases, assuming current non-ring-fenced disposal
+  # case mix.
+  cc_disposals_delta <- calculate_cc_disposals_delta(cc_output, cc_capacity_levered)
+  
+  
+  # Format for plotting
+  cc_disposals_pivoted <- tidyr::unite(cc_disposals_delta, receipt_type_route, c(receipt_type_desc, route), sep = " ") %>%
     dplyr::select(c("date", "receipt_type_route", "n_disposals_delta")) %>%
     tidyr::pivot_wider(
       names_from = date,
@@ -165,24 +238,38 @@ graph.
          cex = 0.5
   )
   
-  #print(cc_disposals_pivoted)
 ```
 
 
-### Example: Remove 500 sitting days (per month) starting on 2023-06-01
+### Example: Remove 500 sitting days (per month) starting on 2024-01-01
 
 If the number of sitting days is decreased, the number of disposals decreases,
-as expected. (In this example, `params$extra_sitting_days = -500` and
-`params$capacity_impact_date = 2023-06-01`.)
+as expected. (In this example, `params$lever_extra_cc_sitting_days = -500` and
+`params$lever_extra_cc_sitting_days_impact_date = 2024-01-01`.)
 
 ```{r echo=FALSE, out.width="100%"}
-  params$extra_sitting_days      <- -500
-  params$capacity_impact_date    <- as.Date("2023-06-01")
-  cc_disposals <- run_crown_court_module(params)
+
+  # Number of extra court sitting days per month
+  params$lever_extra_cc_sitting_days             <- -6000 / 12             # [month^-1]
+  params$lever_extra_cc_sitting_days_impact_date <- "2024-01-01"
   
-  cc_disposals_united <- tidyr::unite(cc_disposals, receipt_type_route, c(receipt_type_desc, route), sep = " ")
+  cc_capacity_levered  <- add_cc_sitting_days(cc_capacity_loaded, params$lever_extra_cc_sitting_days, params$lever_extra_cc_sitting_days_impact_date)
+
+  # Add additional Crown Court receipts (and disposals for ring-fenced cases).
+  cc_output <- add_cc_receipts_delta(cc_output_loaded, cc_receipts_delta)
+
+  # Add extra ring-fenced hours to the capacity table.
+  cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity_levered)
+  check_cc_capacity(cc_capacity_levered)
   
-  cc_disposals_pivoted <- cc_disposals_united %>%
+  # Join the capacity table with the crown output table and calculate disposals
+  # delta for non-ring-fenced cases, assuming current non-ring-fenced disposal
+  # case mix.
+  cc_disposals_delta <- calculate_cc_disposals_delta(cc_output, cc_capacity_levered)
+  
+  
+  # Format for plotting
+  cc_disposals_pivoted <- tidyr::unite(cc_disposals_delta, receipt_type_route, c(receipt_type_desc, route), sep = " ") %>%
     dplyr::select(c("date", "receipt_type_route", "n_disposals_delta")) %>%
     tidyr::pivot_wider(
       names_from = date,
@@ -212,28 +299,42 @@ as expected. (In this example, `params$extra_sitting_days = -500` and
          cex = 0.5
   )
   
-  #print(cc_disposals_pivoted)
 ```
 
 
 
-### Example: Add 100 extra sitting days (per month) starting on 2023-06-01
+### Example: Add 100 extra sitting days (per month) starting on 2024-01-01
 
 If the number of sitting days is increased by a smaller number, the number of
 disposals increases by a smaller number, as expected. (In this example,
-`params$extra_sitting_days = 100` and `params$capacity_impact_date =
-2023-06-01`.) Note that the graph below is identical to the graph for
-`params$extra_sitting_days = 500` and `params$capacity_impact_date = 2023-06-01`
+`params$lever_extra_cc_sitting_days = 100` and `params$lever_extra_cc_sitting_days_impact_date =
+2024-01-01`.) Note that the graph below is identical to the graph for
+`params$lever_extra_cc_sitting_days = 500` and `params$lever_extra_cc_sitting_days_impact_date = 2024-01-01`
 (see above), apart from the y-axis values are smaller by a factor of five.
 
 ```{r echo=FALSE, out.width="100%"}
-  params$extra_sitting_days      <- 100
-  params$capacity_impact_date    <- as.Date("2023-06-01")
-  cc_disposals <- run_crown_court_module(params)
+
+  # Number of extra court sitting days per month
+  params$lever_extra_cc_sitting_days             <- 1200 / 12             # [month^-1]
+  params$lever_extra_cc_sitting_days_impact_date <- "2024-01-01"
   
-  cc_disposals_united <- tidyr::unite(cc_disposals, receipt_type_route, c(receipt_type_desc, route), sep = " ")
+  cc_capacity_levered  <- add_cc_sitting_days(cc_capacity_loaded, params$lever_extra_cc_sitting_days, params$lever_extra_cc_sitting_days_impact_date)
+
+  # Add additional Crown Court receipts (and disposals for ring-fenced cases).
+  cc_output <- add_cc_receipts_delta(cc_output_loaded, cc_receipts_delta)
+
+  # Add extra ring-fenced hours to the capacity table.
+  cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity_levered)
+  check_cc_capacity(cc_capacity_levered)
   
-  cc_disposals_pivoted <- cc_disposals_united %>%
+  # Join the capacity table with the crown output table and calculate disposals
+  # delta for non-ring-fenced cases, assuming current non-ring-fenced disposal
+  # case mix.
+  cc_disposals_delta <- calculate_cc_disposals_delta(cc_output, cc_capacity_levered)
+  
+  
+  # Format for plotting
+  cc_disposals_pivoted <- tidyr::unite(cc_disposals_delta, receipt_type_route, c(receipt_type_desc, route), sep = " ") %>%
     dplyr::select(c("date", "receipt_type_route", "n_disposals_delta")) %>%
     tidyr::pivot_wider(
       names_from = date,
@@ -263,31 +364,42 @@ disposals increases by a smaller number, as expected. (In this example,
          cex = 0.5
   )
   
-  #print(cc_disposals_pivoted)
 ```
 
 
-# Example: Remove 100 sitting days (per month) starting on 2023-06-01
+# Example: Remove 100 sitting days (per month) starting on 2024-01-01
 
 If the number of sitting days is decreased by a smaller number, the number of
 disposals decreases by a smaller number, as expected. (In this example,
-`params$extra_sitting_days = -100` and `params$capacity_impact_date =
-2023-06-01`.) Note that the graph below is identical to the graph for
-`params$extra_sitting_days = -500` and `params$capacity_impact_date =
-2023-06-01` (see above), apart from the y-axis values are smaller by a factor of
+`params$lever_extra_cc_sitting_days = -100` and `params$lever_extra_cc_sitting_days_impact_date =
+2024-01-01`.) Note that the graph below is identical to the graph for
+`params$lever_extra_cc_sitting_days = -500` and `params$lever_extra_cc_sitting_days_impact_date =
+2024-01-01` (see above), apart from the y-axis values are smaller by a factor of
 five.
 
 ```{r echo=FALSE, out.width="100%"}
-  params$extra_sitting_days      <- -100
-  params$capacity_impact_date    <- "2023-06-01"
-  # Format params - normally carried out using function format_params(), but don't necessarily have all variables in list params loaded here, so format_params() may not work. Format necessary parameters in this code chunk instead.
-  params$start_date              <- as.Date(params$start_date)
-  params$capacity_impact_date    <- as.Date(params$capacity_impact_date)
-  cc_disposals <- run_crown_court_module(params)
+
+  # Number of extra court sitting days per month
+  params$lever_extra_cc_sitting_days             <- -1200 / 12             # [month^-1]
+  params$lever_extra_cc_sitting_days_impact_date <- "2024-01-01"
   
-  cc_disposals_united <- tidyr::unite(cc_disposals, receipt_type_route, c(receipt_type_desc, route), sep = " ")
+  cc_capacity_levered  <- add_cc_sitting_days(cc_capacity_loaded, params$lever_extra_cc_sitting_days, params$lever_extra_cc_sitting_days_impact_date)
+
+  # Add additional Crown Court receipts (and disposals for ring-fenced cases).
+  cc_output <- add_cc_receipts_delta(cc_output_loaded, cc_receipts_delta)
+
+  # Add extra ring-fenced hours to the capacity table.
+  cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity_levered)
+  check_cc_capacity(cc_capacity_levered)
   
-  cc_disposals_pivoted <- cc_disposals_united %>%
+  # Join the capacity table with the crown output table and calculate disposals
+  # delta for non-ring-fenced cases, assuming current non-ring-fenced disposal
+  # case mix.
+  cc_disposals_delta <- calculate_cc_disposals_delta(cc_output, cc_capacity_levered)
+  
+  
+  # Format for plotting
+  cc_disposals_pivoted <- tidyr::unite(cc_disposals_delta, receipt_type_route, c(receipt_type_desc, route), sep = " ") %>%
     dplyr::select(c("date", "receipt_type_route", "n_disposals_delta")) %>%
     tidyr::pivot_wider(
       names_from = date,
@@ -317,5 +429,4 @@ five.
          cex = 0.5
   )
   
-  #print(cc_disposals_pivoted)
 ```
