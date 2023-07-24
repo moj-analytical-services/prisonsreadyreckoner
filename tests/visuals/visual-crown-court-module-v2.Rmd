@@ -1,7 +1,7 @@
 ---
-title: "Sense checking of outputs from Crown Court module. Part I. Lever responses."
+title: "Sense checking of outputs from Crown Court functions. Part I: Lever responses."
 author: "Alex Dickinson"
-date: "11/04/2023"
+date: "24/07/2023"
 output: html_document
 ---
 
@@ -12,14 +12,14 @@ devtools::load_all()
 ```
 
 
-`prisonflowcast` explores how changes in Crown Court capacity affect the number
+`prisonsreadyreckoner` explores how changes in Crown Court capacity affect the number
 of Crown Court disposals relative to a baseline number of disposals. The user
 can change the modelled Crown Court capacity by changing the variable
 `params$lever_extra_cc_sitting_days`. Changes in Crown Court capacity take place
 beginning on the date specified by the parameter `params$lever_extra_cc_sitting_days_impact_date`.
 The baseline number of disposals is an output from the xxxx model.
 
-If `params$lever_extra_cc_sitting_days = 0`, it is expected that `prisonflowcast` will
+If `params$lever_extra_cc_sitting_days = 0`, it is expected that `prisonsreadyreckoner` will
 calculate no change to the number of Crown Court disposals.
 
 ```{r echo=FALSE, out.width="100%"}
