@@ -26,7 +26,7 @@ run_prisonsreadyreckoner <- function(params) {
   average_time_on_recall           <- loaded_datasets_list$average_time_on_recall
   recall_profile_adjustments       <- loaded_datasets_list$recall_profile_adjustments
   gender_splits                    <- loaded_datasets_list$gender_splits
-
+  
   # # Defaults not used by the package but made available for the Shiny app.
   # # Shiny equivalent to assign reactives to defaults here.
   # defaults <- set_defaults(params, recall_rate_exclPSS)

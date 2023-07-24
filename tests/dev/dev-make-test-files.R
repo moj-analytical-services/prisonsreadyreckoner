@@ -11,7 +11,7 @@
 # Crown Court disposal volumes.
 make_ringfenced_lookup <- function(mode = 'save') {
   
-  path_ringfenced_lookup <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-ringfenced-lookup.csv"
+  path_ringfenced_lookup <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup.csv"
   
   switch(
     mode,
@@ -29,18 +29,6 @@ make_ringfenced_lookup <- function(mode = 'save') {
 
 
 ################################################################################
-# Remand
-################################################################################
-
-# test-sitting-day-scenario-impacts.xlsx
-# Provided by Jordan Carroll to support testing of the remand model used in
-# prisonsreadyreckoner v1.0.0 (Shiny app v1.0.0).
-# Source: 20230710 - Jordan Carroll - RE_ Remand model comparison.msg
-
-
-
-
-################################################################################
 # Receptions
 ################################################################################
 
@@ -52,7 +40,7 @@ make_ringfenced_lookup <- function(mode = 'save') {
 # projection, combined with the NEW FULLSAMPLE method.
 make_test_receptions_model_data <- function(mode = 'save') {
 
-  path_receptions_model_data <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-receptions-model-data.csv"
+  path_receptions_model_data <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-receptions-model-data.csv"
 
   path_rdo_data         <- "'s3://alpha-app-cjsm-monitoring/actuals_data_mags/[OFFICIAL SENSITIVE - Magistrates RDOs 19-01 to 22-12 (Jan19 to Dec22) as at 200123.xlsx]Data'!A6:G2936"   # '20230427 - Claire O'Neill - RE_ Latest sentencing files_.msg'; '20230505 - Charlotte Wallace - Updated prison projections .msg'
   path_cc_disposals     <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0901/prisons_inputs/sentencing/_crown_actuals_and_inputs/_misc/cc_outputs/ccs_snapshot_20230315/cc_disposals.csv"   # '20230427 - Claire O'Neill - RE_ Latest sentencing files_.msg'; '20230505 - Charlotte Wallace - Updated prison projections .msg'
@@ -98,7 +86,7 @@ make_test_reception_rates <- function(mode = 'save') {
   period_start      <- "2019-03-01"
   period_end        <- "2022-05-01"
 
-  path_reception_rates <- paste0("s3://alpha-prison-forecasting-data/flowcast/test-files/test-reception-rates-", period_start, "-to-", period_end, ".csv")
+  path_reception_rates <- paste0("s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-reception-rates-", period_start, "-to-", period_end, ".csv")
   
   switch(
     mode,
@@ -121,15 +109,6 @@ make_test_reception_rates <- function(mode = 'save') {
 # Prison flow
 ################################################################################
 
-# test-determinate-population.xlsx
-# This file is created from ad hoc data on DOM1. It is used in visualisations
-# of the performance of our determinate profiles for generating forecasts that
-# match those from an example prison projection.
-# See visual-determinate-outflows.Rmd and visual-determinate-outflows-old.Rmd
-# Consider replacing with a file sourced on S3 directly.
-
-
-
 # profiles_2019-03-14_to_2020-03-13.csv
 # Created for testing the ability of profiles generated with the NEW FULLSAMPLE
 # for producing forecasts that match an example prison projection.
@@ -142,7 +121,7 @@ make_test_determinate_profiles <- function(mode = 'save') {
   
   period_start <- "2019-03-14"
   period_end   <- "2020-03-13"
-  path_determinate_profiles <- paste0("s3://alpha-prison-forecasting-data/flowcast/test-files/test-determinate-profiles-", period_start, "-to-", period_end, ".csv")
+  path_determinate_profiles <- paste0("s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-determinate-profiles-", period_start, "-to-", period_end, ".csv")
   
   switch(
     mode,
@@ -169,7 +148,7 @@ make_test_determinate_profiles_old <- function(mode = 'save') {
   
   period_start    <- "2022-01-01"  # '20230205 - Jordan Carroll - RE_ Which fullsample_.msg'
   period_end      <- "2022-12-31"  # '20230205 - Jordan Carroll - RE_ Which fullsample_.msg'
-  path_determinate_profiles <- paste0("s3://alpha-prison-forecasting-data/flowcast/test-files/test-determinate-profiles-old-", period_start, "-to-", period_end, ".csv")
+  path_determinate_profiles <- paste0("s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-determinate-profiles-old-", period_start, "-to-", period_end, ".csv")
 
   path_fullsample   <- "s3://alpha-prison-forecasting-data/FULLSAMPLE/FULLSAMPLE_230331.csv"   # '20230205 - Jordan Carroll - RE_ Which fullsample_.msg'
 
