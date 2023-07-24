@@ -1,7 +1,7 @@
 ---
 title: "Testing performance of `prisonsreadyreckoner` against CJS Modelling team results"
 author: "Alex Dickinson"
-date: "09/06/2023"
+date: "24/07/2023"
 output: html_document
 ---
 
@@ -16,7 +16,7 @@ devtools::load_all()
 silence_botor()
 
 ###-----------------------------------------------------------------------------
-# LOAD BACKGROUND VARIABLES FOR PRISONFLOWCAST
+# LOAD BACKGROUND VARIABLES FOR prisonsreadyreckoner
 
 params <- list()
 
@@ -403,7 +403,7 @@ charlotte_low_disposals_delta <- dplyr::bind_rows(charlotte_low_cc_disposals_del
 # inflows_det_delta_low = 89 rows
 inflows_det_delta_low <- calculate_inflows_det_delta_SUB(charlotte_low_disposals_delta, sentencing_rates_loaded)
 
-# Run Charlotte's court disposals through the relevant prisonflowcast functions
+# Run Charlotte's court disposals through the relevant prisonsreadyreckoner functions
 # Add Charlotte's delta inflows to the background inflows
 inflows_det_low_adj <- add_inflows_det_delta_courts(inflows_det_loaded, inflows_det_delta_low)
 
@@ -417,7 +417,7 @@ charlotte_high_disposals_delta <- dplyr::bind_rows(charlotte_high_cc_disposals_d
 # inflows_det_delta_low = 89 rows
 inflows_det_delta_high <- calculate_inflows_det_delta_SUB(charlotte_high_disposals_delta, sentencing_rates_loaded)
 
-# Run Charlotte's court disposals through the relevant prisonflowcast functions
+# Run Charlotte's court disposals through the relevant prisonsreadyreckoner functions
 # Add Charlotte's delta inflows to the background inflows
 inflows_det_high_adj <- add_inflows_det_delta_courts(inflows_det_loaded, inflows_det_delta_high)
 
@@ -514,7 +514,7 @@ pop_table <- target_pop_det_formatted %>%
 
   * *Note*: The `prisonreadyreckoner` populations increase from a value of zero in March 2023 as `prisonreadyreckoner` models only offenders who enter prison after this date. The CJS Modelling team populations, in contrast, include prisoners who entered prison before March 2023.
   
-**Graph 2** shows the divergences of the **High** and **Low** populations from the Central populations (i.e. the dashed black line in **Graph 1** for `prisonflowcast` and the solid black line in **Graph 1** for the CJS Modelling team).
+**Graph 2** shows the divergences of the **High** and **Low** populations from the Central populations (i.e. the dashed black line in **Graph 1** for `prisonsreadyreckoner` and the solid black line in **Graph 1** for the CJS Modelling team).
 
   * The **Low** divergence of `prisonsreadyreckoner` matches the **Low** divergence of the CJS Modelling team.
   * The **High** divergences do not match well.
