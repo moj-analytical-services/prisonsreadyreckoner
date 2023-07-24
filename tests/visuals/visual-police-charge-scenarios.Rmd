@@ -1,5 +1,5 @@
 ---
-title: "Police charge scenarios loaded by `prisonflowcast`"
+title: "Police charge scenarios loaded by `prisonsreadyreckoner`"
 author: "Alex Dickinson"
 date: "30/05/2023"
 output: html_document
@@ -153,7 +153,7 @@ mc_disposals_delta_loaded_list <- load_police_charges_mc_data(params$police_char
 ```
 
 
-`prisonflowcast`'s ability to model the effect of changes in police charges on prison populations is underpinned by files supplied by David Verry and Katie Mahon from the Upstream and Courts Modelling Team. Here, we visualise these files to understand the different scenarios that they represent.
+`prisonsreadyreckoner`'s ability to model the effect of changes in police charges on prison populations is underpinned by files supplied by David Verry and Katie Mahon from the Upstream and Courts Modelling Team. Here, we visualise these files to understand the different scenarios that they represent.
 
 
 
@@ -161,7 +161,7 @@ mc_disposals_delta_loaded_list <- load_police_charges_mc_data(params$police_char
 
 David supplied four files, each of which records deviations of Crown Court receipts from the total number of Crown Court receipts that the Upstream and Courts Modelling Team used as a baseline in their April 2023 central projection. In the baseline projection, Crown Court receipts are increased to new steady-state conditions over a 24-month period beginning in December 2022.
 
-* **April23_mid_pandemic_real_for_ready_reckoner.csv** contains non-zero values throughout. When it is loaded into `prisonflowcast` using the function `load_police_charges_cc_data_list()`, these non-zero values are set to zero and saved to the list entry `cc_receipts_delta_loaded_list["central"]`. This object provides a default scenario for `prisonflowcast`. In this default scenario, `prisonflowcast` uses the same number of Crown Court receipts as the April 2023 central projection. See graph *Central projection (i.e. 24-month ramp)*.
+* **April23_mid_pandemic_real_for_ready_reckoner.csv** contains non-zero values throughout. When it is loaded into `prisonsreadyreckoner` using the function `load_police_charges_cc_data_list()`, these non-zero values are set to zero and saved to the list entry `cc_receipts_delta_loaded_list["central"]`. This object provides a default scenario for `prisonsreadyreckoner`. In this default scenario, `prisonsreadyreckoner` uses the same number of Crown Court receipts as the April 2023 central projection. See graph *Central projection (i.e. 24-month ramp)*.
 * **April23_mid_pandemic_real_12m_ramp_for_ready_reckoner.csv** records the effect of increasing Crown Court receipts to the new steady-state conditions over a 12-month period instead of over a 24-month period. It contains non-zero values during the 24 months after December 2022. See graph *12-month ramp*.
 * **April23_mid_pandemic_real_36m_ramp_for_ready_reckoner.csv** records the effect of increasing Crown Court receipts to the new steady-state conditions over a 36-month period instead of over a 24-month period. It contains non-zero values during the 36 months after December 2022. See graph *36-month ramp*.
 * **April23_mid_pandemic_real_48m_ramp_for_ready_reckoner.csv** records the effect of increasing Crown Court receipts to the new steady-state conditions over a 48-month period instead of over a 24-month period. It contains non-zero values during the 48 months after December 2022. See graph *48-month ramp*.
@@ -219,7 +219,7 @@ plot_crown_court_receipts(cc_receipts, "48-month ramp", c(-150,150), "Deviation 
 
 Katie supplied one file, in which the sheet `020623_mags_sensitivity_output-` is relevant. This sheet records the absolute numbers of magistrates' court disposals for four scenarios, distinguished by labels in the column `scenario`.
 
-* Label `apr23_central` records values that the Upstream and Courts Modelling Team used as a baseline in their April 2023 central projection. In the baseline projection, magistrates' court disposals are increased to new steady-state conditions over a 24-month period beginning in December 2022. It provides a default scenario for `prisonflowcast`. See graph *Central projection (i.e. 24-month ramp)*.
+* Label `apr23_central` records values that the Upstream and Courts Modelling Team used as a baseline in their April 2023 central projection. In the baseline projection, magistrates' court disposals are increased to new steady-state conditions over a 24-month period beginning in December 2022. It provides a default scenario for `prisonsreadyreckoner`. See graph *Central projection (i.e. 24-month ramp)*.
 * Label `apr23_central_12m` records the effect of increasing magistrates' court disposals to the new steady-state conditions over a 12-month period instead of over a 24-month period. See graph *12-month ramp*.
 * Label `apr23_central_36m` records the effect of increasing magistrates' court disposals to the new steady-state conditions over a 36-month period instead of over a 24-month period. See graph *36-month ramp*.
 * Label `apr23_central_48m` records the effect of increasing magistrates' court disposals to the new steady-state conditions over a 48-month period instead of over a 24-month period. See graph *48-month ramp*.
@@ -261,7 +261,7 @@ plot_disposals(mc_disposals, "48-month ramp", c(-2000,2000), "Deviation in numbe
 
 <!-- David supplied four files, each of which records deviations of magistrates' court disposals from the total number of magistrates' court disposals that the Upstream and Courts Modelling Team used as a baseline in their April 2023 central projection. In the baseline projection, magistrates' court disposals are increased to new steady-state conditions over a 24-month period beginning in December 2022. -->
 
-<!-- * **April23_central_23k_mags_for_ready_reckoner.csv** contains entries with a value of zero throughout. It provides a default scenario for `prisonflowcast`. In this default scenario, `prisonflowcast` uses the same number of magistrates' court disposals as the April 2023 central projection. See graph *Central projection (i.e. 24-month ramp)*. -->
+<!-- * **April23_central_23k_mags_for_ready_reckoner.csv** contains entries with a value of zero throughout. It provides a default scenario for `prisonsreadyreckoner`. In this default scenario, `prisonsreadyreckoner` uses the same number of magistrates' court disposals as the April 2023 central projection. See graph *Central projection (i.e. 24-month ramp)*. -->
 <!-- * **April23_central_23k_mags_12m_ramp_for_ready_reckoner.csv** records the effect of increasing magistrates' court disposals to the new steady-state conditions over a 12-month period instead of over a 24-month period. It contains non-zero values during the 24 months after December 2022. See graph *12-month ramp*. -->
 <!-- * **April23_central_23k_mags_36m_ramp_for_ready_reckoner.csv** records the effect of increasing magistrates' court disposals to the new steady-state conditions over a 36-month period instead of over a 24-month period. It contains non-zero values during the 36 months after December 2022. See graph *36-month ramp*. -->
 <!-- * **April23_central_23k_mags_48m_ramp_for_ready_reckoner.csv** records the effect of increasing magistrates' court disposals to the new steady-state conditions over a 48-month period instead of over a 24-month period. It contains non-zero values during the 48 months after December 2022. See graph *48-month ramp*. -->
