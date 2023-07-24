@@ -54,43 +54,43 @@ plot_disposals <- function(series, title, ylim, ylab) {
 #load_police_charges_mc_data_list(params$police_charges_mc_files, as.Date("2018-10-01"), params$forecast_start_date, params$forecast_end_date)
 
 
-load_police_charges_mc_data_list <- function(police_charges_mc_files, start_date, forecast_start_date, forecast_end_date) {
-  
-  extra_police_charges_mc_list <- list()
-  
-  for (police_charges_mc_scenario in names(police_charges_mc_files)) {
-    
-    police_charges_mc_file <- police_charges_mc_files[[police_charges_mc_scenario]]
-    
-    extra_police_charges_mc <- load_police_charges_mc_file(police_charges_mc_file, start_date, forecast_start_date, forecast_end_date, police_charges_mc_scenario)
-  
-    extra_police_charges_mc_list[[police_charges_mc_scenario]] <- extra_police_charges_mc
-  }
-  
-  return(extra_police_charges_mc_list)
-}
+# load_police_charges_mc_data_list <- function(police_charges_mc_files, start_date, forecast_start_date, forecast_end_date) {
+#   
+#   extra_police_charges_mc_list <- list()
+#   
+#   for (police_charges_mc_scenario in names(police_charges_mc_files)) {
+#     
+#     police_charges_mc_file <- police_charges_mc_files[[police_charges_mc_scenario]]
+#     
+#     extra_police_charges_mc <- load_police_charges_mc_file(police_charges_mc_file, start_date, forecast_start_date, forecast_end_date, police_charges_mc_scenario)
+#   
+#     extra_police_charges_mc_list[[police_charges_mc_scenario]] <- extra_police_charges_mc
+#   }
+#   
+#   return(extra_police_charges_mc_list)
+# }
 
-
-load_police_charges_mc_file <- function(police_charges_mc_file, start_date, forecast_start_date, forecast_end_date, police_charges_mc_scenario) {
-  
-  extra_police_charges_mc <- import_s3_file(police_charges_mc_file) %>%
-    dplyr::rename(date = mags_month,
-                  disposal_type = receipt_type_desc,
-                  n_disposals_delta = forecast_saved) %>%
-    trim_dates(start_date, forecast_start_date, forecast_end_date) %>%
-    dplyr::select(-c("forecast_id")) %>%
-    dplyr::mutate(disposal_type = dplyr::if_else(disposal_type == "TEW", "mc_tew", disposal_type),
-                  disposal_type = dplyr::if_else(disposal_type == "IO", "mc_ind", disposal_type),
-                  disposal_type = dplyr::if_else(disposal_type == "SNM", "mc_snm", disposal_type))
-
-  # Unlike the other scenarios, which are differences from the Central, the
-  # forecast in the Central file is the actual Central forecast. Set the
-  # difference to zero.
-  if (police_charges_mc_scenario == "central")
-    extra_police_charges_mc["n_disposals_delta"] = 0
-  
-  return(extra_police_charges_mc)
-}
+# 
+# load_police_charges_mc_file <- function(police_charges_mc_file, start_date, forecast_start_date, forecast_end_date, police_charges_mc_scenario) {
+#   
+#   extra_police_charges_mc <- import_s3_file(police_charges_mc_file) %>%
+#     dplyr::rename(date = mags_month,
+#                   disposal_type = receipt_type_desc,
+#                   n_disposals_delta = forecast_saved) %>%
+#     trim_dates(start_date, forecast_start_date, forecast_end_date) %>%
+#     dplyr::select(-c("forecast_id")) %>%
+#     dplyr::mutate(disposal_type = dplyr::if_else(disposal_type == "TEW", "mc_tew", disposal_type),
+#                   disposal_type = dplyr::if_else(disposal_type == "IO", "mc_ind", disposal_type),
+#                   disposal_type = dplyr::if_else(disposal_type == "SNM", "mc_snm", disposal_type))
+# 
+#   # Unlike the other scenarios, which are differences from the Central, the
+#   # forecast in the Central file is the actual Central forecast. Set the
+#   # difference to zero.
+#   if (police_charges_mc_scenario == "central")
+#     extra_police_charges_mc["n_disposals_delta"] = 0
+#   
+#   return(extra_police_charges_mc)
+# }
 
 ```
 
@@ -102,35 +102,42 @@ params <- list()
 # Police charge parameters
 
 # Magistrates' courts - new files from Katie Mahon
-params$police_charges_mc_file <- "s3://alpha-prison-forecasting-data/flowcast/data/police-demand-scenarios/020623_mags_sensitivity_output.xlsx"
+params$police_charges_mc_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/020623_mags_sensitivity_output.xlsx"
 params$police_charges_mc_scenarios <- list(central = "apr23_central",
                                            ramp_12m = "apr23_central_12m",
                                            ramp_36m = "apr23_central_36m",
                                            ramp_48m = "apr23_central_48m"
 )
 params$police_charges_mc_sheet <- "020623_mags_sensitivity_output-"
-
-# Magistrates' courts - old files from David Verry
-params$police_charges_mc_files <- list(central = "s3://alpha-prison-forecasting-data/flowcast/data/police-demand-scenarios/April23_central_23k_mags_for_ready_reckoner.csv", # Records the total number of magistrates' court receipts used as a baseline in the April 2023 projections. Includes background values from various sources, and an increase in charge numbers over a 24-month period. It has non-zero values throughout.
-                                       ramp_12m = "s3://alpha-prison-forecasting-data/flowcast/data/police-demand-scenarios/April23_central_23k_mags_12m_ramp_for_ready_reckoner.csv", # Records how magistrates' court receipts would change if police charge numbers were increased over a 12-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
-                                       ramp_36m = "s3://alpha-prison-forecasting-data/flowcast/data/police-demand-scenarios/April23_central_23k_mags_36m_ramp_for_ready_reckoner.csv", # Records how magistrates' court receipts would change if police charge numbers were increased over a 36-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
-                                       ramp_48m = "s3://alpha-prison-forecasting-data/flowcast/data/police-demand-scenarios/April23_central_23k_mags_48m_ramp_for_ready_reckoner.csv" # Records how magistrates' court receipts would change if police charge numbers were increased over a 48-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
-)   # '20230525 - David Verry - RE_ Next steps on the CJS ready reckoner.eml'
+# 
+# # Magistrates' courts - old files from David Verry
+# params$police_charges_mc_files <- list(central = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_central_23k_mags_for_ready_reckoner.csv", # Records the total number of magistrates' court receipts used as a baseline in the April 2023 projections. Includes background values from various sources, and an increase in charge numbers over a 24-month period. It has non-zero values throughout.
+#                                        ramp_12m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_central_23k_mags_12m_ramp_for_ready_reckoner.csv", # Records how magistrates' court receipts would change if police charge numbers were increased over a 12-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
+#                                        ramp_36m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_central_23k_mags_36m_ramp_for_ready_reckoner.csv", # Records how magistrates' court receipts would change if police charge numbers were increased over a 36-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
+#                                        ramp_48m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_central_23k_mags_48m_ramp_for_ready_reckoner.csv" # Records how magistrates' court receipts would change if police charge numbers were increased over a 48-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
+# )   # '20230525 - David Verry - RE_ Next steps on the CJS ready reckoner.eml'
 
 # Crown Court
-params$police_charges_cc_files <- list(central = "s3://alpha-prison-forecasting-data/flowcast/data/police-demand-scenarios/April23_mid_pandemic_real_for_ready_reckoner.csv", # Records the total number of Crown Court receipts used as a baseline in the April 2023 projections. Includes background values from various sources, and an increase in charge numbers over a 24-month period. It has non-zero values throughout.
-                                    ramp_12m = "s3://alpha-prison-forecasting-data/flowcast/data/police-demand-scenarios/April23_mid_pandemic_real_12m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 12-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
-                                    ramp_36m = "s3://alpha-prison-forecasting-data/flowcast/data/police-demand-scenarios/April23_mid_pandemic_real_36m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 36-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
-                                    ramp_48m = "s3://alpha-prison-forecasting-data/flowcast/data/police-demand-scenarios/April23_mid_pandemic_real_48m_ramp_for_ready_reckoner.csv" # Records how Crown Court receipts would change if police charge numbers were increased over a 48-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
+params$police_charges_cc_files <- list(central = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_for_ready_reckoner.csv", # Records the total number of Crown Court receipts used as a baseline in the April 2023 projections. Includes background values from various sources, and an increase in charge numbers over a 24-month period. It has non-zero values throughout.
+                                    ramp_12m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_12m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 12-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
+                                    ramp_36m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_36m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 36-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
+                                    ramp_48m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_48m_ramp_for_ready_reckoner.csv" # Records how Crown Court receipts would change if police charge numbers were increased over a 48-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
 )   # '20230525 - David Verry - RE_ Next steps on the CJS ready reckoner.eml'
 
 # Table from Chun-Yee for converting Crown Court police charge tables
 params$police_charges_cc_route_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/crown_court_modelling/ccs_snapshot_20230125_jan23version/routes.csv"   # '20230518 - Chun-yee Cheng - cjst pre-covid route distribution.msg' 
 
+params$mc_remand_lookup <- tibble::tribble(
+  ~disposal_type, ~remanded,
+  "mc_ind",       TRUE,
+  "mc_tew",       TRUE,
+  "mc_sm",        FALSE,
+  "mc_snm",       FALSE)   # '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
+
 
 params$start_date$police_charges_cc  <- as.Date("2022-11-01")    # First month of the forecast. Used for verifying inputs.
 params$start_date$police_charges_mc  <- as.Date("2022-12-01")
-params$start_date$police_charges_mc_old  <- as.Date("2018-10-01")
+#params$start_date$police_charges_mc_old  <- as.Date("2018-10-01")
 
 params$forecast_start_date <- as.Date("2023-03-01")
 params$forecast_end_date   <- as.Date("2027-03-01")
@@ -138,9 +145,9 @@ params$forecast_end_date   <- as.Date("2027-03-01")
 
 cc_receipts_delta_loaded_list  <- load_police_charges_cc_data_list(params$police_charges_cc_route_file, params$police_charges_cc_files, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
 
-mc_disposals_delta_loaded_list <- load_police_charges_mc_data(params$police_charges_mc_file, params$police_charges_mc_scenarios, params$police_charges_mc_sheet, params$start_date$police_charges_mc, params$forecast_start_date, params$forecast_end_date)
+mc_disposals_delta_loaded_list <- load_police_charges_mc_data(params$police_charges_mc_file, params$police_charges_mc_scenarios, params$police_charges_mc_sheet, params$mc_remand_lookup, params$start_date$police_charges_mc, params$forecast_start_date, params$forecast_end_date)
 
-mc_disposals_delta_loaded_list_old <- load_police_charges_mc_data_list(params$police_charges_mc_files, params$start_date$police_charges_mc_old, params$forecast_start_date, params$forecast_end_date)
+#mc_disposals_delta_loaded_list_old <- load_police_charges_mc_data_list(params$police_charges_mc_files, params$start_date$police_charges_mc_old, params$forecast_start_date, params$forecast_end_date)
 
 
 ```
@@ -208,7 +215,7 @@ plot_crown_court_receipts(cc_receipts, "48-month ramp", c(-150,150), "Deviation 
 ```
 
 
-# Magistrates' courts - new files from Katie Mahon
+# Magistrates' courts
 
 Katie supplied one file, in which the sheet `020623_mags_sensitivity_output-` is relevant. This sheet records the absolute numbers of magistrates' court disposals for four scenarios, distinguished by labels in the column `scenario`.
 
@@ -250,42 +257,42 @@ plot_disposals(mc_disposals, "48-month ramp", c(-2000,2000), "Deviation in numbe
 
 
 
-# Magistrates' courts - old files from David Verry
+<!-- # Magistrates' courts - old files from David Verry -->
 
-David supplied four files, each of which records deviations of magistrates' court disposals from the total number of magistrates' court disposals that the Upstream and Courts Modelling Team used as a baseline in their April 2023 central projection. In the baseline projection, magistrates' court disposals are increased to new steady-state conditions over a 24-month period beginning in December 2022.
+<!-- David supplied four files, each of which records deviations of magistrates' court disposals from the total number of magistrates' court disposals that the Upstream and Courts Modelling Team used as a baseline in their April 2023 central projection. In the baseline projection, magistrates' court disposals are increased to new steady-state conditions over a 24-month period beginning in December 2022. -->
 
-* **April23_central_23k_mags_for_ready_reckoner.csv** contains entries with a value of zero throughout. It provides a default scenario for `prisonflowcast`. In this default scenario, `prisonflowcast` uses the same number of magistrates' court disposals as the April 2023 central projection. See graph *Central projection (i.e. 24-month ramp)*.
-* **April23_central_23k_mags_12m_ramp_for_ready_reckoner.csv** records the effect of increasing magistrates' court disposals to the new steady-state conditions over a 12-month period instead of over a 24-month period. It contains non-zero values during the 24 months after December 2022. See graph *12-month ramp*.
-* **April23_central_23k_mags_36m_ramp_for_ready_reckoner.csv** records the effect of increasing magistrates' court disposals to the new steady-state conditions over a 36-month period instead of over a 24-month period. It contains non-zero values during the 36 months after December 2022. See graph *36-month ramp*.
-* **April23_central_23k_mags_48m_ramp_for_ready_reckoner.csv** records the effect of increasing magistrates' court disposals to the new steady-state conditions over a 48-month period instead of over a 24-month period. It contains non-zero values during the 48 months after December 2022. See graph *48-month ramp*.
+<!-- * **April23_central_23k_mags_for_ready_reckoner.csv** contains entries with a value of zero throughout. It provides a default scenario for `prisonflowcast`. In this default scenario, `prisonflowcast` uses the same number of magistrates' court disposals as the April 2023 central projection. See graph *Central projection (i.e. 24-month ramp)*. -->
+<!-- * **April23_central_23k_mags_12m_ramp_for_ready_reckoner.csv** records the effect of increasing magistrates' court disposals to the new steady-state conditions over a 12-month period instead of over a 24-month period. It contains non-zero values during the 24 months after December 2022. See graph *12-month ramp*. -->
+<!-- * **April23_central_23k_mags_36m_ramp_for_ready_reckoner.csv** records the effect of increasing magistrates' court disposals to the new steady-state conditions over a 36-month period instead of over a 24-month period. It contains non-zero values during the 36 months after December 2022. See graph *36-month ramp*. -->
+<!-- * **April23_central_23k_mags_48m_ramp_for_ready_reckoner.csv** records the effect of increasing magistrates' court disposals to the new steady-state conditions over a 48-month period instead of over a 24-month period. It contains non-zero values during the 48 months after December 2022. See graph *48-month ramp*. -->
 
 
-```{r echo=FALSE}
-mc_disposals <- mc_disposals_delta_loaded_list_old[["central"]]
+<!-- ```{r echo=FALSE} -->
+<!-- mc_disposals <- mc_disposals_delta_loaded_list_old[["central"]] -->
 
-plot_disposals(mc_disposals, "Central projection (i.e. 24-month ramp)", c(-700,900), "Deviation in number of disposals from central projection")
+<!-- plot_disposals(mc_disposals, "Central projection (i.e. 24-month ramp)", c(-700,900), "Deviation in number of disposals from central projection") -->
 
-```
+<!-- ``` -->
 
-```{r echo=FALSE}
-mc_disposals <- mc_disposals_delta_loaded_list_old[["ramp_12m"]]
+<!-- ```{r echo=FALSE} -->
+<!-- mc_disposals <- mc_disposals_delta_loaded_list_old[["ramp_12m"]] -->
 
-plot_disposals(mc_disposals, "12-month ramp", c(-700,900), "Deviation in number of disposals from central projection")
+<!-- plot_disposals(mc_disposals, "12-month ramp", c(-700,900), "Deviation in number of disposals from central projection") -->
 
-```
+<!-- ``` -->
 
-```{r echo=FALSE}
-mc_disposals <- mc_disposals_delta_loaded_list_old[["ramp_36m"]]
+<!-- ```{r echo=FALSE} -->
+<!-- mc_disposals <- mc_disposals_delta_loaded_list_old[["ramp_36m"]] -->
 
-plot_disposals(mc_disposals, "36-month ramp", c(-700,900), "Deviation in number of disposals from central projection")
+<!-- plot_disposals(mc_disposals, "36-month ramp", c(-700,900), "Deviation in number of disposals from central projection") -->
 
-```
+<!-- ``` -->
 
-```{r echo=FALSE}
-mc_disposals <- mc_disposals_delta_loaded_list_old[["ramp_48m"]]
+<!-- ```{r echo=FALSE} -->
+<!-- mc_disposals <- mc_disposals_delta_loaded_list_old[["ramp_48m"]] -->
 
-plot_disposals(mc_disposals, "48-month ramp", c(-700,900), "Deviation in number of disposals from central projection")
+<!-- plot_disposals(mc_disposals, "48-month ramp", c(-700,900), "Deviation in number of disposals from central projection") -->
 
-```
+<!-- ``` -->
 
 
