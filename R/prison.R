@@ -73,20 +73,6 @@ make_remand_filter_out <- function(remand_rate, no_bail_rate, ctl, projection_le
 }
 
 
-# calculate_pop_remand_delta <- function(cc_disposals) {
-#   
-#   pop_remand_delta <- dplyr::mutate(cc_disposals, casetype = "remand", pop_remand_delta = (n_receipts_delta - n_disposals_delta) * remand_rate) %>%
-#                         dplyr::group_by(date, casetype) %>%
-#                         dplyr::summarise(pop_remand_delta = sum(pop_remand_delta), .groups = 'drop') %>%
-#                         dplyr::mutate(pop_remand_delta = cumsum(pop_remand_delta)) %>%
-#                         tidyr::pivot_wider(names_from = date,
-#                           values_from = pop_remand_delta,
-#                           values_fill = 0,
-#                           names_sort = TRUE)
-# 
-# }
-
-
 calculate_pop_remand_delta <- function(mc_disposals, cc_disposals, profiles_remand_in, profiles_remand_out) {
   
   # Find change in receipts relevant for remand.
@@ -265,17 +251,6 @@ load_profiles_lic <- function(profiles_file, projection_length_months) {
 }
 
 
-# # Load licence parameters from the Probation Modelling team.
-# load_licence_times <- function(licence_times_file) {
-#   
-#   average_time_on_licence_excl_ps <- import_s3_file(licence_times_file) %>%
-#     dplyr::mutate(senband = paste0("senband", senband)) %>%
-#     dplyr::arrange(senband) %>%
-#     tibble::deframe()
-#   
-# }
-
-
 # Load licence and recall parameters from Jordan Carroll
 load_recall_params <- function(recall_file, start_date, forecast_start_date, forecast_end_date) {
   
@@ -285,13 +260,7 @@ load_recall_params <- function(recall_file, start_date, forecast_start_date, for
     dplyr::arrange(senband) %>%
     tibble::deframe()
   
-  # licence_profile_adjustments_exc <- import_s3_file(recall_file, sheet = "license_profile_adjustments_exc") %>%
-  #   dplyr::rename(senband = SenBand) %>%
-  #   dplyr::mutate(senband = paste0("senband", senband)) %>%
-  #   dplyr::arrange(senband) %>%
-  #   tibble::deframe()
-  
-  
+
   # Recall rate. Currently, a time series is provided. We will assume the steady
   # state values.
   recall_rate_exclPSS <- import_s3_file(recall_file, sheet = "recall_rate_exclPSS") %>%

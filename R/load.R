@@ -8,11 +8,9 @@ load_datasets <- function(params) {
 
   # Load data for police charges module
   cc_receipts_delta_loaded_list  <- load_police_charges_cc_data_list(params$police_charges_cc_route_file, params$police_charges_cc_files, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
-  #mc_disposals_delta_loaded_list <- load_police_charges_mc_data(params$police_charges_mc_file, params$police_charges_mc_scenarios, params$police_charges_mc_sheet, params$start_date$police_charges_mc, params$forecast_start_date, params$forecast_end_date)
   mc_disposals_delta_loaded_list <- load_police_charges_mc_data(params$police_charges_mc_file, params$police_charges_mc_scenarios, params$police_charges_mc_sheet, params$mc_remand_lookup, params$start_date$police_charges_mc, params$forecast_start_date, params$forecast_end_date)
   
   # Load data for Crown Court module
-  #cc_data     <- load_crown_data(params$cc_output_file, params$cc_capacity_file, params$ringfenced_lookup_file, params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date, params$remand_rates)
   cc_data     <- load_crown_data(params$cc_output_file, params$cc_capacity_file, params$ringfenced_lookup_file, params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date)
   
   # Load data for sentencing module
@@ -60,7 +58,6 @@ load_crown_data <- function(cc_output_file, cc_capacity_file, ringfenced_lookup_
   ringfenced_lookup    <- load_ringfenced_lookup(ringfenced_lookup_file)
   
   # Add ring-fenced status. Calculate backlog case rate and hours per disposal.
-  #cc_output <- augment_crown_output(cc_output, ringfenced_lookup, remand_rates)
   cc_output <- augment_crown_output(cc_output, ringfenced_lookup)
   
   # Make capacity monitor

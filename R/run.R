@@ -62,8 +62,8 @@ run_prisonsreadyreckoner <- function(params) {
   
   print(paste0("pop_scenario and gender split took ", Sys.time() - t0, " seconds"))
 
-  # # Plotting routines to be used in development to assess model output.
-  # dev_plot_population(pop_combined, "remand", "Remand delta")
+  # Plotting routines to be used in development to assess model output.
+  dev_plot_population(pop_combined, "remand", "Remand delta")
   # dev_plot_population(pop_combined, "determinate", "Determinate")
   # dev_plot_population(pop_combined, "indeterminate", "Indeterminate")
   # dev_plot_population(pop_combined, "recall", "Recall")
@@ -107,9 +107,6 @@ run_baseline <- function(params, inflows_det_loaded, profiles_det_loaded,
 
 
 # A scenario run to be compared with the baseline.
-# run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, sentencing_rates_loaded,
-#                          inflows_det_loaded, profiles_det_loaded,
-#                          nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall) {
 run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list,
                          profiles_remand_in, profiles_remand_out,
                          sentencing_rates_loaded,
@@ -127,7 +124,6 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
   # remaining capacity. Do what you want when a warning occurs. Here we are just
   # echoing it.
   withCallingHandlers(warning = function(msg) {},
-                      #{courts_outputs <- run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, sentencing_rates_loaded, inflows_det_loaded)})
                      {courts_outputs <- run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, profiles_remand_in, profiles_remand_out, sentencing_rates_loaded, inflows_det_loaded)})
     pop_remand_delta <- courts_outputs$pop_remand_delta
     inflows_det_adj  <- courts_outputs$inflows_det_adj
@@ -169,7 +165,6 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
 #' inflows owing to changes in the number of court disposals.
 #'
 #' @export
-#run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disposals, sentencing_rates, inflows_det) {
 run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disposals_delta,
                               profiles_remand_in, profiles_remand_out,
                               sentencing_rates, inflows_det) {
@@ -187,7 +182,6 @@ run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disp
   cc_disposals_delta <- calculate_cc_disposals_delta(cc_output, cc_capacity)
   
   # Calculate remand population from court disposals.
-  #pop_remand_delta  <- calculate_pop_remand_delta(cc_disposals_delta)
   pop_remand_delta  <- calculate_pop_remand_delta(mc_disposals_delta, cc_disposals_delta, profiles_remand_in, profiles_remand_out)
   
   # Calculate determinate inflows from court disposals.

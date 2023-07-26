@@ -115,10 +115,8 @@ augment_crown_output <- function(cc_output, ringfenced_lookup) {
   # cc_output <- dplyr::left_join(cc_output, remand_rates, by = "receipt_type_desc", unmatched = "error")
     
   
-  # # Calculate parameters that will be used in online calculations. All derived
-  # # time parameters will be in hours.
-  # cc_output <- dplyr::mutate(cc_output, remand_rate = remand_rate * !ringfenced)
-
+  # Calculate parameters that will be used in online calculations. All derived
+  # time parameters will be in hours.
   cc_output <- dplyr::group_by(cc_output, date) %>%
                     dplyr::mutate(hours_non_ringfenced = sum((dur_disposals * !ringfenced) / 60)) %>%
                     dplyr::ungroup()
@@ -191,7 +189,6 @@ calculate_cc_disposals_delta <- function(cc_output, cc_capacity) {
   
   cc_disposals <- dplyr::left_join(cc_output, cc_capacity, by = c("date")) %>%
                     dplyr::mutate(n_disposals_delta = n_disposals_ringfenced_delta + (capacity_delta - hours_ringfenced_delta) * backlog_rate) %>%
-                    #dplyr::select(date, receipt_type_desc, route, remand_rate, n_receipts_delta, n_disposals_delta)
                     dplyr::select(date, receipt_type_desc, route, n_receipts_delta, n_disposals_delta)
   
 }

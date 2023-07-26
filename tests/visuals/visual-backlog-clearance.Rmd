@@ -1,0 +1,319 @@
+---
+title: "Sense checking of backlog clearance under typical input parameters"
+author: "Brian Burton"
+date: "26/07/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)#, dpi = 50, fig.width = 15, fig.height = 10)
+
+devtools::load_all()
+```
+
+
+## Aim
+
+To test whether typical lever values are likely to completely deplete the
+Crown Court backlog in the forecast time horizon. Where the backlog is depleted,
+the model has become out of bounds and the relevant parameters should not be
+offered to a Shiny app user.
+
+
+## Method
+
+1. Load all files necessary for running the Crown Court module.
+2. Accumulate additional non-ringfenced disposals.
+3. Plot backlog by case type with accumulated additional disposals.
+
+
+```{r include = FALSE}
+
+set_crown_params <- function() {
+  
+  params <- list()
+  
+  params$start_date <- as.Date("2022-11-01")    # cc_output start date
+  params$forecast_start_date     <- start_date
+  params$forecast_end_date       <- lubridate::add_with_rollback(start_date, months(4*12 - 1), roll_to_first = TRUE) 
+  
+  # Crown Court parameters
+  # Input paths
+  params$cc_output_file          <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/crown-output-apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
+  params$cc_capacity_file        <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sd_htpsd_adjusted_apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
+  
+  # Paths to parameter tables
+  params$ringfenced_lookup_file  <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup.csv"
+  
+  return(params)
+}
+
+
+# Files for the original April 2023 analysis.
+load_crown_data_test <- function(cc_output_file, cc_capacity_file, ringfenced_lookup_file, start_date, forecast_start_date, forecast_end_date) {
+    
+  # Read baseline inputs, which are disposals for ring-fenced cases and time
+  # series for sitting days and hours available per sitting day.
+  cc_output   <- load_crown_output_with_backlog(cc_output_file, start_date, forecast_start_date, forecast_end_date)
+  cc_capacity <- load_cc_capacity(cc_capacity_file, start_date, forecast_start_date, forecast_end_date)
+  #check_cc_inputs(cc_output, cc_capacity)
+  
+  # Read parameter tables for Crown module
+  ringfenced_lookup    <- load_ringfenced_lookup(ringfenced_lookup_file)
+  
+  # Add ring-fenced status. Calculate backlog case rate and hours per disposal.
+  cc_output <- augment_crown_output(cc_output, ringfenced_lookup)
+  
+  # Make capacity monitor
+  cc_capacity  <- augment_cc_capacity(cc_capacity, cc_output)
+  
+  return(list(cc_output = cc_output, cc_capacity = cc_capacity))
+}
+
+
+load_crown_output_with_backlog <- function(cc_output_file, start_date, forecast_start_date, forecast_end_date) {
+  
+  col_types <-
+    readr::cols(
+      Time = readr::col_integer(),
+      date = readr::col_date(format = '%Y-%m-%d'),
+      FY = readr::col_character(),
+      receipt_type_desc = readr::col_character(),
+      region = readr::col_character(),
+      actual_route = readr::col_character(),
+      n_backlog = readr::col_integer(),
+      n_receipts = readr::col_integer(),
+      n_disposals = readr::col_integer(),
+      dur_backlog = readr::col_double(),
+      dur_receipts = readr::col_double(),
+      dur_disposals = readr::col_double(),
+      scenario = readr::col_character(),
+      dev = readr::col_character(),
+      scenario_dev = readr::col_character()
+    )
+  
+  cc_output <- import_s3_file(cc_output_file, col_types = col_types) %>%
+                 dplyr::rename(route = actual_route)
+  
+  cc_output <- trim_dates(cc_output, start_date, forecast_start_date, forecast_end_date) %>%
+                 dplyr::select(date, receipt_type_desc, route,
+                               n_backlog,                                 # Read n_backlog so we may sense-check backlog depletion.
+                               n_disposals, dur_disposals)
+
+  return(cc_output)
+}
+
+
+
+
+compare_disposals_delta <- function(cc_output, cc_capacity, cc_output_diff, cc_capacity_diff, cumul = FALSE) {
+  
+  cc_capacity <- add_cc_sitting_days_test(cc_capacity, cc_capacity_diff)
+
+  cc_output <- add_cc_receipts_delta_test(cc_output, cc_output_diff)
+  
+  # Add extra ring-fenced hours to the capacity table.
+  cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity)
+  check_cc_capacity(cc_capacity)
+  
+  # Join the capacity table with the crown output table and calculate disposals
+  # delta for non-ring-fenced cases assuming current non-ring-fenced disposal
+  # case mix.
+  cc_disposals <- calculate_cc_disposals_delta(cc_output, cc_capacity)
+  
+  cc_disposals_delta <- dplyr::mutate(cc_disposals, disposal_type = paste0("cc_", route)) %>%
+                          dplyr::group_by(date, disposal_type) %>%
+                          dplyr::summarise(n_disposals_delta = sum(n_disposals_delta, na.rm = TRUE), .groups = "drop")
+
+
+  cc_output_diff <- dplyr::mutate(cc_output_diff, disposal_type = paste0("cc_", route)) %>%
+                      dplyr::group_by(date, disposal_type) %>%
+                      dplyr::summarise(n_disposals_delta = sum(n_disposals_delta, na.rm = TRUE), .groups = "drop")
+  
+  cc_disposals_base <- dplyr::mutate(cc_output, disposal_type = paste0("cc_", route)) %>%
+                         dplyr::group_by(date, disposal_type) %>%
+                         dplyr::summarise(n_disposals = sum(n_disposals, na.rm = TRUE), .groups = "drop")
+
+  cc_disposals_delta_all <- dplyr::group_by(cc_disposals_delta, date) %>%
+                              dplyr::summarise(n_disposals_delta = sum(n_disposals_delta))
+  cc_output_diff_all <- dplyr::group_by(cc_output_diff, date) %>%
+                          dplyr::summarise(n_disposals_delta = sum(n_disposals_delta))
+  cc_disposals_base_all <- dplyr::group_by(cc_disposals_base, date) %>%
+                              dplyr::summarise(n_disposals = sum(n_disposals))
+
+  
+  
+  plot_disposals_delta(cc_disposals_delta_all, cc_output_diff_all, cc_disposals_base_all, "all disposals", cumul, 4)
+  disposal_types <- unique(cc_disposals_delta$disposal_type)
+  for (disposal_type in disposal_types)
+    plot_disposals_delta(dplyr::filter(cc_disposals_delta, disposal_type == !!disposal_type),
+                         dplyr::filter(cc_output_diff, disposal_type == !!disposal_type),
+                         dplyr::filter(cc_disposals_base, disposal_type == !!disposal_type),
+                         disposal_type, cumul, 2)
+
+}
+
+
+# add_cc_sitting_days_test <- function(cc_capacity, cc_capacity_diff) {
+#   
+#   cc_capacity <- dplyr::left_join(cc_capacity, cc_capacity_diff, by = c("date"), suffix = c("", ".y"), unmatched = "error") %>%
+#                    dplyr::mutate(sitting_days_delta = sitting_days_delta.y) %>%
+#                    dplyr::select(-sitting_days_delta.y)
+# 
+#   cc_capacity$capacity_delta <- cc_capacity$sitting_days_delta * cc_capacity$hours_per_day
+#   
+#   return(cc_capacity)
+# }
+
+
+# A cut down version of the package function, ignoring n_receipts_delta, which
+# is not relevant for this visualisation.
+add_cc_receipts_delta_test <- function(cc_output, cc_output_diff) {
+  
+  cc_output <- dplyr::left_join(cc_output, cc_output_diff, by = c("date", "receipt_type_desc", "route"), unmatched = "error") %>%
+                 dplyr::mutate(n_disposals_ringfenced_delta = n_disposals_delta * ringfenced) %>%
+                 dplyr::select(-n_disposals_delta)
+  
+}
+
+
+plot_disposals_delta <- function(cc_disposals_delta, cc_output_diff, cc_disposals_base, disposal_type, cumul, colour) {
+  
+  label_mod <- paste0("Model, ", disposal_type)
+  
+  cc_disposals_delta <- dplyr::select(cc_disposals_delta, date, n_disposals_delta) %>%
+                          tidyr::pivot_wider(names_from = date,
+                                             values_from = n_disposals_delta,
+                                             values_fill = 0,
+                                             names_sort = TRUE
+                          )
+
+  label_exp <- paste0("CJST, ", disposal_type)
+
+  cc_output_diff <- dplyr::select(cc_output_diff, date, n_disposals_delta) %>%
+                      tidyr::pivot_wider(names_from = date,
+                                         values_from = n_disposals_delta,
+                                         values_fill = 0,
+                                         names_sort = TRUE
+                      )
+
+
+  # label_base <- paste0("Baseline disposals, ", disposal_type)
+  # 
+  # cc_disposals_base <- dplyr::select(cc_disposals_base, date, n_disposals) %>%
+  #                        tidyr::pivot_wider(names_from = date,
+  #                                           values_from = n_disposals,
+  #                                           values_fill = 0,
+  #                                           names_sort = TRUE
+  #                        )
+
+
+  #cc_disposals_plot <- rbind(cc_disposals_delta, cc_output_diff, cc_disposals_base)
+  cc_disposals_plot <- rbind(cc_disposals_delta, cc_output_diff)
+  #cc_disposals_plot <- cc_disposals_delta
+  x <- as.Date(names(cc_disposals_plot))
+  if (cumul == TRUE) {
+    y <- t(apply(cc_disposals_plot, 1, cumsum))
+    main <- paste0("Comparison of cumulative changes in disposals, ", disposal_type)
+  } else {
+    y <- cc_disposals_plot
+    main <- paste0("Comparison of changes in disposals, ", disposal_type)
+  }
+  matplot(x,
+          t(y),
+          type = 'l',
+          xlab = "Date",
+          main = main,
+          ylab = "Change in number of disposals",
+          lty = c(1, 2, 1),
+          col = c(colour, colour, 1)
+          )
+  legend("topright",
+         inset = 0.02,
+         #legend = c(label_mod, label_exp, label_base),
+         legend = c(label_mod, label_exp),
+         #legend = c(label_mod),
+         lty = c(1, 2, 1),
+         col = c(colour, colour, 1)
+    )
+
+}
+
+```
+
+
+# Results
+
+The following compares backlog with cumulative disposals by case type, assuming
+the additional sitting days start on 2023-03-01.
+
+For reference, our ringfenced cases are as follows:
+
+
+`receipt_type_desc`    `route`             `ringfenced`                     
+---------------------  ------------------  -------------------------------------
+`app`                  `app`               `TRUE`
+`ind`                  `e_other`           `TRUE`
+`ind`                  `effective`         `FALSE`
+`ind`                  `egp`               `TRUE`
+`ind`                  `gp_cracked`        `FALSE`
+`ind`                  `l_other`           `FALSE`
+`ind`                  `lgp`               `FALSE`
+`ind`                  `other_cracked`     `FALSE`
+`sent`                 `sent`              `TRUE`
+`tew`                  `e_other`           `TRUE`
+`tew`                  `effective`         `FALSE`
+`tew`                  `egp`               `TRUE`
+`tew`                  `gp_cracked`        `FALSE`
+`tew`                  `l_other`           `FALSE`
+`tew`                  `lgp`               `FALSE`
+`tew`                  `other_cracked`     `FALSE`
+---------------------  ------------------  -------------------------------------
+
+
+```{r echo = FALSE}
+
+scenario_data <- load_crown_scenario_data_apr23()
+
+
+
+  # LEVER: Add (or subtract) sitting days.
+  cc_capacity_levered  <- add_cc_sitting_days(cc_capacity_loaded, params$lever_extra_cc_sitting_days, params$lever_extra_cc_sitting_days_impact_date)
+
+  # Add additional Crown Court receipts (and disposals for ring-fenced cases).
+  cc_output <- add_cc_receipts_delta(cc_output, cc_receipts_delta)
+
+  # Add extra ring-fenced hours to the capacity table.
+  cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity)
+  check_cc_capacity(cc_capacity)
+  
+  # Join the capacity table with the crown output table and calculate disposals
+  # delta for non-ring-fenced cases, assuming current non-ring-fenced disposal
+  # case mix.
+  cc_disposals_delta <- calculate_cc_disposals_delta(cc_output, cc_capacity)
+
+  
+  
+  
+
+# Find differences in disposals between scenarios.
+cc_output_diff_high <- dplyr::left_join(scenario_data$cc_output_base, scenario_data$cc_output_high, by = c("date", "receipt_type_desc", "route"), unmatched = "error") %>%
+                         dplyr::mutate(n_disposals_delta = n_disposals.y - n_disposals.x) %>%
+                         dplyr::select(date, receipt_type_desc, route, n_disposals_delta)
+cc_output_diff_high[is.na(cc_output_diff_high)] <- 0
+
+compare_disposals_delta(scenario_data$cc_output_base, scenario_data$cc_capacity_base, cc_output_diff_high, cc_capacity_diff_high)
+  
+```
+
+
+The following compares changes in the cumulative disposal volumes under the
+original high sitting day scenario and our simplified model. **Only
+non-ringfenced cases are affected**.
+
+```{r echo = FALSE}
+
+compare_disposals_delta(scenario_data$cc_output_base, scenario_data$cc_capacity_base, cc_output_diff_high, cc_capacity_diff_high, TRUE)
+  
+```
+
