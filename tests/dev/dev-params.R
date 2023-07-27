@@ -90,17 +90,7 @@ dev_set_params <- function() {
   
   # Sentencing parameters
   # Remand rates.
-  # # FYI, the Prisons team provided an intercept but this is not relevant for
-  # # marginal changes. The following co-efficients were derived from backlog
-  # # volumes calibrated to match HMCTS outstanding caseload but, for simplicity,
-  # # we are applying them to unadjusted changes in non-ringfenced disposal
-  # # volumes.
-  # params$remand_rates <- tibble::tribble(
-  #   ~receipt_type_desc, ~remand_rate,
-  #   "ind",                     0.580,
-  #   "tew",                     0.277,
-  #   "app",                         0,
-  #   "sent",                        0)   # '20230503 - Charlotte Wallace - RE_ Gender split and remand ratio_.msg'
+  params$published_remand_pop <- 13176                     # OMSQ Oct-Dec 2022, Table 1.1, Adults, 31 March 2023. For QA purposes only.
   params$remand_rates <- c(receipts = 0.187429985453694, 
                           disposals = 0.475353729743915)   # '20230712 - To Jordan Carroll - RE_ Remand model comparison.msg'
   params$no_bail_rate <- 0.2                               # '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
@@ -122,7 +112,6 @@ dev_set_params <- function() {
   # Recall/licence variables
   # Put back to previous version so recall rates are fixed values rather than time series
   params$recall_file           <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/recall_excl_PSS_output_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx"   # '20230505 - Charlotte Wallace - Updated prison projections .msg'
-  #params$licence_times_file    <- "s3://alpha-probation-forecasting-data/Licence/time_spent_on_licence/average_time_on_licence_excl_pss_2023-02-28.csv"   # '20230419 - Danielle Kelly - RE_ Licence and recall parameters_.msg'
   params$licence_profiles_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/adjusted_license_profile.csv"   # '20230601 - Jordan Carroll - RE_ Your licence profiles_.msg'
   
   

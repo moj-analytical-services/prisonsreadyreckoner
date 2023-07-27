@@ -62,13 +62,13 @@ run_prisonsreadyreckoner <- function(params) {
   
   print(paste0("pop_scenario and gender split took ", Sys.time() - t0, " seconds"))
 
-  # Plotting routines to be used in development to assess model output.
-  dev_plot_population(pop_combined, "remand", "Remand delta")
+  # # Plotting routines to be used in development to assess model output.
+  # dev_plot_population(pop_combined, "remand", "Remand delta")
   # dev_plot_population(pop_combined, "determinate", "Determinate")
   # dev_plot_population(pop_combined, "indeterminate", "Indeterminate")
   # dev_plot_population(pop_combined, "recall", "Recall")
 
-  return(pop_combined)
+  return(dplyr::arrange(pop_combined, run, date, casetype, senband, sex))
 }
 
 
@@ -123,8 +123,9 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
   # run_courts_module() issues a warning if extra ring-fenced disposals outstrip
   # remaining capacity. Do what you want when a warning occurs. Here we are just
   # echoing it.
-  withCallingHandlers(warning = function(msg) {},
-                     {courts_outputs <- run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, profiles_remand_in, profiles_remand_out, sentencing_rates_loaded, inflows_det_loaded)})
+  # withCallingHandlers(warning = function(msg) {warning("Outputs will not be meaningful.")},
+  #                     {courts_outputs <- run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, profiles_remand_in, profiles_remand_out, sentencing_rates_loaded, inflows_det_loaded)})
+  courts_outputs <- run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, profiles_remand_in, profiles_remand_out, params$published_remand_pop, sentencing_rates_loaded, inflows_det_loaded)
     pop_remand_delta <- courts_outputs$pop_remand_delta
     inflows_det_adj  <- courts_outputs$inflows_det_adj
   
@@ -166,7 +167,7 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
 #'
 #' @export
 run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disposals_delta,
-                              profiles_remand_in, profiles_remand_out,
+                              profiles_remand_in, profiles_remand_out, published_remand_pop,
                               sentencing_rates, inflows_det) {
 
   # Add additional Crown Court receipts (and disposals for ring-fenced cases).
@@ -180,9 +181,11 @@ run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disp
   # delta for non-ring-fenced cases, assuming current non-ring-fenced disposal
   # case mix.
   cc_disposals_delta <- calculate_cc_disposals_delta(cc_output, cc_capacity)
+  check_cc_disposals_delta(cc_output, cc_disposals_delta)
   
   # Calculate remand population from court disposals.
   pop_remand_delta  <- calculate_pop_remand_delta(mc_disposals_delta, cc_disposals_delta, profiles_remand_in, profiles_remand_out)
+  check_pop_remand(pop_remand_delta, published_remand_pop)
   
   # Calculate determinate inflows from court disposals.
   inflows_det_delta <- calculate_inflows_det_delta(cc_disposals_delta, mc_disposals_delta, sentencing_rates)

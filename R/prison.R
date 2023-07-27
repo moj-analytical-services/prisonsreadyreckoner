@@ -111,6 +111,16 @@ calculate_pop_remand_delta <- function(mc_disposals, cc_disposals, profiles_rema
 }
 
 
+check_pop_remand <- function(pop_remand_delta, published_remand_pop) {
+  
+  if (any(dplyr::select_if(pop_remand_delta, is.numeric) < -published_remand_pop))
+    warning("Assumption violation: ",
+            "The remand population fell below zero. ",
+            "Please provide a scenario with a higher volume of court receipts or fewer sitting days.")
+    
+}
+
+
 
 ################################################################################
 # Determinate prisoners
@@ -421,12 +431,11 @@ load_gender_splits <- function(gender_splits_file) {
 #' @export
 split_populations_by_gender <- function(pop, gender_splits) {
   
-  # Also taking the opportunity to order the columns.
   pop <- pop %>%
     dplyr::left_join(gender_splits, by = c("casetype", "senband"), na_matches = "na", unmatched = "error") %>%
     dplyr::mutate(population = population * prop_sex) %>%
-    dplyr::select(run, date, casetype, senband, sex, population) %>%
-    dplyr::arrange(run, date, casetype, senband, sex)
+    #dplyr::arrange(run, date, casetype, senband, sex) %>%    # Commented for speed. No need to sort here.
+    dplyr::select(run, date, casetype, senband, sex, population)
 
 }
 
