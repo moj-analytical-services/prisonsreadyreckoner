@@ -26,7 +26,7 @@ run_prisonsreadyreckoner <- function(params) {
   average_time_on_recall           <- loaded_datasets_list$average_time_on_recall
   recall_profile_adjustments       <- loaded_datasets_list$recall_profile_adjustments
   gender_splits                    <- loaded_datasets_list$gender_splits
-
+  
   # # Defaults not used by the package but made available for the Shiny app.
   # # Shiny equivalent to assign reactives to defaults here.
   # defaults <- set_defaults(params, recall_rate_exclPSS)
@@ -68,7 +68,7 @@ run_prisonsreadyreckoner <- function(params) {
   # dev_plot_population(pop_combined, "indeterminate", "Indeterminate")
   # dev_plot_population(pop_combined, "recall", "Recall")
 
-  return(pop_combined)
+  return(dplyr::arrange(pop_combined, run, date, casetype, senband, sex))
 }
 
 
@@ -107,9 +107,6 @@ run_baseline <- function(params, inflows_det_loaded, profiles_det_loaded,
 
 
 # A scenario run to be compared with the baseline.
-# run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, sentencing_rates_loaded,
-#                          inflows_det_loaded, profiles_det_loaded,
-#                          nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall) {
 run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list,
                          profiles_remand_in, profiles_remand_out,
                          sentencing_rates_loaded,
@@ -126,9 +123,9 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
   # run_courts_module() issues a warning if extra ring-fenced disposals outstrip
   # remaining capacity. Do what you want when a warning occurs. Here we are just
   # echoing it.
-  withCallingHandlers(warning = function(msg) {},
-                      #{courts_outputs <- run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, sentencing_rates_loaded, inflows_det_loaded)})
-                     {courts_outputs <- run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, profiles_remand_in, profiles_remand_out, sentencing_rates_loaded, inflows_det_loaded)})
+  # withCallingHandlers(warning = function(msg) {warning("Outputs will not be meaningful.")},
+  #                     {courts_outputs <- run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, profiles_remand_in, profiles_remand_out, sentencing_rates_loaded, inflows_det_loaded)})
+  courts_outputs <- run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, profiles_remand_in, profiles_remand_out, params$published_remand_pop, sentencing_rates_loaded, inflows_det_loaded)
     pop_remand_delta <- courts_outputs$pop_remand_delta
     inflows_det_adj  <- courts_outputs$inflows_det_adj
   
@@ -169,9 +166,8 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
 #' inflows owing to changes in the number of court disposals.
 #'
 #' @export
-#run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disposals, sentencing_rates, inflows_det) {
 run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disposals_delta,
-                              profiles_remand_in, profiles_remand_out,
+                              profiles_remand_in, profiles_remand_out, published_remand_pop,
                               sentencing_rates, inflows_det) {
 
   # Add additional Crown Court receipts (and disposals for ring-fenced cases).
@@ -185,10 +181,11 @@ run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disp
   # delta for non-ring-fenced cases, assuming current non-ring-fenced disposal
   # case mix.
   cc_disposals_delta <- calculate_cc_disposals_delta(cc_output, cc_capacity)
+  check_cc_disposals_delta(cc_output, cc_disposals_delta)
   
   # Calculate remand population from court disposals.
-  #pop_remand_delta  <- calculate_pop_remand_delta(cc_disposals_delta)
   pop_remand_delta  <- calculate_pop_remand_delta(mc_disposals_delta, cc_disposals_delta, profiles_remand_in, profiles_remand_out)
+  check_pop_remand(pop_remand_delta, published_remand_pop)
   
   # Calculate determinate inflows from court disposals.
   inflows_det_delta <- calculate_inflows_det_delta(cc_disposals_delta, mc_disposals_delta, sentencing_rates)

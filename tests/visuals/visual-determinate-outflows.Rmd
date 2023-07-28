@@ -12,7 +12,7 @@ devtools::load_all()
 ```{r include=FALSE}
 library(magrittr)
 
-#path_target <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-determinate-population.xlsx"
+#path_target <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-determinate-population.xlsx"   # This file is created from ad hoc data on DOM1.
 
 # Load determinate sentence inflows from Charlotte's projections.
 # load_inflows_det_charlotte_comparison <- function(inflow_file, start_date, impact_date) {
@@ -243,7 +243,7 @@ params$forecast_end_date       <- lubridate::add_with_rollback(params$forecast_s
 # Prison and licence parameters
 params$prison_inflows_file  <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0901/model_outputs/_prison_outputs/_sensitivity/extra_outputs/detailed_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx"   # '20230505 - Charlotte Wallace - Updated prison projections .msg'
 
-params$profiles_file        <- "s3://alpha-prison-forecasting-data/flowcast/data/profiles-det-20230502-shiny-v0.0.0-OFFICIAL.csv"
+params$profiles_file        <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/profiles-det-20230502-shiny-v0.0.0-OFFICIAL.csv"
 # Add maximum stretch factor. For use, for example, by a Shiny app.
 params$lever_profiles_det_stretch_factor_min   <- 0.5
 params$lever_profiles_det_stretch_factor_max <- 5
@@ -254,7 +254,7 @@ params$lever_profiles_det_stretch_factor_max <- 5
 # params$profiles_period_end     <- "2020-03-13"
 # params$time_served_impact_date <- "2022-04-01"
 
-#params$inflow_file             <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-determinate-population.xlsx"
+#params$inflow_file             <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-determinate-population.xlsx"   # This file is created from ad hoc data on DOM1.
 #params$profiles_file           <- paste0("s3://alpha-prison-forecasting-data/flowcast/test-files/test-determinate-profiles-", params$profiles_period_start, "-to-", params$profiles_period_end, ".csv")
 
 inflows_det_loaded <- load_inflows_det(params$prison_inflows_file, params$start_date$inflows_det, params$forecast_start_date, params$forecast_end_date)

@@ -40,6 +40,26 @@ dev_set_params <- function() {
   
   
   ################################################################################
+  # Shiny app parameters.
+  # For use by the Shiny app only.
+  ################################################################################
+  
+  params$capacity_version <- "May-23"
+
+  params$tot_pop_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/populations_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_230424_134433.xlsx"
+  params$capacity_file <- paste0("s3://alpha-app-prisonsreadyreckonerapp/2023-04/", params$capacity_version, " Supply Forecasts_V1.5_Shared.xlsx")
+  
+  # Added by Alex Dickinson - historical data for plotting
+  params$recall_rate_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/recall_rate_b.csv"
+  params$time_served_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/historical-time-served-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  params$sitting_days_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/sitting_days_actuals.csv"
+  params$prison_population_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/historical-prison-population-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  params$prison_inflows_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/historical-prison-inflows-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  params$police_charges_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/historical-police-charges-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  
+  
+  
+  ################################################################################
   # General parameters.
   # General parameters are intended for use by a package user and the Shiny app.
   # A user may wish to change these but they will be fixed for individual
@@ -60,7 +80,7 @@ dev_set_params <- function() {
   
   # Police charge parameters
   # Magistrates' courts
-  params$police_charges_mc_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/020623_mags_sensitivity_output.xlsx"
+  params$police_charges_mc_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/020623_mags_sensitivity_output.xlsx"   # '202306026- Katie Mahon - RE_ mags outputs template.eml'
   params$police_charges_mc_scenarios <- list(central = "apr23_central",
                                              ramp_12m = "apr23_central_12m",
                                              ramp_36m = "apr23_central_36m",
@@ -90,17 +110,7 @@ dev_set_params <- function() {
   
   # Sentencing parameters
   # Remand rates.
-  # # FYI, the Prisons team provided an intercept but this is not relevant for
-  # # marginal changes. The following co-efficients were derived from backlog
-  # # volumes calibrated to match HMCTS outstanding caseload but, for simplicity,
-  # # we are applying them to unadjusted changes in non-ringfenced disposal
-  # # volumes.
-  # params$remand_rates <- tibble::tribble(
-  #   ~receipt_type_desc, ~remand_rate,
-  #   "ind",                     0.580,
-  #   "tew",                     0.277,
-  #   "app",                         0,
-  #   "sent",                        0)   # '20230503 - Charlotte Wallace - RE_ Gender split and remand ratio_.msg'
+  params$published_remand_pop <- 13176                     # OMSQ Oct-Dec 2022, Table 1.1, Adults, 31 March 2023. For QA purposes only.
   params$remand_rates <- c(receipts = 0.187429985453694, 
                           disposals = 0.475353729743915)   # '20230712 - To Jordan Carroll - RE_ Remand model comparison.msg'
   params$no_bail_rate <- 0.2                               # '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
@@ -122,7 +132,6 @@ dev_set_params <- function() {
   # Recall/licence variables
   # Put back to previous version so recall rates are fixed values rather than time series
   params$recall_file           <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/recall_excl_PSS_output_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx"   # '20230505 - Charlotte Wallace - Updated prison projections .msg'
-  #params$licence_times_file    <- "s3://alpha-probation-forecasting-data/Licence/time_spent_on_licence/average_time_on_licence_excl_pss_2023-02-28.csv"   # '20230419 - Danielle Kelly - RE_ Licence and recall parameters_.msg'
   params$licence_profiles_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/adjusted_license_profile.csv"   # '20230601 - Jordan Carroll - RE_ Your licence profiles_.msg'
   
   
@@ -134,6 +143,6 @@ dev_set_params <- function() {
   
   # Gender splits
   params$gender_splits_file      <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/gender-splits-20230502-shiny-v0.0.0-OFFICIAL.csv"
- 
+  
   return(params) 
 }

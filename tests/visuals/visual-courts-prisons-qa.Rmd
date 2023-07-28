@@ -1,7 +1,7 @@
 ---
-title: "Testing effect of court receptions"
+title: "Testing performance of `prisonsreadyreckoner` against CJS Modelling team results"
 author: "Alex Dickinson"
-date: "09/06/2023"
+date: "24/07/2023"
 output: html_document
 ---
 
@@ -10,12 +10,14 @@ knitr::opts_chunk$set(echo = TRUE)
 devtools::load_all()
 ```
 
+
 ```{r echo=FALSE}
 
-###-----------------------------------------------------------------------------
-# LOAD BACKGROUND VARIABLES FOR PRISONFLOWCAST
+silence_botor()
 
-### PUT PARAMS HERE
+###-----------------------------------------------------------------------------
+# LOAD BACKGROUND VARIABLES FOR prisonsreadyreckoner
+
 params <- list()
 
 
@@ -30,7 +32,7 @@ params <- list()
 params$lever_police_charges_scenario           <- "central"
 
 # Number of extra court sitting days per month
-params$lever_extra_cc_sitting_days             <- 20000 / 12             # [month^-1]
+params$lever_extra_cc_sitting_days             <- 0 / 12             # [month^-1]
 params$lever_extra_cc_sitting_days_impact_date <- "2024-01-01"
 
 # Number of extra prison receptions per band per month
@@ -76,12 +78,11 @@ params$police_charges_mc_scenarios <- list(central = "apr23_central",
 )
 params$police_charges_mc_sheet <- "020623_mags_sensitivity_output-"
 
-
 # Crown Court
 params$police_charges_cc_files <- list(central = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_for_ready_reckoner.csv", # Records the total number of Crown Court receipts used as a baseline in the April 2023 projections. Includes background values from various sources, and an increase in charge numbers over a 24-month period. It has non-zero values throughout.
-                                       ramp_12m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_12m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 12-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
-                                       ramp_36m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_36m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 36-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
-                                       ramp_48m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_48m_ramp_for_ready_reckoner.csv" # Records how Crown Court receipts would change if police charge numbers were increased over a 48-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
+                                    ramp_12m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_12m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 12-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
+                                    ramp_36m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_36m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 36-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
+                                    ramp_48m = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_48m_ramp_for_ready_reckoner.csv" # Records how Crown Court receipts would change if police charge numbers were increased over a 48-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
 )   # '20230525 - David Verry - RE_ Next steps on the CJS ready reckoner.eml'
 
 # Table from Chun-Yee for converting Crown Court police charge tables
@@ -98,17 +99,28 @@ params$ringfenced_lookup_file  <- "s3://alpha-app-prisonsreadyreckonerapp/2023-0
 
 
 # Sentencing parameters
-# Remand rates. FYI, the Prisons team provided an intercept but this is not
-# relevant for marginal changes. The following co-efficients were derived from
-# backlog volumes calibrated to match HMCTS outstanding caseload but, for
-# simplicity, we are applying them to unadjusted changes in non-ringfenced
-# disposal volumes.
-params$remand_rates <- tibble::tribble(
-  ~receipt_type_desc, ~remand_rate,
-  "ind",                     0.580,
-  "tew",                     0.277,
-  "app",                         0,
-  "sent",                        0)   # 20230503 - Charlotte Wallace - RE_ Gender split and remand ratio_.msg
+# Remand rates.
+# # FYI, the Prisons team provided an intercept but this is not relevant for
+# # marginal changes. The following co-efficients were derived from backlog
+# # volumes calibrated to match HMCTS outstanding caseload but, for simplicity,
+# # we are applying them to unadjusted changes in non-ringfenced disposal
+# # volumes.
+# params$remand_rates <- tibble::tribble(
+#   ~receipt_type_desc, ~remand_rate,
+#   "ind",                     0.580,
+#   "tew",                     0.277,
+#   "app",                         0,
+#   "sent",                        0)   # '20230503 - Charlotte Wallace - RE_ Gender split and remand ratio_.msg'
+params$remand_rates <- c(receipts = 0.187429985453694, 
+                        disposals = 0.475353729743915)   # '20230712 - To Jordan Carroll - RE_ Remand model comparison.msg'
+params$no_bail_rate <- 0.2                               # '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
+params$ctl          <- 6                                 # [months] '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
+params$mc_remand_lookup <- tibble::tribble(
+  ~disposal_type, ~remanded,
+  "mc_ind",       TRUE,
+  "mc_tew",       TRUE,
+  "mc_sm",        FALSE,
+  "mc_snm",       FALSE)   # '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
 
 params$sentencing_rates_file  <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/reception-rates-20230502-shiny-v0.0.0-OFFICIAL.csv"
 
@@ -160,9 +172,6 @@ profiles_recall <- make_lag_filters(recall_time)
 
 ```
 
-
-
-# Court disposals
 
 ```{r echo=FALSE}
 
@@ -326,9 +335,9 @@ format_charlotte_population_data <- function(target_pop_det_loaded) {
 
 ```{r echo=FALSE}
 
-path_target <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-RR_test_230612.xlsx"
+path_target <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-RR_test_230612.xlsx"
 
-court_disposals_target <- import_s3_file(path_target, range = "population!G5:V54") %>%
+court_disposals_target <- suppressMessages(import_s3_file(path_target, range = "population!G5:V54")) %>%
   dplyr::mutate(date = lubridate::floor_date(as.Date(`Row Labels`), "month"), .keep = "unused")
 
 target_pop_det_formatted <- format_charlotte_population_data(court_disposals_target)
@@ -356,33 +365,33 @@ pop_baseline <- run_baseline(params, inflows_det_loaded, profiles_det_loaded,
 
 
 # Load Crown Court disposals data from Charlotte
-charlotte_baseline_cc_disposals_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sentencing_outputs_apr23_s4.xlsx"
+charlotte_baseline_cc_disposals_file <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-sentencing_outputs_apr23_s4.xlsx"
 charlotte_baseline_cc_disposals_loaded <- import_s3_file(charlotte_baseline_cc_disposals_file, sheet = "disp_plea_impactrr_out_apr23_s4")
 charlotte_baseline_cc_disposals <- format_charlotte_cc_disposals(charlotte_baseline_cc_disposals_loaded, params$forecast_start_date, params$forecast_end_date, flag = "all")
 
-charlotte_low_cc_disposals_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sentencing_outputs_apr23_s4_RR_test_min.xlsx"
+charlotte_low_cc_disposals_file <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-sentencing_outputs_apr23_s4_RR_test_min.xlsx"
 charlotte_low_cc_disposals_loaded <- import_s3_file(charlotte_low_cc_disposals_file, sheet = "disp_plea_impactrr_out_apr23_s4")
 charlotte_low_cc_disposals <- format_charlotte_cc_disposals(charlotte_low_cc_disposals_loaded, params$forecast_start_date, params$forecast_end_date, flag = 0)
 charlotte_low_cc_disposals_delta <- calculate_charlotte_disposals_delta(charlotte_low_cc_disposals, charlotte_baseline_cc_disposals)
 
-charlotte_high_cc_disposals_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sentencing_outputs_apr23_s4_RR_test_max.xlsx"
+charlotte_high_cc_disposals_file <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-sentencing_outputs_apr23_s4_RR_test_max.xlsx"
 charlotte_high_cc_disposals_loaded <- import_s3_file(charlotte_high_cc_disposals_file, sheet = "disp_plea_impactrr_out_apr23_s4")
 charlotte_high_cc_disposals <- format_charlotte_cc_disposals(charlotte_high_cc_disposals_loaded, params$forecast_start_date, params$forecast_end_date, flag = 0)
 charlotte_high_cc_disposals_delta <- calculate_charlotte_disposals_delta(charlotte_high_cc_disposals, charlotte_baseline_cc_disposals)
 
 
 # Load magistrates' court disposals data from Charlotte
-charlotte_baseline_mc_disposals_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0901/mags_projections/projections_from_mags_model_built_2022_02/2022_06/apr23_test_output_mags_med.csv"
-charlotte_baseline_mc_disposals_loaded <- import_s3_file(charlotte_baseline_mc_disposals_file)
+charlotte_baseline_mc_disposals_file <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-apr23_test_output_mags_med.csv"
+charlotte_baseline_mc_disposals_loaded <- suppressMessages(import_s3_file(charlotte_baseline_mc_disposals_file))
 charlotte_baseline_mc_disposals <- format_charlotte_mc_disposals(charlotte_baseline_mc_disposals_loaded, params$forecast_start_date, params$forecast_end_date)
 
-charlotte_low_mc_disposals_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0901/mags_projections/projections_from_mags_model_built_2022_02/2022_06/apr23_test_output_mags_med_RR_test_min.csv"
-charlotte_low_mc_disposals_loaded <- import_s3_file(charlotte_low_mc_disposals_file)
+charlotte_low_mc_disposals_file <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-apr23_test_output_mags_med_RR_test_min.csv"
+charlotte_low_mc_disposals_loaded <- suppressMessages(import_s3_file(charlotte_low_mc_disposals_file))
 charlotte_low_mc_disposals <- format_charlotte_mc_disposals(charlotte_low_mc_disposals_loaded, params$forecast_start_date, params$forecast_end_date)
 charlotte_low_mc_disposals_delta <- calculate_charlotte_disposals_delta(charlotte_low_mc_disposals, charlotte_baseline_mc_disposals)
 
-charlotte_high_mc_disposals_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0901/mags_projections/projections_from_mags_model_built_2022_02/2022_06/apr23_test_output_mags_med_RR_test_max.csv"
-charlotte_high_mc_disposals_loaded <- import_s3_file(charlotte_high_mc_disposals_file)
+charlotte_high_mc_disposals_file <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-apr23_test_output_mags_med_RR_test_max.csv"
+charlotte_high_mc_disposals_loaded <- suppressMessages(import_s3_file(charlotte_high_mc_disposals_file))
 charlotte_high_mc_disposals <- format_charlotte_mc_disposals(charlotte_high_mc_disposals_loaded, params$forecast_start_date, params$forecast_end_date)
 charlotte_high_mc_disposals_delta <- calculate_charlotte_disposals_delta(charlotte_high_mc_disposals, charlotte_baseline_mc_disposals)
 
@@ -394,7 +403,7 @@ charlotte_low_disposals_delta <- dplyr::bind_rows(charlotte_low_cc_disposals_del
 # inflows_det_delta_low = 89 rows
 inflows_det_delta_low <- calculate_inflows_det_delta_SUB(charlotte_low_disposals_delta, sentencing_rates_loaded)
 
-# Run Charlotte's court disposals through the relevant prisonflowcast functions
+# Run Charlotte's court disposals through the relevant prisonsreadyreckoner functions
 # Add Charlotte's delta inflows to the background inflows
 inflows_det_low_adj <- add_inflows_det_delta_courts(inflows_det_loaded, inflows_det_delta_low)
 
@@ -408,7 +417,7 @@ charlotte_high_disposals_delta <- dplyr::bind_rows(charlotte_high_cc_disposals_d
 # inflows_det_delta_low = 89 rows
 inflows_det_delta_high <- calculate_inflows_det_delta_SUB(charlotte_high_disposals_delta, sentencing_rates_loaded)
 
-# Run Charlotte's court disposals through the relevant prisonflowcast functions
+# Run Charlotte's court disposals through the relevant prisonsreadyreckoner functions
 # Add Charlotte's delta inflows to the background inflows
 inflows_det_high_adj <- add_inflows_det_delta_courts(inflows_det_loaded, inflows_det_delta_high)
 
@@ -468,32 +477,84 @@ pop_table <- target_pop_det_formatted %>%
 ```
 
 
+### Summary ###
+
+* Determinate sentence prison populations predicted using the Prisons Submodule and Courts Submodule of `prisonsreadyreckoner` are compared to populations predicted by the [CJS Modelling team](https://peoplefinder.service.gov.uk/teams/justice-system-modelling-criminal-justice) using the same input data.
+* Comparisons are carried out for a **Low** scenario (i.e. low rates of court receipts and disposals) and a **High** scenario (i.e. high rates of court receipts and disposals).
+* The Prisons Submodule performs excellently.
+* The Courts Submodule performs well for the **Low** scenario, but not as well for the **High** scenario.
+* Worse performance of the Courts Submodule for the **High** scenario may be because regression used for sentencing rates is not trained on data that extend to such high volumes.
+
+
+
+<!-- ### Aim ### -->
+
+<!-- The aim of this visualisation is to test the performance of the Courts and Sentencing Submodules of `prisonsreadyreckoner` using data produced by the [CJS Modelling team](https://peoplefinder.service.gov.uk/teams/justice-system-modelling-criminal-justice). Specifically, it uses three scenarios (**Low**, **Central** and **High**) in which the number of cases disposed of by the magistrates' courts and the number of cases received by the Crown Courts are varied. For each scenario, two tests are carried out: -->
+
+<!-- * *Testing Courts Submodule and Prison Submodule*: Magistrates' court disposals and Crown Court receipts are passed through the `prisonsreadyreckoner` Courts Submodule followed by the Prisons Submodule. The resultant determinate sentence prison population is compared to the population predicted by the CJS Modelling team using the same court disposals and receipts. -->
+<!-- * *Testing Prisons Submodule only*: Determinate sentence prison receptions (predicted from court disposals and receipts by the CJS Modelling team) are passed through the `prisonsreadyreckoner` Prisons Submodule. The resultant determinate sentence prison population is compared to the population predicted by the CJS Modelling team using the same court disposals and receipts. -->
+
+
+### Testing Courts Submodule and Prison Submodule
+
+* Magistrates' court disposals and Crown Court receipts are passed through the `prisonsreadyreckoner` Courts Submodule followed by the Prisons Submodule.
+* **Low**, **Central** and **High** scenarios are used.
+* Each scenario relies on two files of input data:
+  + **Low**:
+    - **Magistrates' court disposals**: s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-apr23_test_output_mags_med_RR_test_min.csv (copied from original location s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0901/mags_projections/projections_from_mags_model_built_2022_02/2022_06/apr23_test_output_mags_med_RR_test_min.csv).
+    - **Crown Court receipts**: s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-sentencing_outputs_apr23_s4_RR_test_min.xlsx (copied from original location s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sentencing_outputs_apr23_s4_RR_test_min.xlsx).
+  + **Central**:
+    - **Magistrates' court disposals**: s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-apr23_test_output_mags_med.csv (copied from original location s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0901/mags_projections/projections_from_mags_model_built_2022_02/2022_06/apr23_test_output_mags_med.csv).
+    - **Crown Court receipts**: s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-sentencing_outputs_apr23_s4.xlsx (copied from original location s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sentencing_outputs_apr23_s4.xlsx).
+  + **High**:
+    - **Magistrates' court disposals**: s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-apr23_test_output_mags_med_RR_test_max.csv (copied from original location s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0901/mags_projections/projections_from_mags_model_built_2022_02/2022_06/apr23_test_output_mags_med_RR_test_max.csv).
+    - **Crown Court receipts**: s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-sentencing_outputs_apr23_s4_RR_test_max.xlsx (copied from original location s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sentencing_outputs_apr23_s4_RR_test_max.xlsx).
+    
+**Graph 1** shows the determinate sentence prison population for each scenario calculated by `prisonsreadyreckoner`, and also shows the population for each scenario calculated by the CJS Modelling team (these results are loaded from the file s3://alpha-prison-forecasting-data/flowcast/test-files/test-RR_test_230612.xlsx).
+
+  * *Note*: The `prisonreadyreckoner` populations increase from a value of zero in March 2023 as `prisonreadyreckoner` models only offenders who enter prison after this date. The CJS Modelling team populations, in contrast, include prisoners who entered prison before March 2023.
+  
+**Graph 2** shows the divergences of the **High** and **Low** populations from the Central populations (i.e. the dashed black line in **Graph 1** for `prisonsreadyreckoner` and the solid black line in **Graph 1** for the CJS Modelling team).
+
+  * The **Low** divergence of `prisonsreadyreckoner` matches the **Low** divergence of the CJS Modelling team.
+  * The **High** divergences do not match well.
+
+
+
+<!-- For each scenario, `prisonsreadyreckoner` takes magistrates' court disposals and Crown Court receipts from the two files and calculates the resulting determinate sentence prison population.  -->
+
+
 ```{r echo = FALSE}
 
 
 ggplot2::ggplot() +
-  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = cjst_central_pop, color = "cjst_central_pop", linetype = "cjst_central_pop")) +
-  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = cjst_high_pop, color = "cjst_high_pop", linetype = "cjst_high_pop")) + 
-  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = cjst_low_pop, color = "cjst_low_pop", linetype = "cjst_low_pop")) +
-  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = prr_baseline_pop, color = "prr_baseline_pop", linetype = "prr_baseline_pop")) +
-  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = prr_pop_det_high, color = "prr_pop_det_high", linetype = "prr_pop_det_high")) +
-  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = prr_pop_det_low, color = "prr_pop_det_low", linetype = "prr_pop_det_low")) +
-  ggplot2::scale_linetype_manual(name = " ", values = c("cjst_central_pop" = "solid", "cjst_high_pop" = "solid", "cjst_low_pop" = "solid", "prr_baseline_pop" = "dashed", "prr_pop_det_high" = "dashed", "prr_pop_det_low" = "dashed")) + 
-  ggplot2::scale_color_manual(name = " ", values = c("cjst_central_pop" = "black", "cjst_high_pop" = "blue", "cjst_low_pop" = "red", "prr_baseline_pop" = "black", "prr_pop_det_high" = "blue", "prr_pop_det_low" = "red")) +
-  ggplot2::labs(title = "axes_title", x = "axes_xlabel", y = "axes_ylabel", caption = "axes_caption") +
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = cjst_central_pop, color = "Central (CJS Modelling team)", linetype = "Central (CJS Modelling team)")) +
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = cjst_high_pop, color = "High (CJS Modelling team)", linetype = "High (CJS Modelling team)")) + 
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = cjst_low_pop, color = "Low (CJS Modelling team)", linetype = "Low (CJS Modelling team)")) +
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = prr_baseline_pop, color = "Central (prisonsreadyreckoner)", linetype = "Central (prisonsreadyreckoner)")) +
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = prr_pop_det_high, color = "High (prisonsreadyreckoner)", linetype = "High (prisonsreadyreckoner)")) +
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = prr_pop_det_low, color = "Low (prisonsreadyreckoner)", linetype = "Low (prisonsreadyreckoner)")) +
+  ggplot2::scale_linetype_manual(name = " ", values = c("Central (CJS Modelling team)" = "solid", "High (CJS Modelling team)" = "solid", "Low (CJS Modelling team)" = "solid", "Central (prisonsreadyreckoner)" = "dashed", "High (prisonsreadyreckoner)" = "dashed", "Low (prisonsreadyreckoner)" = "dashed")) + 
+  ggplot2::scale_color_manual(name = " ", values = c("Central (CJS Modelling team)" = "black", "High (CJS Modelling team)" = "blue", "Low (CJS Modelling team)" = "red", "Central (prisonsreadyreckoner)" = "black", "High (prisonsreadyreckoner)" = "blue", "Low (prisonsreadyreckoner)" = "red")) +
+  ggplot2::labs(title = "Graph 1: Determinate sentence prison population", x = "", y = "Population", caption = "") +
   ggplot2::theme_classic()
 
+```
+
+
+
+
+```{r echo = FALSE}
 
 ggplot2::ggplot(data = pop_table) +
-  ggplot2::geom_line(ggplot2::aes(x = date, y = cjst_high_pop_delta, color = "cjst_high_pop_delta", linetype = "cjst_high_pop_delta")) + 
-  ggplot2::geom_line(ggplot2::aes(x = date, y = cjst_low_pop_delta, color = "cjst_low_pop_delta", linetype = "cjst_low_pop_delta")) +
-  ggplot2::geom_line(ggplot2::aes(x = date, y = prr_pop_det_high_delta, color = "prr_pop_det_high_delta", linetype = "prr_pop_det_high_delta")) +
-  ggplot2::geom_line(ggplot2::aes(x = date, y = prr_pop_det_low_delta, color = "prr_pop_det_low_delta", linetype = "prr_pop_det_low_delta")) +
-  ggplot2::scale_linetype_manual(name = " ", values = c("cjst_high_pop_delta" = "solid", "cjst_low_pop_delta" = "solid", "prr_pop_det_high_delta" = "dashed", "prr_pop_det_low_delta" = "dashed")) + 
-  ggplot2::scale_color_manual(name = " ", values = c("cjst_high_pop_delta" = "blue", "cjst_low_pop_delta" = "red", "prr_pop_det_high_delta" = "blue", "prr_pop_det_low_delta" = "red")) +
-  ggplot2::labs(title = "axes_title", x = "axes_xlabel", y = "axes_ylabel", caption = "axes_caption") +
+  ggplot2::geom_line(ggplot2::aes(x = date, y = cjst_high_pop_delta, color = "High (CJS Modelling team)", linetype = "High (CJS Modelling team)")) + 
+  ggplot2::geom_line(ggplot2::aes(x = date, y = cjst_low_pop_delta, color = "Low (CJS Modelling team)", linetype = "Low (CJS Modelling team)")) +
+  ggplot2::geom_line(ggplot2::aes(x = date, y = prr_pop_det_high_delta, color = "High (prisonsreadyreckoner)", linetype = "High (prisonsreadyreckoner)")) +
+  ggplot2::geom_line(ggplot2::aes(x = date, y = prr_pop_det_low_delta, color = "Low (prisonsreadyreckoner)", linetype = "Low (prisonsreadyreckoner)")) +
+  ggplot2::scale_linetype_manual(name = " ", values = c("High (CJS Modelling team)" = "solid", "Low (CJS Modelling team)" = "solid", "High (prisonsreadyreckoner)" = "dashed", "Low (prisonsreadyreckoner)" = "dashed")) + 
+  ggplot2::scale_color_manual(name = " ", values = c("High (CJS Modelling team)" = "blue", "Low (CJS Modelling team)" = "red", "High (prisonsreadyreckoner)" = "blue", "Low (prisonsreadyreckoner)" = "red")) +
+  ggplot2::labs(title = "Graph 2: Divergence of determinate sentence prison population from Central scenario", x = "", y = "Divergence", caption = "") +
   ggplot2::theme_classic()
-
 
 ```
 
@@ -502,33 +563,26 @@ ggplot2::ggplot(data = pop_table) +
 
 
 
-
-<!-- Plot: Charlotte baseline and Charlotte scenarios -->
-
-<!-- Plot: `prisonsreadyreckoner` baseline -->
-
-<!-- Low scenario -->
-
-<!-- Plot: `prisonsreadyreckoner` low scenario with baseline -->
-
-<!-- Plot: Difference 1: `prisonsreadyreckoner` difference between low scenario and baseline -->
-
-<!-- Plot: Difference 2: Difference between Charlotte baseline and Charlotte scenarios -->
-
-<!-- Plot: Difference between Difference 1 and Difference 2 -->
+## Testing Prisons Submodule only
 
 
+* **Low**, **Central** and **High** scenarios takes determinate sentence prison receptions from file s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-RR_test_230612.xlsx.
 
-# Receptions
+**Graph 3** shows the determinate sentence prison population for each scenario calculated by `prisonsreadyreckoner`, and also shows the population for each scenario calculated by the CJS Modelling team (these results are loaded from the file s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-RR_test_230612.xlsx).
+  
+  * *Note*: The `prisonreadyreckoner` populations increase from a value of zero in March 2023 as `prisonreadyreckoner` models only offenders who enter prison after this date. The CJS Modelling team populations, in contrast, include prisoners who entered prison before March 2023.
+  
+**Graph 4** shows the divergence of the **High** and **Low** populations from the Central population.
 
-Plot receptions
+  * Excellent match between the `prisonsreadyreckoner` and the CJS Modelling team populations.
+
 
 
 ```{r echo=FALSE}
 
-path_target <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-RR_test_230612.xlsx"
+path_target <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-RR_test_230612.xlsx"
 
-prison_inflows_low_high <- import_s3_file(path_target, range = "receptions!A5:M90") %>%
+prison_inflows_low_high <- suppressMessages(import_s3_file(path_target, range = "receptions!A5:M90")) %>%
   dplyr::mutate(date = lubridate::floor_date(as.Date(`Row Labels`), "month"), .keep = "unused") %>%
   dplyr::filter(date >= params$forecast_start_date, date <= params$forecast_end_date)
 
@@ -637,34 +691,41 @@ pop_table <- target_pop_det_formatted %>%
 
 
 ggplot2::ggplot() +
-  ggplot2::geom_line(data = pop_table, ggplot2::aes( x = date, y = cjst_central_pop, color = "cjst_central_pop", linetype = "cjst_central_pop")) +
-  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = cjst_high_pop, color = "cjst_high_pop", linetype = "cjst_high_pop")) + 
-  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = cjst_low_pop, color = "cjst_low_pop", linetype = "cjst_low_pop")) +
+  ggplot2::geom_line(data = pop_table, ggplot2::aes( x = date, y = cjst_central_pop, color = "Central (CJS Modelling team)", linetype = "Central (CJS Modelling team)")) +
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = cjst_high_pop, color = "High (CJS Modelling team)", linetype = "High (CJS Modelling team)")) + 
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = cjst_low_pop, color = "Low (CJS Modelling team)", linetype = "Low (CJS Modelling team)")) +
   ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = prr_central_pop, color = "prr_central_pop", linetype = "prr_central_pop")) +
-  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = prr_pop_det_high, color = "prr_pop_det_high", linetype = "prr_pop_det_high")) +
-  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = prr_pop_det_low, color = "prr_pop_det_low", linetype = "prr_pop_det_low")) +
-  ggplot2::scale_linetype_manual(name = " ", values = c("cjst_central_pop" = "solid", "cjst_high_pop" = "solid", "cjst_low_pop" = "solid", "prr_central_pop" = "dashed", "prr_pop_det_high" = "dashed", "prr_pop_det_low" = "dashed")) + 
-  ggplot2::scale_color_manual(name = " ", values = c("cjst_central_pop" = "black", "cjst_high_pop" = "blue", "cjst_low_pop" = "red", "prr_central_pop" = "black", "prr_pop_det_high" = "blue", "prr_pop_det_low" = "red")) +
-  ggplot2::labs(title = "axes_title", x = "axes_xlabel", y = "axes_ylabel", caption = "axes_caption") +
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = prr_pop_det_high, color = "High (prisonsreadyreckoner)", linetype = "High (prisonsreadyreckoner)")) +
+  ggplot2::geom_line(data = pop_table, ggplot2::aes(x = date, y = prr_pop_det_low, color = "Low (prisonsreadyreckoner)", linetype = "Low (prisonsreadyreckoner)")) +
+  ggplot2::scale_linetype_manual(name = " ", values = c("Central (CJS Modelling team)" = "solid", "High (CJS Modelling team)" = "solid", "Low (CJS Modelling team)" = "solid", "prr_central_pop" = "dashed", "High (prisonsreadyreckoner)" = "dashed", "Low (prisonsreadyreckoner)" = "dashed")) + 
+  ggplot2::scale_color_manual(name = " ", values = c("Central (CJS Modelling team)" = "black", "High (CJS Modelling team)" = "blue", "Low (CJS Modelling team)" = "red", "prr_central_pop" = "black", "High (prisonsreadyreckoner)" = "blue", "Low (prisonsreadyreckoner)" = "red")) +
+  ggplot2::labs(title = "Determinate sentence prison population", x = "", y = "Population", caption = "") +
   ggplot2::theme_classic()
 
 
 ggplot2::ggplot(data = pop_table) +
-  ggplot2::geom_line(ggplot2::aes(x = date, y = cjst_high_pop_delta, color = "cjst_high_pop_delta", linetype = "cjst_high_pop_delta")) + 
-  ggplot2::geom_line(ggplot2::aes(x = date, y = cjst_low_pop_delta, color = "cjst_low_pop_delta", linetype = "cjst_low_pop_delta")) +
-  ggplot2::geom_line(ggplot2::aes(x = date, y = prr_pop_det_high_delta, color = "prr_pop_det_high_delta", linetype = "prr_pop_det_high_delta")) +
-  ggplot2::geom_line(ggplot2::aes(x = date, y = prr_pop_det_low_delta, color = "prr_pop_det_low_delta", linetype = "prr_pop_det_low_delta")) +
-  ggplot2::scale_linetype_manual(name = " ", values = c("cjst_high_pop_delta" = "solid", "cjst_low_pop_delta" = "solid", "prr_pop_det_high_delta" = "dashed", "prr_pop_det_low_delta" = "dashed")) + 
-  ggplot2::scale_color_manual(name = " ", values = c("cjst_high_pop_delta" = "blue", "cjst_low_pop_delta" = "red", "prr_pop_det_high_delta" = "blue", "prr_pop_det_low_delta" = "red")) +
-  ggplot2::labs(title = "axes_title", x = "axes_xlabel", y = "axes_ylabel", caption = "axes_caption") +
+  ggplot2::geom_line(ggplot2::aes(x = date, y = cjst_high_pop_delta, color = "High (CJS Modelling team)", linetype = "High (CJS Modelling team)")) + 
+  ggplot2::geom_line(ggplot2::aes(x = date, y = cjst_low_pop_delta, color = "Low (CJS Modelling team)", linetype = "Low (CJS Modelling team)")) +
+  ggplot2::geom_line(ggplot2::aes(x = date, y = prr_pop_det_high_delta, color = "High (prisonsreadyreckoner)", linetype = "High (prisonsreadyreckoner)")) +
+  ggplot2::geom_line(ggplot2::aes(x = date, y = prr_pop_det_low_delta, color = "Low (prisonsreadyreckoner)", linetype = "Low (prisonsreadyreckoner)")) +
+  ggplot2::scale_linetype_manual(name = " ", values = c("High (CJS Modelling team)" = "solid", "Low (CJS Modelling team)" = "solid", "High (prisonsreadyreckoner)" = "dashed", "Low (prisonsreadyreckoner)" = "dashed")) + 
+  ggplot2::scale_color_manual(name = " ", values = c("High (CJS Modelling team)" = "blue", "Low (CJS Modelling team)" = "red", "High (prisonsreadyreckoner)" = "blue", "Low (prisonsreadyreckoner)" = "red")) +
+  ggplot2::labs(title = "Divergence of determinate sentence prison population from Central scenario", x = "", y = "Divergence", caption = "") +
   ggplot2::theme_classic()
 
 
 ```
 
 
+### Conclusions
 
-The inflow values in s3://alpha-prison-forecasting-data/flowcast/test-files/test-RR_test_230612.xlsx are slightly different to the inflows used in `prisonsreadyreckoner` (see s3://alpha-app-prisonsreadyreckonerapp/2023-04/detailed_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx)
+* Excellent performance of `prisonsreadyreckoner` Prisons Submodule suggests that divergence of `prisonsreadyreckoner` from CJS Modelling team for **High** scenario in **Graph 2** is caused by Courts Submodule.
+* Worse performance of Courts Submodule for **High** scenario may be because regression used for Crown Court disposals is not trained on data that extend to these high volumes.
+
+
+### Note 
+
+The inflow values in s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-RR_test_230612.xlsx are slightly different to the inflows used in `prisonsreadyreckoner` (see s3://alpha-app-prisonsreadyreckonerapp/2023-04/detailed_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx). The differences are minimal, so are unlikely to affect the results presented here.
 
 
 
@@ -700,32 +761,33 @@ prison_inflows_comparison <- inflows_det_loaded_pivoted %>%
 
 
 ggplot2::ggplot() +
-  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = prr_orig_inflows_sb1, color = "prr_orig_inflows_sb1", linetype = "prr_orig_inflows_sb1")) +
-  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = prr_orig_inflows_sb2, color = "prr_orig_inflows_sb2", linetype = "prr_orig_inflows_sb2")) + 
-  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = prr_orig_inflows_sb3, color = "prr_orig_inflows_sb3", linetype = "prr_orig_inflows_sb3")) +
-  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = prr_orig_inflows_sb4, color = "prr_orig_inflows_sb4", linetype = "prr_orig_inflows_sb4")) +
-  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = central_inflows_sb1, color = "central_inflows_sb1", linetype = "central_inflows_sb1")) +
-  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = central_inflows_sb2, color = "central_inflows_sb2", linetype = "central_inflows_sb2")) +
-  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = central_inflows_sb3, color = "central_inflows_sb3", linetype = "central_inflows_sb3")) +
-  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = central_inflows_sb4, color = "central_inflows_sb4", linetype = "central_inflows_sb4")) +
-  ggplot2::scale_linetype_manual(name = " ", values = c("central_inflows_sb1" = "solid",
-                                                        "central_inflows_sb2" = "solid",
-                                                        "central_inflows_sb3" = "solid",
-                                                        "central_inflows_sb4" = "solid",
-                                                        "prr_orig_inflows_sb1" = "dashed",
-                                                        "prr_orig_inflows_sb2" = "dashed",
-                                                        "prr_orig_inflows_sb3" = "dashed",
-                                                        "prr_orig_inflows_sb4" = "dashed"
+  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = prr_orig_inflows_sb1, color = "prisonsreadyreckoner (Sentence Band 1)", linetype = "prisonsreadyreckoner (Sentence Band 1)")) +
+  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = prr_orig_inflows_sb2, color = "prisonsreadyreckoner (Sentence Band 2)", linetype = "prisonsreadyreckoner (Sentence Band 2)")) + 
+  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = prr_orig_inflows_sb3, color = "prisonsreadyreckoner (Sentence Band 3)", linetype = "prisonsreadyreckoner (Sentence Band 3)")) +
+  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = prr_orig_inflows_sb4, color = "prisonsreadyreckoner (Sentence Band 4)", linetype = "prisonsreadyreckoner (Sentence Band 4)")) +
+  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = central_inflows_sb1, color = "CJS (Sentence Band 1)", linetype = "CJS (Sentence Band 1)")) +
+  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = central_inflows_sb2, color = "CJS (Sentence Band 2)", linetype = "CJS (Sentence Band 2)")) +
+  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = central_inflows_sb3, color = "CJS (Sentence Band 3)", linetype = "CJS (Sentence Band 3)")) +
+  ggplot2::geom_line(data = prison_inflows_comparison, ggplot2::aes(x = date, y = central_inflows_sb4, color = "CJS (Sentence Band 4)", linetype = "CJS (Sentence Band 4)")) +
+  ggplot2::scale_linetype_manual(name = " ", values = c("CJS (Sentence Band 1)" = "solid",
+                                                        "CJS (Sentence Band 2)" = "solid",
+                                                        "CJS (Sentence Band 3)" = "solid",
+                                                        "CJS (Sentence Band 4)" = "solid",
+                                                        "prisonsreadyreckoner (Sentence Band 1)" = "dashed",
+                                                        "prisonsreadyreckoner (Sentence Band 2)" = "dashed",
+                                                        "prisonsreadyreckoner (Sentence Band 3)" = "dashed",
+                                                        "prisonsreadyreckoner (Sentence Band 4)" = "dashed"
                                                         )) +
-  ggplot2::scale_color_manual(name = " ", values = c("central_inflows_sb1" = "black",
-                                                     "central_inflows_sb2" = "red",
-                                                     "central_inflows_sb3" = "green",
-                                                     "central_inflows_sb4" = "blue",
-                                                     "prr_orig_inflows_sb1" = "black",
-                                                     "prr_orig_inflows_sb2" = "red",
-                                                     "prr_orig_inflows_sb3" = "green",
-                                                     "prr_orig_inflows_sb4" = "blue"
+  ggplot2::scale_color_manual(name = " ", values = c("CJS (Sentence Band 1)" = "black",
+                                                     "CJS (Sentence Band 2)" = "red",
+                                                     "CJS (Sentence Band 3)" = "green",
+                                                     "CJS (Sentence Band 4)" = "blue",
+                                                     "prisonsreadyreckoner (Sentence Band 1)" = "black",
+                                                     "prisonsreadyreckoner (Sentence Band 2)" = "red",
+                                                     "prisonsreadyreckoner (Sentence Band 3)" = "green",
+                                                     "prisonsreadyreckoner (Sentence Band 4)" = "blue"
   )) +
+  ggplot2::labs(title = "Determinate sentence prison receptions", x = "", y = "Receptions", caption = "") +
   ggplot2::theme_classic()
 
 

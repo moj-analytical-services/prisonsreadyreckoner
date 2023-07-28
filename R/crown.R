@@ -42,7 +42,9 @@ load_crown_output <- function(cc_output_file, start_date, forecast_start_date, f
                  dplyr::rename(route = actual_route)
   
   cc_output <- trim_dates(cc_output, start_date, forecast_start_date, forecast_end_date) %>%
-                 dplyr::select(date, receipt_type_desc, route, n_disposals, dur_disposals)
+                 dplyr::select(date, receipt_type_desc, route,
+                               n_backlog,                                 # Read n_backlog so we may sense-check backlog depletion.
+                               n_disposals, dur_disposals)
 
   return(cc_output)
 }
@@ -105,20 +107,13 @@ check_cc_inputs <- function(cc_output, cc_capacity) {
 # adding these columns on loading, the table structure is more transparent and
 # less CPU time will be spent manipulating the table, especially in contexts
 # where model runs are invoked iteratively, such as in a Shiny app.
-#augment_crown_output <- function(cc_output, ringfenced_lookup, remand_rates) {
 augment_crown_output <- function(cc_output, ringfenced_lookup) {
     
   # Add ring-fenced status.
   cc_output <- dplyr::left_join(cc_output, ringfenced_lookup, by = c("receipt_type_desc", "route"), unmatched = "error")
 
-  # # Add remand rates.
-  # cc_output <- dplyr::left_join(cc_output, remand_rates, by = "receipt_type_desc", unmatched = "error")
-    
-  
-  # # Calculate parameters that will be used in online calculations. All derived
-  # # time parameters will be in hours.
-  # cc_output <- dplyr::mutate(cc_output, remand_rate = remand_rate * !ringfenced)
-
+  # Calculate parameters that will be used in online calculations. All derived
+  # time parameters will be in hours.
   cc_output <- dplyr::group_by(cc_output, date) %>%
                     dplyr::mutate(hours_non_ringfenced = sum((dur_disposals * !ringfenced) / 60)) %>%
                     dplyr::ungroup()
@@ -191,19 +186,66 @@ calculate_cc_disposals_delta <- function(cc_output, cc_capacity) {
   
   cc_disposals <- dplyr::left_join(cc_output, cc_capacity, by = c("date")) %>%
                     dplyr::mutate(n_disposals_delta = n_disposals_ringfenced_delta + (capacity_delta - hours_ringfenced_delta) * backlog_rate) %>%
-                    #dplyr::select(date, receipt_type_desc, route, remand_rate, n_receipts_delta, n_disposals_delta)
-                    dplyr::select(date, receipt_type_desc, route, n_receipts_delta, n_disposals_delta)
+                    dplyr::select(date, receipt_type_desc, route, 
+                                  ringfenced,                          # Retain so we may check whether disposals deplete the backlog.
+                                  n_receipts_delta, n_disposals_delta)
   
 }
 
 
 check_cc_capacity <- function(cc_capacity) {
   
-  residual_capacity <- (cc_capacity$capacity_base + cc_capacity$capacity_delta) - (cc_capacity$hours_ringfenced_base + cc_capacity$hours_ringfenced_delta)
+  hours_ringfenced <- cc_capacity$hours_ringfenced_base + cc_capacity$hours_ringfenced_delta
+  if (any(hours_ringfenced < 0))
+    warning("Assumption violation: ",
+            "The total duration of ring-fenced disposals implied by your court ",
+            "receipts is less than zero for at least one month. ",
+            "Please provide a scenario with a higher volume of court receipts.")
   
+  residual_capacity <- (cc_capacity$capacity_base + cc_capacity$capacity_delta) - hours_ringfenced
   if (any(residual_capacity < 0))
-    warning("There was not enough court capacity to serve the ring-fenced demand. Model output will not be meaningful.")
+    warning("Assumption violation: ",
+            "There was not enough court capacity to serve the additional ring-fenced demand ",
+            "implied by your court receipts. ",
+            "Please provide a scenario with fewer court receipts or more sitting days.")
   
 }
 
+
+# A crude test of backlog depletion for speed. Assumes that one only needs to
+# test the last date.
+# Note, we are only interested in non-ring-fenced cases. By assumption, an
+# increase in the ring-fenced receipts leads to an immediate increase in ring-
+# fenced disposals with no impact on the backlog. A decrease in ring-fenced
+# receipts would only start to impact the backlog once the drop is larger than
+# the baseline ring-fenced disposals and we already have a check for that
+# threshold.
+check_cc_disposals_delta <- function(cc_output, cc_disposals_delta) {
+  
+  # Find the non-ringfenced backlog in the last month
+  cc_backlog <- dplyr::filter(cc_output, date == max(cc_output$date), ringfenced == FALSE) %>%
+    dplyr::group_by(.data$route) %>%
+    dplyr::summarise(n_backlog = sum(.data$n_backlog, na.rm = TRUE))
+  
+  # Find the total additional disposals by the last month.
+  cc_disposals_delta_total <- dplyr::filter(cc_disposals_delta, ringfenced == FALSE) %>%
+    dplyr::group_by(.data$route) %>%
+    dplyr::summarise(n_disposals_delta = sum(.data$n_disposals_delta, na.rm = TRUE))
+  
+  # Check that the total additional disposals did not exceed the backlog.
+  cc_backlog <- dplyr::left_join(cc_backlog, cc_disposals_delta_total, by = "route")
+
+  if (sum(cc_backlog$n_backlog) < sum(cc_backlog$n_disposals_delta)) {
+    warning("Assumption violation: ",
+            "The backlog of non-ring-fenced cases fell to zero by the end of the ",
+            "simulation. ",
+            "Please provide a scenario with more court receipts or fewer sitting days.")
+  } else if (any(cc_backlog$n_backlog - cc_backlog$n_disposals_delta < 0)) {
+    warning("Assumption violation: ",
+            "The backlog of non-ring-fenced cases fell to zero by the end of the ",
+            "simulation for at least one court route. ",
+            "You may wish to provide a scenario with more court receipts or fewer sitting days.")
+  }
+    
+}
   
