@@ -14,14 +14,12 @@ e.g. (#2, @bgburton)
 -->
 
 
-# prisonsreadyreckoner 1.0.0.9000
+# prisonsreadyreckoner 1.0.0
 
 First release for sharing with customers. Adds:
 
 * Simplistic remand calculations accounting for the release of a proportion of
 remand prisoners following expiry of custody time limits.
-
-* Improved documentation.
 
 
 ## Breaking changes

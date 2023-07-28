@@ -432,7 +432,7 @@ load_gender_splits <- function(gender_splits_file) {
 split_populations_by_gender <- function(pop, gender_splits) {
   
   pop <- pop %>%
-    dplyr::left_join(gender_splits, by = c("casetype", "senband"), na_matches = "na", unmatched = "error") %>%
+    dplyr::left_join(gender_splits, by = c("casetype", "senband"), na_matches = "na", multiple = "all", unmatched = "error") %>%
     dplyr::mutate(population = population * prop_sex) %>%
     #dplyr::arrange(run, date, casetype, senband, sex) %>%    # Commented for speed. No need to sort here.
     dplyr::select(run, date, casetype, senband, sex, population)

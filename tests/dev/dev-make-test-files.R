@@ -16,7 +16,7 @@ make_ringfenced_lookup <- function(mode = 'save') {
   switch(
     mode,
     'save' = {
-      lookup <- update_ringfenced_lookup()
+      lookup <- prisonsreadyreckonerupdater::update_ringfenced_lookup()
       botor::s3_write(lookup$data, readr::write_csv, path_ringfenced_lookup)
     },
     'report' = {},
@@ -78,7 +78,7 @@ make_test_receptions_model_data <- function(mode = 'save') {
 # combined with the OLD FULLSAMPLE.
 make_test_reception_rates <- function(mode = 'save') {
   
-  library(fullsample)
+  #library(fullsample)
   
   path_rdo_data     <- "'s3://alpha-app-cjsm-monitoring/actuals_data_mags/[OFFICIAL SENSITIVE - Magistrates RDOs 19-01 to 22-12 (Jan19 to Dec22) as at 200123.xlsx]Data'!A6:G2936"   # '20230427 - Claire O'Neill - RE_ Latest sentencing files_.msg'
   path_cc_disposals <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0901/prisons_inputs/sentencing/_crown_actuals_and_inputs/_misc/cc_outputs/ccs_snapshot_20230315/cc_disposals.csv"   # '20230427 - Claire O'Neill - RE_ Latest sentencing files_.msg'
@@ -91,8 +91,8 @@ make_test_reception_rates <- function(mode = 'save') {
   switch(
     mode,
     'save' = {
-      #reception_rates <- update_reception_rates(path_rdo_data, path_cc_disposals, period_start, period_end)
-      reception_rates <- update_reception_rates_old(path_rdo_data, path_cc_disposals, period_start, period_end, path_fullsample, visualise = FALSE)
+      #reception_rates <- prisonsreadyreckonerupdater::update_reception_rates(path_rdo_data, path_cc_disposals, period_start, period_end)
+      reception_rates <- prisonsreadyreckonerupdater::update_reception_rates_old(path_rdo_data, path_cc_disposals, period_start, period_end, path_fullsample, visualise = FALSE)
       botor::s3_write(reception_rates$data, readr::write_csv, path_reception_rates)
     },
     'report' = {},
@@ -126,7 +126,7 @@ make_test_determinate_profiles <- function(mode = 'save') {
   switch(
     mode,
     'save' = {
-      determinate_profiles <- update_determinate_profiles(period_start, period_end, visualise = FALSE)
+      determinate_profiles <- prisonsreadyreckonerupdater::update_determinate_profiles(period_start, period_end, visualise = FALSE)
       botor::s3_write(determinate_profiles$data, readr::write_csv, path_determinate_profiles)
     },
     'report' = {},
@@ -155,7 +155,7 @@ make_test_determinate_profiles_old <- function(mode = 'save') {
   switch(
     mode,
     'save' = {
-      determinate_profiles <- update_determinate_profiles_old(period_start, period_end, path_fullsample, visualise = FALSE)
+      determinate_profiles <- prisonsreadyreckonerupdater::update_determinate_profiles_old(period_start, period_end, path_fullsample, visualise = FALSE)
       botor::s3_write(determinate_profiles$data, readr::write_csv, path_determinate_profiles)
     },
     'report' = {},

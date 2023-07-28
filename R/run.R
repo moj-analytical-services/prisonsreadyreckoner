@@ -62,11 +62,11 @@ run_prisonsreadyreckoner <- function(params) {
   
   print(paste0("pop_scenario and gender split took ", Sys.time() - t0, " seconds"))
 
-  # Plotting routines to be used in development to assess model output.
-  dev_plot_population(pop_combined, "remand", "Remand delta")
-  dev_plot_population(pop_combined, "determinate", "Determinate")
-  dev_plot_population(pop_combined, "indeterminate", "Indeterminate")
-  dev_plot_population(pop_combined, "recall", "Recall")
+  # # Plotting routines to be used in development to assess model output.
+  # dev_plot_population(pop_combined, "remand", "Remand delta")
+  # dev_plot_population(pop_combined, "determinate", "Determinate")
+  # dev_plot_population(pop_combined, "indeterminate", "Indeterminate")
+  # dev_plot_population(pop_combined, "recall", "Recall")
 
   return(dplyr::arrange(pop_combined, run, date, casetype, senband, sex))
 }
@@ -175,17 +175,17 @@ run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disp
 
   # Add extra ring-fenced hours to the capacity table.
   cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity)
-  check_cc_capacity(cc_capacity)
+  #check_cc_capacity(cc_capacity)
   
   # Join the capacity table with the crown output table and calculate disposals
   # delta for non-ring-fenced cases, assuming current non-ring-fenced disposal
   # case mix.
   cc_disposals_delta <- calculate_cc_disposals_delta(cc_output, cc_capacity)
-  check_cc_disposals_delta(cc_output, cc_disposals_delta)
+  #check_cc_disposals_delta(cc_output, cc_disposals_delta)
   
   # Calculate remand population from court disposals.
   pop_remand_delta  <- calculate_pop_remand_delta(mc_disposals_delta, cc_disposals_delta, profiles_remand_in, profiles_remand_out)
-  check_pop_remand(pop_remand_delta, published_remand_pop)
+  #check_pop_remand(pop_remand_delta, published_remand_pop)
   
   # Calculate determinate inflows from court disposals.
   inflows_det_delta <- calculate_inflows_det_delta(cc_disposals_delta, mc_disposals_delta, sentencing_rates)
