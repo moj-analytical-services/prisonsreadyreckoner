@@ -116,7 +116,7 @@ check_pop_remand <- function(pop_remand_delta, published_remand_pop) {
   if (any(dplyr::select_if(pop_remand_delta, is.numeric) < -published_remand_pop))
     warning("Assumption violation: ",
             "The remand population fell below zero. ",
-            "Please provide a scenario with a higher volume of court receipts or fewer sitting days.")
+            "Please provide a scenario with more court receipts or fewer sitting days.")
     
 }
 

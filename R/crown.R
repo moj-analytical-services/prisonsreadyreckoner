@@ -214,6 +214,12 @@ check_cc_capacity <- function(cc_capacity) {
 
 # A crude test of backlog depletion for speed. Assumes that one only needs to
 # test the last date.
+# Note, we are only interested in non-ring-fenced cases. By assumption, an
+# increase in the ring-fenced receipts leads to an immediate increase in ring-
+# fenced disposals with no impact on the backlog. A decrease in ring-fenced
+# receipts would only start to impact the backlog once the drop is larger than
+# the baseline ring-fenced disposals and we already have a check for that
+# threshold.
 check_cc_disposals_delta <- function(cc_output, cc_disposals_delta) {
   
   # Find the non-ringfenced backlog in the last month
@@ -229,11 +235,17 @@ check_cc_disposals_delta <- function(cc_output, cc_disposals_delta) {
   # Check that the total additional disposals did not exceed the backlog.
   cc_backlog <- dplyr::left_join(cc_backlog, cc_disposals_delta_total, by = "route")
 
-  if (any(cc_backlog$n_backlog - cc_backlog$n_disposals_delta < 0))
+  if (sum(cc_backlog$n_backlog) < sum(cc_backlog$n_disposals_delta)) {
+    warning("Assumption violation: ",
+            "The backlog of non-ring-fenced cases fell to zero by the end of the ",
+            "simulation. ",
+            "Please provide a scenario with more court receipts or fewer sitting days.")
+  } else if (any(cc_backlog$n_backlog - cc_backlog$n_disposals_delta < 0)) {
     warning("Assumption violation: ",
             "The backlog of non-ring-fenced cases fell to zero by the end of the ",
             "simulation for at least one court route. ",
-            "Please provide a scenario with more court receipts or fewer sitting days.")
+            "You may wish to provide a scenario with more court receipts or fewer sitting days.")
+  }
     
 }
   
