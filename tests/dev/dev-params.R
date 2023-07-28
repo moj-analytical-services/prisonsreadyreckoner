@@ -40,6 +40,26 @@ dev_set_params <- function() {
   
   
   ################################################################################
+  # Shiny app parameters.
+  # For use by the Shiny app only.
+  ################################################################################
+  
+  params$capacity_version <- "May-23"
+
+  params$tot_pop_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/populations_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_230424_134433.xlsx"
+  params$capacity_file <- paste0("s3://alpha-app-prisonsreadyreckonerapp/2023-04/", params$capacity_version, " Supply Forecasts_V1.5_Shared.xlsx")
+  
+  # Added by Alex Dickinson - historical data for plotting
+  params$recall_rate_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/recall_rate_b.csv"
+  params$time_served_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/historical-time-served-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  params$sitting_days_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/sitting_days_actuals.csv"
+  params$prison_population_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/historical-prison-population-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  params$prison_inflows_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/historical-prison-inflows-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  params$police_charges_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/historical-police-charges-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  
+  
+  
+  ################################################################################
   # General parameters.
   # General parameters are intended for use by a package user and the Shiny app.
   # A user may wish to change these but they will be fixed for individual
@@ -123,6 +143,6 @@ dev_set_params <- function() {
   
   # Gender splits
   params$gender_splits_file      <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/gender-splits-20230502-shiny-v0.0.0-OFFICIAL.csv"
- 
+  
   return(params) 
 }

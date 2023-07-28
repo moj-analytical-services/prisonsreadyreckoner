@@ -1,7 +1,7 @@
 Package: prisonsreadyreckoner
 Type: Package
 Title: Prison Forecasting Flows Model
-Version: 1.0.0.9000
+Version: 1.0.0
 Authors@R: c(
     person(given = "Alex", family = "Dickinson", role = c("aut", "cre"), email = "Alex.Dickinson@justice.gov.uk"),
     person(given = "Brian", family = "Burton", role = c("aut"), email = "Brian.Burton@justice.gov.uk"),
@@ -31,6 +31,7 @@ Imports:
     rlang
 Suggests: 
     knitr,
+    prisonsreadyreckonerupdater (>= 1.0.0),
     rmarkdown,
     testthat (>= 3.0.0)
 Roxygen: list(markdown = TRUE)
