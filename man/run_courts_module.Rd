@@ -12,6 +12,7 @@ run_courts_module(
   mc_disposals_delta,
   profiles_remand_in,
   profiles_remand_out,
+  published_remand_pop,
   sentencing_rates,
   inflows_det
 )

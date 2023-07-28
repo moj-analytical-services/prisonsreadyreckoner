@@ -1,0 +1,254 @@
+---
+title: "Sense checking of backlog clearance under typical input parameters"
+author: "Brian Burton"
+date: "26/07/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)#, dpi = 50, fig.width = 15, fig.height = 10)
+
+devtools::load_all()
+```
+
+
+## Aim
+
+To test whether typical lever values are likely to completely deplete the
+Crown Court backlog in the forecast time horizon. Where the backlog is depleted,
+the model has become out of bounds and the relevant parameters should not be
+offered to a Shiny app user. Alternatively, a notice should be issued when
+bounds are exceeded.
+
+
+## Method
+
+1. Load all files necessary for running the Crown Court module.
+2. Accumulate additional non-ringfenced disposals.
+3. Plot backlog by case type with accumulated additional disposals.
+
+
+```{r include = FALSE}
+
+source("../dev/dev-params.R")
+
+
+# Files and parameters for the original April 2023 analysis.
+set_crown_params <- function() {
+  
+  silence_botor()
+  
+  params <- dev_set_params()
+  params <- format_params(params)
+
+  # Number of extra police charges
+  params$lever_police_charges_scenario           <- "central" #"ramp_48m"
+  
+  # Number of extra court sitting days per month
+  params$lever_extra_cc_sitting_days             <- 20000 / 12             # [month^-1]
+  params$lever_extra_cc_sitting_days_impact_date <- "2023-03-01"
+
+  return(params)
+}
+
+
+# Same as equivalent package function but adding n_backlog to the output.
+load_crown_data_test <- function(cc_output_file, cc_capacity_file, ringfenced_lookup_file, start_date, forecast_start_date, forecast_end_date) {
+    
+  # Read baseline inputs, which are disposals for ring-fenced cases and time
+  # series for sitting days and hours available per sitting day.
+  cc_output   <- load_crown_output_with_backlog(cc_output_file, start_date, forecast_start_date, forecast_end_date)
+  cc_capacity <- load_cc_capacity(cc_capacity_file, start_date, forecast_start_date, forecast_end_date)
+  #check_cc_inputs(cc_output, cc_capacity)
+  
+  # Read parameter tables for Crown module
+  ringfenced_lookup    <- load_ringfenced_lookup(ringfenced_lookup_file)
+  
+  # Add ring-fenced status. Calculate backlog case rate and hours per disposal.
+  cc_output <- augment_crown_output(cc_output, ringfenced_lookup)
+  
+  # Make capacity monitor
+  cc_capacity  <- augment_cc_capacity(cc_capacity, cc_output)
+  
+  return(list(cc_output = cc_output, cc_capacity = cc_capacity))
+}
+
+
+# Same as package function but adding n_backlog to the output.
+load_crown_output_with_backlog <- function(cc_output_file, start_date, forecast_start_date, forecast_end_date) {
+  
+  col_types <-
+    readr::cols(
+      Time = readr::col_integer(),
+      date = readr::col_date(format = '%Y-%m-%d'),
+      FY = readr::col_character(),
+      receipt_type_desc = readr::col_character(),
+      region = readr::col_character(),
+      actual_route = readr::col_character(),
+      n_backlog = readr::col_integer(),
+      n_receipts = readr::col_integer(),
+      n_disposals = readr::col_integer(),
+      dur_backlog = readr::col_double(),
+      dur_receipts = readr::col_double(),
+      dur_disposals = readr::col_double(),
+      scenario = readr::col_character(),
+      dev = readr::col_character(),
+      scenario_dev = readr::col_character()
+    )
+  
+  cc_output <- import_s3_file(cc_output_file, col_types = col_types) %>%
+                 dplyr::rename(route = actual_route)
+  
+  cc_output <- trim_dates(cc_output, start_date, forecast_start_date, forecast_end_date) %>%
+                 dplyr::select(date, receipt_type_desc, route,
+                               n_backlog,                                 # Read n_backlog so we may sense-check backlog depletion.
+                               n_disposals, dur_disposals)
+
+  return(cc_output)
+}
+
+
+plot_backlog <- function(cc_disposals_delta, cc_backlog, disposal_type, colour) {
+  
+  main <- paste0("Additional disposals vs baseline backlog, ", disposal_type)
+
+  label_mod <- paste0("Additional disposals, ", disposal_type)
+  
+  cc_disposals_delta <- dplyr::arrange(cc_disposals_delta, date) %>%
+                          dplyr::mutate(n_disposals_delta = cumsum(n_disposals_delta)) %>%
+                          dplyr::select(date, n_disposals_delta) %>%
+                          tidyr::pivot_wider(names_from = date,
+                                             values_from = n_disposals_delta,
+                                             names_sort = TRUE
+                          )
+
+  label_backlog <- paste0("Backlog, ", disposal_type)
+
+  cc_backlog <- dplyr::select(cc_backlog, date, n_backlog) %>%
+                      tidyr::pivot_wider(names_from = date,
+                                         values_from = n_backlog,
+                                         names_sort = TRUE
+                      )
+
+
+  cc_disposals_plot <- rbind(cc_disposals_delta, cc_backlog)
+  x <- as.Date(names(cc_disposals_plot))
+  y <- cc_disposals_plot
+
+  matplot(x,
+          t(y),
+          type = 'l',
+          xlab = "Date",
+          main = main,
+          ylab = "Volume",
+          lty = c(1, 2),
+          col = c(colour, colour)
+          )
+  legend("bottomright",
+         inset = 0.02,
+         legend = c(label_mod, label_backlog),
+         lty = c(1, 2),
+         col = c(colour, colour)
+    )
+
+}
+
+
+
+params <- set_crown_params()
+
+# Load data for police charges module
+  cc_receipts_delta_loaded_list  <- load_police_charges_cc_data_list(params$police_charges_cc_route_file, params$police_charges_cc_files, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
+  mc_disposals_delta_loaded_list <- load_police_charges_mc_data(params$police_charges_mc_file, params$police_charges_mc_scenarios, params$police_charges_mc_sheet, params$mc_remand_lookup, params$start_date$police_charges_mc, params$forecast_start_date, params$forecast_end_date)
+  
+# Load data for Crown Court module
+cc_data <- load_crown_data_test(params$cc_output_file, params$cc_capacity_file, params$ringfenced_lookup_file, params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date)
+  cc_output_loaded   <- cc_data$cc_output
+  cc_capacity_loaded <- cc_data$cc_capacity
+
+# LEVER: Add police charges.
+cc_receipts_delta  <- cc_receipts_delta_loaded_list[[params$lever_police_charges_scenario]]
+mc_disposals_delta <- mc_disposals_delta_loaded_list[[params$lever_police_charges_scenario]]
+
+# LEVER: Add (or subtract) sitting days.
+cc_capacity_levered  <- add_cc_sitting_days(cc_capacity_loaded, params$lever_extra_cc_sitting_days, params$lever_extra_cc_sitting_days_impact_date)
+
+
+# Add additional Crown Court receipts (and disposals for ring-fenced cases).
+cc_output <- add_cc_receipts_delta(cc_output_loaded, cc_receipts_delta)
+
+# Add extra ring-fenced hours to the capacity table.
+cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity_levered)
+check_cc_capacity(cc_capacity)
+  
+# Join the capacity table with the crown output table and calculate disposals
+# delta for non-ring-fenced cases, assuming current non-ring-fenced disposal
+# case mix.
+cc_disposals_delta <- calculate_cc_disposals_delta(cc_output, cc_capacity)
+
+```
+
+
+# Results
+
+The following compares backlog with cumulative disposals by case type, assuming
+the `r params$lever_police_charges_scenario` police charge scenario and assuming
+additional sitting days of `r params$lever_extra_cc_sitting_days` start on
+`r params$lever_extra_cc_sitting_days_impact_date`.
+
+For reference, our ringfenced cases are as follows:
+
+
+`receipt_type_desc`    `route`             `ringfenced`                     
+---------------------  ------------------  -------------------------------------
+`app`                  `app`               `TRUE`
+`ind`                  `e_other`           `TRUE`
+`ind`                  `effective`         `FALSE`
+`ind`                  `egp`               `TRUE`
+`ind`                  `gp_cracked`        `FALSE`
+`ind`                  `l_other`           `FALSE`
+`ind`                  `lgp`               `FALSE`
+`ind`                  `other_cracked`     `FALSE`
+`sent`                 `sent`              `TRUE`
+`tew`                  `e_other`           `TRUE`
+`tew`                  `effective`         `FALSE`
+`tew`                  `egp`               `TRUE`
+`tew`                  `gp_cracked`        `FALSE`
+`tew`                  `l_other`           `FALSE`
+`tew`                  `lgp`               `FALSE`
+`tew`                  `other_cracked`     `FALSE`
+---------------------  ------------------  -------------------------------------
+
+As can be seen, the backlog is breached so a warning message should be added to
+the package code.
+
+
+```{r echo = FALSE}
+
+# Compare disposals delta with backlog.
+cc_disposals_delta <- dplyr::mutate(cc_disposals_delta, disposal_type = paste0("cc_", route)) %>%
+                          dplyr::group_by(date, disposal_type) %>%
+                          dplyr::summarise(n_disposals_delta = sum(n_disposals_delta, na.rm = TRUE), .groups = "drop")
+
+cc_backlog <- dplyr::mutate(cc_output, disposal_type = paste0("cc_", route)) %>%
+                          dplyr::group_by(date, disposal_type) %>%
+                          dplyr::summarise(n_backlog = sum(n_backlog, na.rm = TRUE), .groups = "drop")
+
+cc_disposals_delta_all <- dplyr::group_by(cc_disposals_delta, date) %>%
+                              dplyr::summarise(n_disposals_delta = sum(n_disposals_delta))
+
+cc_backlog_all <- dplyr::group_by(cc_backlog, date) %>%
+                              dplyr::summarise(n_backlog = sum(n_backlog))
+
+
+plot_backlog(cc_disposals_delta_all, cc_backlog_all, "all disposals", 4)
+
+disposal_types <- unique(cc_disposals_delta$disposal_type)
+for (disposal_type in disposal_types)
+    plot_backlog(dplyr::filter(cc_disposals_delta, disposal_type == !!disposal_type),
+                         dplyr::filter(cc_backlog, disposal_type == !!disposal_type),
+                         disposal_type, 2)
+
+```
+
+
