@@ -1,0 +1,742 @@
+---
+title: "Scenario work"
+author: "Brian G Burton"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Scenario work}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+<!---
+```{r setup}
+#library(mojmodel)
+```
+--->
+
+
+# Scenario mode{#scenario-mode}
+
+The `prisonsreadyreckoner` package is designed to be used both by the Shiny app,
+`prisons-ready-reckoner-app` and as a stand-alone package that may be invoked for
+batch scenario work in conjunction with other MoJ products.
+
+Scenario working is best done within a framework to record scenarios, their
+purpose and the files used. The following is a step-by-step guide to using
+`prisonsreadyreckoner` within the framework offered by the MoJ package,
+`mojmodel`. Note, `prisonsreadyreckoner` is public only to service the Shiny
+app. `mojmodel` and the other MoJ packages cited below are not publicly
+available.
+
+
+## Method 1. Create a respository from scratch
+
+### Step 1. Create your repository
+
+Set up a new repository on Github to organise your work and use the SSH key
+to create a clone in RStudio. Make sure to include a .gitignore file in the
+repository by selecting the appropriate option at creation.
+
+
+### Step 2. Install packages
+
+Install prisonsreadyreckoner and other packages for scenario and package
+management. The following has been tested with RStudio 4.1.2 and renv v0.15.4.
+
+```r
+# Install renv for package management.
+if (!suppressMessages(suppressWarnings(require("renv"))))
+  install.packages("renv")
+renv::init()
+
+# Tell renv that Python will be used (for interacting with S3). By default this
+# will point to a default Python binary file. If given a choice, choose a
+# Python version 3.x. Your renv lock file will be updated with details of the #
+# Python version used.
+renv::use_python()
+  
+# Install the reticulate library to interface with Python.
+renv::install("reticulate")
+  
+# Install boto3.
+reticulate::py_install("boto3")
+
+# Install mojmetr, which is used by mojmodel to
+# read and validate data files. At the time of writing, the current version of
+# mojmetr is v0.2.1 but you should check that a higher version is available and
+# substitute in the following. See
+# https://github.com/moj-analytical-services/mojmetr
+renv::install("git@github.com:moj-analytical-services/mojmetr.git@v0.2.1")
+
+# Install mojmodel, which is used to manage sceanrios. At the time of writing,
+# the current version of mojmodel is v0.5.0 but you should check that a higher
+# version is available and # substitute in the following. See
+# https://github.com/moj-analytical-services/mojmodel
+renv::install("git@github.com:moj-analytical-services/mojmodel.git@v0.5.0")
+
+# If intending to create novel input files with the prisonsreadyreckonerupdater
+# package, install prisonsreadyreckonerupdater and its dependencies. At the time
+# of writing, the current version of prisonsreadyreckonerupdater is v1.0.0 but
+# you should check that a higher version is available and substitute in the
+# following. See
+# https://github.com/moj-analytical-services/prisonsreadyreckonerupdater
+renv::install("moj-analytical-services/Rdbtools")
+renv::install("git@github.com:moj-analytical-services/fullsample.git")
+renv::install("git@github.com:moj-analytical-services/prisonsreadyreckonerupdater.git@v1.0.0")
+
+# Install prisonsreadyreckoner. At the time of writing, the current version of
+# prisonsreadyreckoner is v1.0.0 but you should check that a higher version is
+# available and substitute in the following. See
+# https://github.com/moj-analytical-services/prisonsreadyreckoner
+renv::install("git@github.com:moj-analytical-services/prisonsreadyreckoner.git@v1.0.0")
+```
+
+If any package dependencies fail to install in this process, you may need to
+find a higher version of the dependency or install directly from Github. For
+example, to install rlang v1.1.1, one would use:
+
+```r
+renv::install("r-lib/rlang@564f176361985f214d1b5f710ebe08810ed475f4")
+```
+
+where the hash after the "@" sign is the commit hash from the relevant Github
+release (e.g.
+[https://github.com/r-lib/rlang/releases/tag/v1.1.1](https://github.com/r-lib/rlang/releases/tag/v1.1.1)).
+
+Please note that prisonsreadyreckoner requires at least `tidyselect` v1.2.0.
+
+
+### Step 3. Setting up the mojmodel framework
+
+The mojmodel framework comprises some standard folders in your RStudio project
+and some standard folders on S3. At initialisation, you must specify an S3
+folder where the standard folders are to be installed. For example,
+
+```r
+mojmodel::init('s3://alpha-my-s3-bucket/my-s3-folder')
+```
+
+For a description of the folders and files created, see [documentation](https://model-redevelopment-website.apps.alpha.mojanalytics.xyz/packages/r/mojmodel/)
+to the [mojmodel]{https://github.com/moj-analytical-services/mojmodel} package.
+
+Briefly, you will have to store a scenario log at the root folder specified in
+your call to `mojmodel::init()`. Each scenario therein will refer to a 'params'
+file and a 'files' file in the relevant S3 subfolder. These specify the
+parameters and files to be used by the scenario. They may be edited in the local
+`tmp` folder (in your RStudio project) and moved to and from S3 using the
+`mojmodel` functions beginning with `upload_` and `download_`. A `config.yaml`
+file exists in your local directory to tell `mojmodel` where to find scenario
+files and to provide other general settings. A `model.R` file in your local
+`model` folder will be used by `mojmodel` to call your scenarios appropriately
+and save output to S3.
+
+
+### Step 4. Edit your config.yaml file
+
+Three fields in the config.yaml file should be set:
+
+1. `scenariosFile` Assign the name of the scenario log you wish to use.
+2. `modelVersion` Optional but useful if you expect to have non-backwards
+compatible versions of your project. Where this differs from the equivalent
+value for a scenario in your scenario log, `mojmodel` will tell you that the
+scenario may not be compatible with your latest assumed version. Why not start
+with 'v1.0.0'?
+3. `origins` You may wish to add multiple origins using the default as an
+example. These allow your `files` file to define the locations of input files
+(see below).
+
+Once edited and saved, you may need to inform `mojmodel` of your changes to this
+file by typing:
+
+```r
+mojmodel::read_config()
+```
+
+
+### Step 5. Define your scenarios
+
+Each scenario is defined by a minimum of three files, a scenario log (which may
+contain information for other scenarios also), a `params` file and a `files`
+file. Details of these can be found in the [documentation](https://model-redevelopment-website.apps.alpha.mojanalytics.xyz/packages/r/mojmodel/)
+to the mojmodel.
+
+To get you started, Annex A provides examples of each file for a single
+scenario, which uses files created for the first Shiny release (July 2023). Edit
+and upload copies of these to the relevant S3 folders created when you called
+`mojmodel::init()`.
+
+The example `params` file is specified to set all the *levers*
+available in `prisonsreadyreckoner` to their base values. You will have to
+adjust lever values to obtain a meaningful scenario output.
+
+The `files` file refers to many files created for the first Shiny release. You
+will need access to the relevant Shiny folder to use these files. Ask the 
+CJS Team for access, if required. Alternatively, you may wish to ask the CJS
+Team for bespoke files and you may also need to generate some files yourself
+with functions from the
+[prisonsreadyreckonerupdater](https://github.com/moj-analytical-services/prisonsreadyreckonerupdater)
+package.
+
+
+### Step 6. Set up a `model.R` script
+
+The `model.R` file sits in your local `model` folder and provides an interface
+between `mojmodel` and your model. This file can take many
+forms, depending on the structure of your model. A structure designed
+specifically for `prisonsreadyreckoner` is provided in Annex A. This will save
+the output of prisonsreadyreckoner in the `output` folder on S3.
+
+Don't forget to create a snapshot of the packages you have used to create your
+output:
+
+```r
+renv::snapshot()
+```
+
+You may need to update some packages at this point if renv reports unsatisfied
+dependencies. Do not ignore this as some functions in `prisonsreadyreckoner`
+may not work properly.
+
+
+### Step 7. Run your model
+
+Provided you have followed the preceding steps, you may run your first scenario
+by calling the `run_scenarios()` function in mojmodel:
+
+```r
+mojmodel::run_scenarios()
+```
+
+By default, this function will run all scenarios in the scenario log with the
+`refresh` field set to `TRUE`. Alternatively, it will accept a vector of
+scenario names or scenario ids to specify which scenarios from your log you wish
+to run.
+
+
+
+## Method 2. Use a repository template
+
+This method is not currently available. If there is sufficient interest, this
+may be introduced.
+
+
+
+## Annex A. Example files
+
+### Example config file
+
+```yaml
+s3Url: "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisons-ready-reckoner-commissions"
+scenariosFile: "scenarios-20230712-OFFICIAL.yaml"
+runLog: "log-run-OFFICIAL.yaml"
+modelVersion: v1.0.0
+
+localDirs:
+  capture: "capture"
+  model: "model"
+  tmp: "tmp"
+  validation: "validation"
+
+s3Dirs:
+  archive: "archive"
+  assumptions: "assumptions"
+  files: "files"
+  meta: "meta"
+  outputs: "outputs"
+  params: "params"
+  register: "register"
+  log:
+    runLog: "log"
+    validation: "log/validation"
+
+origins:
+  s3: "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisons-ready-reckoner-commissions/data"
+  shiny: "s3://alpha-app-prisonsreadyreckonerapp"
+
+lazyRead: FALSE
+
+outputMode: SCENARIO  # [SCENARIO | TABLE]
+security: "OFFICIAL"
+```
+
+
+### Example Scenario log
+
+Add further scenarios below your first, choosing a unique name and incrementing
+the `id` by 1.
+
+```yaml
+# Commissions of prison forecasts from the prisonsreadyreckoner package.
+# Add new scenarios below, making sure the params and files references are
+# appropriate for your intended new scenario.
+# Upload your new copy from the tmp folder using mojmodel::upload_scenario_log()
+# in the console.
+
+
+shiny_1_0_0:
+  id: 1
+  description: >-
+    Basic, initial scenario accompanying the Shiny app release v1.0.0.
+  modelVersion: v1.0.0  # Version of the commissions repository
+  assumptions: NA
+  params: params-20230712-shiny_1_0_0-OFFICIAL.yaml
+  files: files-20230712-shiny_1_0_0-OFFICIAL.yaml
+  startup: NA
+  commissioner: DG Performance, Strategy and Analysis
+  dateCommission: 2023-06-15
+  purpose: >-
+    This scenario uses the no-change parameter set, where none of the levers
+    available to Shiny app users are pulled. Outputs for scenario and baseline
+    are exactly the same. The scenario and its input files provide a template
+    for generating other scenarios which deviate in some way from the Shiiny
+    app baseline, either by pulling levers or introducing entirely different
+    input files.
+  comments: >-
+    Based on the same parameters used for the first release of the
+    prisons-ready-reckoner-app, v1.0.0.
+  refresh: TRUE
+  dateRun: NA
+  user: NA
+  sha: NA
+
+# IMPORTANT: A yaml should end with an empty line like the following:
+
+```
+
+
+### Example params file
+
+```yaml
+# Parameters used for the first formal release of the Shiny app, August 2023,
+# prisons-ready-reckoner-app v1.0.0.
+# To create a new version, copy into the tmp folder, edit and use
+# mojmodel::upload_params(<name of new file>). You can download an existing file
+# with mojmodel::download_params(<name of file you want to copy>).
+
+version:
+  prisonsreadyreckoner: v1.0.0
+
+
+################################################################################
+# Levers and their impact dates.
+# Levers and their impact dates are those parameters available to app users.
+################################################################################
+
+# Number of extra police charges
+lever_police_charges_scenario: "central"
+  
+# Number of extra court sitting days per month
+lever_extra_cc_sitting_days: !expr '0 / 12'             # [month^-1]
+lever_extra_cc_sitting_days_impact_date: "2024-01-01"
+  
+# Number of extra prison receptions per band per month
+lever_extra_inflows_det: !expr 'c(senband1 = 0, senband2 = 0, senband3 = 0, senband4 = 0)'
+lever_extra_inflows_det_impact_date: "2024-01-01"
+  
+# Factors for stretching profiles of time served in prison, broken down by sentence band
+lever_profiles_det_stretch_factors: !expr 'c(senband1 = 1, senband2 = 1, senband3 = 1, senband4 = 1)'
+lever_profiles_det_stretch_impact_date: "2024-01-01"
+  
+# Recall
+lever_recall_rate: !expr 'signif(c(senband1 = 0.234774346793349, senband2 = 0.1003465003465, senband3 = 0.048357569686712, senband4 = 0.0213297380452349), 3)'   # 20230505 - Charlotte Wallace - Updated prison projections .msg
+lever_recall_rate_impact_date: "2024-01-01"
+  
+  
+  
+################################################################################
+# General parameters.
+# General parameters are intended for use by a package user and the Shiny app.
+# A user may wish to change these but they will be fixed for individual
+# releases of the Shiny app.
+################################################################################
+  
+# Expected initial dates in various data files. The forecast will start from the
+# last consistent date.
+start_date:
+  police_charges_cc: "2022-11-01"    # First month of the forecast. Used for verifying inputs.
+  police_charges_mc: "2022-12-01"
+  inflows_det: "2023-03-31"
+  recall_rate: "2023-03-01"
+  cc_files: "2022-11-01"
+
+projection_length_months: 49         # To March 2027. '20230525 - To Ceri Cooper - Actions from our ready reckoner meeting just now_.msg'
+  
+  
+# Police charge parameters
+# Magistrates' courts
+police_charges_mc_scenarios:
+  central: "apr23_central"
+  ramp_12m: "apr23_central_12m"
+  ramp_36m: "apr23_central_36m"
+  ramp_48m: "apr23_central_48m"
+police_charges_mc_sheet: "020623_mags_sensitivity_output-"
+
+
+# Sentencing parameters
+# Remand rates.
+published_remand_pop: 13176                     # OMSQ Oct-Dec 2022, Table 1.1, Adults, 31 March 2023. For QA purposes only.
+remand_rates: !expr 'c(receipts = 0.187429985453694, disposals = 0.475353729743915)'   # '20230712 - To Jordan Carroll - RE_ Remand model comparison.msg'
+no_bail_rate: 0.2                               # '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
+ctl: 6                                          # [months] '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
+mc_remand_lookup: !expr 'tibble::tribble(~disposal_type, ~remanded, "mc_ind", TRUE, "mc_tew", TRUE, "mc_sm", FALSE, "mc_snm", FALSE)'   # '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
+  
+
+# Mean monthly inflow of indeterminate prisoners, taken from OMSQ. We assume
+# that indeterminates are never released
+inflows_indet_mean: !expr '299 / 12'   # OMSQ Oct-Dec 2022, Table 2.5a, last four quarters
+
+
+# IMPORTANT: A yaml should end with an empty line like the following:
+
+```
+
+
+### Example files file
+
+```yaml
+# Files used for the first formal release of the Shiny app, August 2023.
+# To create a new version, copy into the tmp folder, edit and use
+# mojmodel::upload_files(<name of new file>). You can download an existing file
+# with mojmodel::download_files(<name of file you want to copy>).
+#
+# NB, please ignore any references to 'Sheet1' in any dataFile field. This is
+# to avoid triggering a parsing error. Sheet names are currently dealt with by
+# the prisonsreadyreckoner package (v1.0.0).
+
+
+police_charges_mc_file:
+  description: >-
+    "Magistrates' court receipts for various police charge scenarios""
+  origin: shiny
+  dataFile: "'2023-04/[020623_mags_sensitivity_output.xlsx]Sheet1'"
+  dataRegister: NA
+  comments: "202306026 - XXX - RE_ mags outputs template.eml"
+
+police_charges_cc_files__central:
+  description: >-
+    Records the total number of Crown Court receipts used as a baseline in the
+    April 2023 projections. Includes background values from various sources, and
+    an increase in charge numbers over a 24-month period. It has non-zero values
+    throughout.
+  origin: shiny
+  dataFile: "2023-04/April23_mid_pandemic_real_for_ready_reckoner.csv"
+  dataRegister: NA
+  comments: "20230525 - XXX - RE_ Next steps on the CJS ready reckoner.eml"
+
+police_charges_cc_files__ramp_12m:
+  description: >-
+    Records how Crown Court receipts would change if police charge numbers were
+    increased over a 12-month period instead of over a 24-month period. Records
+    differences relative to the values in
+    April23_mid_pandemic_real_for_ready_reckoner.csv.
+  origin: shiny
+  dataFile: "2023-04/April23_mid_pandemic_real_12m_ramp_for_ready_reckoner.csv"
+  dataRegister: NA
+  comments: "20230525 - XXX - RE_ Next steps on the CJS ready reckoner.eml"
+
+police_charges_cc_files__ramp_36m:
+  description: >-
+    Records how Crown Court receipts would change if police charge numbers were
+    increased over a 36-month period instead of over a 24-month period. Record
+    differences relative to the values in
+    April23_mid_pandemic_real_for_ready_reckoner.csv.
+  origin: shiny
+  dataFile: "2023-04/April23_mid_pandemic_real_36m_ramp_for_ready_reckoner.csv"
+  dataRegister: NA
+  comments: "20230525 - XXX - RE_ Next steps on the CJS ready reckoner.eml"
+
+police_charges_cc_files__ramp_48m:
+  description: >-
+    Records how Crown Court receipts would change if police charge numbers were
+    increased over a 48-month period instead of over a 24-month period. Records
+    differences relative to the values in
+    April23_mid_pandemic_real_for_ready_reckoner.csv.
+  origin: shiny
+  dataFile: "2023-04/April23_mid_pandemic_real_48m_ramp_for_ready_reckoner.csv"
+  dataRegister: NA
+  comments: "20230525 - XXX - RE_ Next steps on the CJS ready reckoner.eml"
+
+police_charges_cc_route_file:
+  description: >-
+    Table for converting Crown Court police charge tables to Crown output
+    tables.
+  origin: shiny
+  dataFile: "2023-04/routes.csv"
+  dataRegister: NA
+  comments: "20230518 - XXX - cjst pre-covid route distribution.msg"
+
+cc_output_file:
+  description: >-
+    Monthly forecast disposals and durations in the Crown Court under the
+    central scenario.
+  origin: shiny
+  dataFile: "2023-04/crown-output-apr23_s4.csv"
+  dataRegister: NA
+  comments: "20230502 - XXX - RE_ Testing our assumptions with a second Crown Court scenario_.msg"
+
+cc_capacity_file:
+  description: >-
+    Monthly sitting days and hours per in the Crown Court under the central
+    scenario.
+  origin: shiny
+  dataFile: "2023-04/sd_htpsd_adjusted_apr23_s4.csv"
+  dataRegister: NA
+  comments: "20230502 - XXX - RE_ Testing our assumptions with a second Crown Court scenario_.msg"
+
+ringfenced_lookup_file:
+  description: >-
+    A look-up table for which Crown Court 
+  origin: shiny
+  dataFile: "2023-04/ringfenced-lookup-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  dataRegister: NA
+  comments: Generated with the prisonsreadyreckonerupdater package.
+
+sentencing_rates_file:
+  description: >-
+    Coefficients for a linear regression relating court disposals to prison
+    receptions.
+  origin: shiny
+  dataFile: "2023-04/reception-rates-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  dataRegister: NA
+  comments: Generated with the prisonsreadyreckonerupdater package.
+
+prison_inflows_file:
+  description: >-
+    Baseline forecast prison inflows from the offiial projection.
+  origin: shiny
+  dataFile: "'2023-04/[detailed_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx]Sheet1'"
+  dataRegister: NA
+  comments: "20230505 - XXX - Updated prison projections .msg"
+
+profiles_file:
+  description: >-
+    Time served profiles by sentence band.
+  origin: shiny
+  dataFile: "2023-04/profiles-det-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  dataRegister: NA
+  comments: Generated with the prisonsreadyreckonerupdater package.
+
+recall_file:
+  description: >-
+    Miscellaneous recall parameters from the Prisons Team.
+  origin: shiny
+  dataFile: "'2023-04/[recall_excl_PSS_output_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx]Sheet1'"
+  dataRegister: NA
+  comments: "20230505 - XXX - Updated prison projections .msg"
+
+licence_profiles_file:
+  description: >-
+    Time on licence profiles from the Prisons Team.
+  origin: shiny
+  dataFile: "2023-04/adjusted_license_profile.csv"
+  dataRegister: NA
+  comments: "20230601 - XXX - RE_ Your licence profiles_.msg"
+
+gender_splits_file:
+  description: >-
+    A table of gender splits by case type and sentence band.
+  origin: shiny
+  dataFile: "2023-04/gender-splits-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  dataRegister: NA
+  comments: Generated with the prisonsreadyreckonerupdater package.
+
+
+
+
+################################################################################
+# The following are historical data used by the Shiny app and not used by the
+# prisonsreadyreckoner package (v1.0.0). This may change in later releases.
+################################################################################
+
+tot_pop_file:
+  description: >-
+    Latest actual and forecast prison population.
+  origin: shiny
+  dataFile: "2023-04/populations_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx"
+  dataRegister: NA
+  comments: "20230511 - XXX - RE_ Updated prison projections .msg""
+
+capacity_file:
+  description: >-
+    Latest prison capacity forecasts.
+  origin: shiny
+  dataFile: "2023-04/May-23 Supply Forecasts_V1.5_Shared.xlsx"
+  dataRegister: NA
+  comments: "20230516 - XXX - RE_ April-23 Provisional Adult Male Projections and Cap Gaps.msg"
+
+recall_rate_hist_file:
+  description: >-
+    Historical percentage of licensees recalled to prison per month.
+  origin: shiny
+  dataFile: "2023-04/recall_rate_b.csv"
+  dataRegister: NA
+  comments: "20230623 - XXX - RE_ Historical time series for ready reckoner.msg"
+
+time_served_hist_file:
+  description: >-
+    Historical average time served by sentence band estimated with fullsample.
+  origin: shiny
+  dataFile: "2023-04/historical-time-served-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  dataRegister: NA
+  comments: Generated with the prisonsreadyreckonerupdater package.
+
+sitting_days_hist_file:
+  description: >-
+    Historical number of Crown Court sitting days per year.
+  origin: shiny
+  dataFile: "2023-04/sitting_days_actuals.csv"
+  dataRegister: NA
+  comments: "20230629 - XXX - RE_ Historical sitting day data for ready reckoner.eml"
+
+prison_population_hist_file:
+  description: >-
+    Historical prison population estimated with fullsample.
+  origin: shiny
+  dataFile: "2023-04/historical-prison-population-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  dataRegister: NA
+  comments: Generated with the prisonsreadyreckonerupdater package.
+
+prison_inflows_hist_file:
+  description: >-
+    Historical prison inflows by sentence band estimated with fullsample.
+  origin: shiny
+  dataFile: "2023-04/historical-prison-inflows-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  dataRegister: NA
+  comments: Generated with the prisonsreadyreckonerupdater package.
+
+police_charges_hist_file:
+  description: >-
+    Magistrates' court receipts/disposals under certain police charge scenarios.
+  origin: shiny
+  dataFile: "2023-04/historical-police-charges-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  dataRegister: NA
+  comments: >-
+    Generated with the prisonsreadyreckonerupdater package.
+    "20230710 - XXX - RE_ mags outputs template.msg""
+
+
+# IMPORTANT: A yaml should end with an empty line like the following:
+
+```
+
+
+### Example model.R script
+
+```r
+# Library calls. Primarily to allow renv::snapshot() to capture all relevant
+# packages in the renv.lock file.
+library("mojmetr")
+library("mojmodel")
+library("Rdbtools")
+library("fullsample")
+library("prisonsreadyreckonerupdater")
+library("prisonsreadyreckoner")
+
+
+
+
+# The main function is the function from which model execution starts. Every
+# model must have a main function.
+# The arguments, params and files, are, respectively, the model parameters and
+# the file names of your input tables specified in the scenarios parameter file.
+#
+# To call this, use mojmodel::run_scenarios(scenario_ids = c(<ids to run>)) in
+# the console.
+main <- function(model_version, scenario_name, scenario_id, params, files, ...) {
+
+  # Combine parameters and file details into a parameter list suitable for use
+  # with prisonsreadyreckoner.
+  params <- extend_params(params, files)
+  
+  raw <- prisonsreadyreckoner::run_prisonsreadyreckoner(params)
+
+  # Save the output table to the outputs folder on s3 in the structure specified
+  # by the 'outputMode' from the configuration file.
+  mojmodel::write_table(raw, 'raw')
+
+  return(TRUE)
+}
+
+
+extend_params <- function(params, files) {
+  
+  REGEX_S3_EXCEL <- '^\'(s3://|/)?([^][&$@=;/:+,?\\{^}`"\'>~<#|]+/)*\\[[^]]+\\.xls(m|x)?][^\'!]+\'(!([1-9][0-9]*:[1-9][0-9]*|[A-Z]+:[A-Z]+|[A-Z]+[1-9][0-9]*:[A-Z]+[1-9][0-9]*))?$'
+
+  origins <- mojmodel:::mojmodel_env$CONFIG[['origins']]
+  file_param_names <- names(files)
+  file_params <- list()
+  
+  for (i in 1:length(files)) {
+
+    # For Excel files, the prisonsreadyreckoner package currently accepts only
+    # the file path.
+    if (grepl(REGEX_S3_EXCEL, files[[i]][['dataFile']], perl = TRUE)) {
+      excel_parts <- get_excel_parts(files[[i]][['dataFile']])
+      data_file <- excel_parts[['path']]
+    }
+    else
+      data_file <- files[[i]][['dataFile']]
+    
+    data_file <- paste(origins[[ files[[i]][['origin']] ]], data_file, sep = "/")
+    
+    
+    # Create sub-lists, as necessary.
+    if (grepl('__', file_param_names[i])) {
+      
+      file_list      <- sub("__\\w+$", "", file_param_names[i], perl = TRUE)
+      file_list_item <- sub("^\\w+__", "", file_param_names[i], perl = TRUE)
+      
+      if (!file_list %in% names(file_params))
+        file_params[[file_list]] <- list()
+      
+      file_params[[file_list]][[file_list_item]] <- data_file
+
+    } else
+      file_params[[ file_param_names[i] ]] <- data_file
+
+  }
+  
+  return(c(params, file_params))
+}
+
+
+# Extracts the path, sheet and range from an Excel reference of the form,
+#   '[filename]sheet'
+#   'path/[filename]sheet'
+#   'path/[filename]sheet'!A1:B100
+# Returns a list with components, path, sheet and range. The range component
+# will be null if not supplied.
+get_excel_parts <- function(ref) {
+  
+  # Note, there are no input checks in this function because it is only called
+  # from deep in the package after inputs have already been checked.
+  
+  ref_path <- sub("^'([^\\[]*)\\[(([^]])+)].*$", "\\1\\2", ref)
+  ref_sheet <- sub("^[^]]+]([^']+)'.*$", "\\1", ref)
+  
+  ref_range <- sub("^[^!]+!(.+)$", "\\1", ref)
+  if (ref_range == ref)
+    ref_range <- NULL
+  else if (grepl('^[A-Z]+:[A-Z]+$', ref_range, ignore.case = TRUE))
+    ref_range <- readxl::cell_cols(ref_range)
+  else if (grepl('^[0-9]+:[0-9]+$', ref_range)) {
+    
+    x0 <- as.numeric(sub("^([0-9]+):[0-9]+$", "\\1", ref_range))
+    x1 <- as.numeric(sub("^[0-9]+:([0-9]+)$", "\\1", ref_range))
+    ref_range <- readxl::cell_rows(seq(x0, x1))
+    
+  }
+  
+  return(list(path = ref_path, sheet = ref_sheet, range = ref_range))
+}
+
+
+```
