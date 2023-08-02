@@ -23,12 +23,13 @@ format_params <- function(params) {
   params$forecast_start_date     <- lubridate::floor_date(max(params$start_date$police_charges_cc, params$start_date$police_charges_mc, params$start_date$inflows_det, params$start_date$recall_rate, params$start_date$cc_files), "month")
   params$forecast_end_date       <- lubridate::add_with_rollback(params$forecast_start_date, months(params$projection_length_months - 1), roll_to_first = TRUE) 
   
-  # Convert lever date strings to dates.
-  params$lever_extra_cc_sitting_days_impact_date <- as.Date(params$lever_extra_cc_sitting_days_impact_date)
-  params$lever_extra_inflows_det_impact_date     <- as.Date(params$lever_extra_inflows_det_impact_date)
-  params$lever_profiles_det_stretch_impact_date  <- as.Date(params$lever_profiles_det_stretch_impact_date)
-  params$lever_recall_rate_impact_date           <- as.Date(params$lever_recall_rate_impact_date)
-  
+  # Convert lever date strings to dates and floor to the beginning of the month
+  # for good measure. Our model only operates on a monthly basis.
+  params$lever_extra_cc_sitting_days_impact_date <- lubridate::floor_date(as.Date(params$lever_extra_cc_sitting_days_impact_date), "month")
+  params$lever_extra_inflows_det_impact_date     <- lubridate::floor_date(as.Date(params$lever_extra_inflows_det_impact_date), "month")
+  params$lever_profiles_det_stretch_impact_date  <- lubridate::floor_date(as.Date(params$lever_profiles_det_stretch_impact_date), "month")
+  params$lever_recall_rate_impact_date           <- lubridate::floor_date(as.Date(params$lever_recall_rate_impact_date), "month")
+
   return(params)
 }
 
