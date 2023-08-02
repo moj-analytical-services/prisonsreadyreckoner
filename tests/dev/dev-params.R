@@ -46,7 +46,6 @@ dev_set_params <- function() {
   
   params$capacity_version <- "May-23"
 
-  #params$tot_pop_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/populations_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_230424_134433.xlsx"
   params$tot_pop_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/populations_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx"   # 20230511 - Charlotte Wallace - RE_ Updated prison projections .msg
   params$capacity_file <- paste0("s3://alpha-app-prisonsreadyreckonerapp/2023-04/", params$capacity_version, " Supply Forecasts_V1.5_Shared.xlsx")
   

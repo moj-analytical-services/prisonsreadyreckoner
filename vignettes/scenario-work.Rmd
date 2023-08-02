@@ -26,8 +26,8 @@ knitr::opts_chunk$set(
 # Scenario mode{#scenario-mode}
 
 The `prisonsreadyreckoner` package is designed to be used both by the Shiny app,
-`prisons-ready-reckoner-app` and as a stand-alone package that may be invoked for
-batch scenario work in conjunction with other MoJ products.
+`prisons-ready-reckoner-app` and as a stand-alone package that may be invoked
+for batch scenario work in conjunction with other MoJ products.
 
 Scenario working is best done within a framework to record scenarios, their
 purpose and the files used. The following is a step-by-step guide to using
@@ -68,6 +68,23 @@ renv::install("reticulate")
   
 # Install boto3.
 reticulate::py_install("boto3")
+
+```
+
+At this point, you may find it useful to copy the `renv.lock` file from the 
+`prisons-ready-reckoner-commissions` Github repository to your local project
+directory and type the following:
+
+```r
+renv::restore()
+```
+
+The `prisons-ready-reckoner-commissions` repository has a known consistent set
+of packages where all dependencies have been resolved.
+
+Alternatively, you could try installing from scratch as follows:
+
+```r
 
 # Install mojmetr, which is used by mojmodel to
 # read and validate data files. At the time of writing, the current version of
@@ -111,7 +128,6 @@ where the hash after the "@" sign is the commit hash from the relevant Github
 release (e.g.
 [https://github.com/r-lib/rlang/releases/tag/v1.1.1](https://github.com/r-lib/rlang/releases/tag/v1.1.1)).
 
-Please note that prisonsreadyreckoner requires at least `tidyselect` v1.2.0.
 
 
 ### Step 3. Setting up the mojmodel framework
