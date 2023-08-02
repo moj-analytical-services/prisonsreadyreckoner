@@ -56,7 +56,8 @@ functions in the accompanying internal MoJ package,
 
 ## Installation
 
-Assuming you are using `renv` for package maanagement, install `prisonsreadyreckoner` by typing the following in the RStudio console:
+Assuming you are using `renv` for package management, install
+`prisonsreadyreckoner` by typing the following in the RStudio console:
 
 ```r
 renv::install("git@github.com:moj-analytical-services/prisonsreadyreckoner.git@v1.0.0")
@@ -86,14 +87,30 @@ reticulate::py_install("boto3")
 
 ## Running the model
 
-Call the model with
+Assuming you are using `prisonsreadyreckoner` as a stand-alone package, call the
+model with
 
 ```r
-prisonsreadyreckoner::run_prisonflowcast(params)
+impact <- prisonsreadyreckoner::run_prisonflowcast(params)
 ```
 
 where `params` is a vector of parameter values conforming with current
 [specifications](https://model-redevelopment-website.apps.alpha.mojanalytics.xyz/packages/r/prisonsreadyreckoner/articles/params.html).
+This will include various parameters and files embodying a prison population
+forecast of interest and a few 'levers' and their impact dates, which represent
+departures from the assumptions of the forecast.
+
+The return value will be a tibble providing baseline and scenario prison
+population forecasts under, respectively, 'baseline' conditions and with the
+'levers' from the `params` list activated. Both populations are split by prison
+population cohort and gender.
+
+**The 'baseline' has no intrinsic value.** Instead, assuming files provided in
+the `params` list are appropriate, the differences (scenario minus baseline)
+between the scenario and baseline volumes represents an estimate of the impact
+that lever settings have on the prison population. An adjusted prison population
+forecast may be obtained by adding this difference to the relevant prison
+population forecast.
 
 
 ## Further reading
