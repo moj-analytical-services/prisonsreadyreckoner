@@ -81,12 +81,12 @@ dev_set_params <- function() {
   # Police charge parameters
   # Magistrates' courts
   params$police_charges_mc_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/020623_mags_sensitivity_output.xlsx"   # '202306026- Katie Mahon - RE_ mags outputs template.eml'
+  params$police_charges_mc_sheet <- "020623_mags_sensitivity_output-"
   params$police_charges_mc_scenarios <- list(central = "apr23_central",
                                              ramp_12m = "apr23_central_12m",
                                              ramp_36m = "apr23_central_36m",
                                              ramp_48m = "apr23_central_48m"
   )
-  params$police_charges_mc_sheet <- "020623_mags_sensitivity_output-"
 
   # Crown Court
   params$police_charges_cc_files <- list(central = "s3://alpha-app-prisonsreadyreckonerapp/2023-04/April23_mid_pandemic_real_for_ready_reckoner.csv", # Records the total number of Crown Court receipts used as a baseline in the April 2023 projections. Includes background values from various sources, and an increase in charge numbers over a 24-month period. It has non-zero values throughout.

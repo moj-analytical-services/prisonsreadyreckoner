@@ -1,0 +1,251 @@
+---
+title: "Parameters used by prisonsreadyreckoner"
+author: "Brian G Burton"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Parameters used by prisonsreadyreckoner}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+<!---
+```{r setup}
+#library(prisonsreadyreckoner)
+```
+--->
+
+
+# Parameters{#parameters}
+
+Parameters of the `prisonsreadyreckoner` model may be divided into three groups:
+
+1. Levers. These represent deviations of the model from key assumptions in the
+formal courts, prison and probation forecasts. They are the parameters made
+available to users of the accompanying [Shiny app](https://github.com/ministryofjustice/prisons-ready-reckoner-app)
+for exploring influences of drivers of the prison population.
+
+2. Supporting parameters. These include paths to files containing data for the
+model as well as dates, scalars and other small pieces of information that
+determine model behaviour.
+
+3. Contextualparameters. Paths to files containing historical data and
+contextual forecasting data. Not currently used by `prisonsreadyreckoner` but
+used by the Shiny app to provide context for the package's forecasts.
+
+
+## Levers
+
+--------------------------------------------------------------------------------
+Parameter                               Description                      
+--------------------------------------- ----------------------------------------
+lever_police_charges_scenario           The name of the police charge scenario
+                                        defining court receipt volumes. See
+                                        below for available values.
+                                        
+lever_extra_cc_sitting_days             The number of Crown Court sitting days
+                                        to be added *per month* after the
+                                        lever impact date. (The equivalent in
+                                        the Shiny app is expressed on a per year 
+                                        basis and divided by 12 on capture).
+  
+lever_extra_cc_sitting_days_impact_date The impact date for the sitting day
+                                        lever, e.g. `"2023-06-01"`.
+                                        
+lever_extra_inflows_det                 A named vector of additional inflows to
+                                        the determinate sentence prison
+                                        population per month by sentence band,
+                                        e.g.
+                                        `c(senband1 = 0, senband2 = 0, senband3 = 0, senband4 = 0)`
+  
+lever_extra_inflows_det_impact_date     The impact date for the determinate
+                                        sentence inflow lever.
+  
+lever_profiles_det_stretch_factors      A named vector of stretch factors to
+                                        apply to profiles (distributions) of
+                                        time served among the determinate
+                                        sentence prison population by sentence
+                                        band, e.g.
+                                        `c(senband1 = 1, senband2 = 1, senband3 = 1, senband4 = 1)`
+
+lever_profiles_det_stretch_impact_date  The impact date for the determinate
+                                        sentence profile lever.
+  
+lever_recall_rate                       A named vector of recall rates,
+                                        expressing monthly recall volumes as a
+                                        fraction of licensee population, e.g.
+                                        `c(senband1 = 0.235, senband2 = 0.100, senband3 = 0.048, senband4 = 0.021)`
+                                        
+lever_recall_rate_impact_date           The impact date for the recall rate
+                                        lever.
+
+--------------------------------------------------------------------------------
+
+
+
+## Supporting parameters
+
+--------------------------------------------------------------------------------
+Parameter                               Description                      
+--------------------------------------- ----------------------------------------
+start_date                              Expected initial dates in various data
+                                        files. Setting these helps to confirm
+                                        the right data are being used. The
+                                        forecast will start from the
+                                        last consistent date.
+                                        
+--police_charges_cc                     Date for `police_charges_cc_files`
+  
+--police_charges_mc                     Date for `police_charges_mc_file`
+  
+--inflows_det                           Date for `prison_inflows_file`
+  
+--recall_rate                           Date for `recall_file`
+  
+--cc_files                              Date for `cc_output_file` and
+                                        `cc_capacity_file`.
+                                        
+projection_length_months                The number of months to include in the
+                                        forecast period.
+                                        
+police_charges_mc_file                  The path to a file holding receipt
+                                        volumes in the magistrates' court for
+                                        various police charge scenarios.
+                                        
+police_charges_mc_sheet                 The name of the sheet in
+                                        `police_charges_mc_file`
+                                        where magistrates' court police charge
+                                        scenario data are to be found.
+                                        
+police_charges_mc_scenarios             A named list of police charge scenarios
+                                        for the magistrates' court. Keys are the
+                                        values acceptable for the
+                                        `lever_police_charges_scenario` lever.
+                                        Values are scenario names as they appear
+                                        in `police_charges_mc_file`.
+                                        
+police_charges_cc_files                 A named list of paths for police charge
+                                        scenarios for the Crown Court. Keys are
+                                        the values acceptable for the
+                                        `lever_police_charges_scenario` lever.
+                                        Values are paths to the relevant files.
+                                        
+police_charges_cc_route_file            Path to a file for converting Crown
+                                        Court receipts, as read from a path in
+                                        `police_charges_cc_files`, into a format
+                                        suitable for the Crown Court module.
+
+cc_output_file                          Path to a file holding baseline disposal
+                                        volumes and durations for Crown Court
+                                        modelling.
+                                      
+cc_capacity_file                        Path to a file holding baseline sitting
+                                        days and hours per day for Crown Court
+                                        modelling.
+                                        
+ringfenced_lookup_file                  Path to a look-up table identifying
+                                        Crown Court case types that are
+                                        considered to be 'ring-fenced' (and
+                                        serviced immediately upon receipt).
+                                        
+published_remand_pop                    The latest remand population. Used for
+                                        issuing a warning if remand population
+                                        falls below zero.
+                                        
+remand_rates                            A named vector of remand rates for
+                                        court receipts (specifically, triable
+                                        either way and indictable only
+                                        magistrates' court receipts) and for
+                                        Crown Court cases at disposal, e.g.
+                                        `c(receipts = 0.187, disposals = 0.475)`.
+                                        
+no_bail_rate                            The proportion of those remanded who
+                                        are never bailed.
+                                        
+ctl                                     The custody time limit in months for
+                                        defendants remanded in custody.
+                                        
+mc_remand_lookup                        A look-up table specifying which types
+                                        of magistrates' court receipt are in
+                                        scope for the remand modelling.
+                                        
+
+sentencing_rates_file                   A path to a file specifying factors for
+                                        converting magistrates' and Crown court
+                                        disposals to determinate sentence prison
+                                        receptions by sentence band.
+                                        
+prison_inflows_file                     Path to a file containing the baseline
+                                        inflows for determinate sentence
+                                        prisoners under the formal prison
+                                        population forecast.
+                                        
+profiles_file                           Path to a file containing determinate
+                                        sentence length profiles (distributions)
+                                        for determinate sentence prisoners by
+                                        sentence band.
+                                        
+recall_file                             Path to a file containing various recall
+                                        statistics used in recall modelling such
+                                        as average time on recall.
+                                        
+licence_profiles_file                   Path to a file containing time on
+                                        licence profiles (distributions)
+                                        for determinate sentence licensees by
+                                        sentence band.
+                                        
+inflows_indet_mean                      Mean inflow of indeterminate prisoners
+                                        per month.
+                                        
+gender_splits_file                      Path to a file providing the split of
+                                        the prison population by gender for
+                                        different case types and determinate
+                                        sentence bands.
+                                      
+--------------------------------------------------------------------------------
+
+
+
+## Contextual parameters.
+
+--------------------------------------------------------------------------------
+Parameter                               Description                      
+--------------------------------------- ----------------------------------------
+tot_pop_file                            Path to a file containing actual and
+                                        forecast total prison population.
+                                        
+capacity_file                           Forecast prison capacity.
+
+recall_rate_hist_file                   Historical recall rates, formulated in
+                                        the same was as `lever_recall_rate`.
+                                        
+time_served_hist_file                   Estimates of historical average time
+                                        served for comparison with the mean
+                                        durations of the baseline determinate
+                                        sentence profiles used in forecasting.
+                                        Note that the data contained will be
+                                        biased for much of the initial part of
+                                        the record for the longest sentence
+                                        length band.
+                                        
+sitting_days_hist_file                  Historical sitting days.
+
+prison_population_hist_file             Historical prison population.
+  
+prison_inflows_hist_file                Historical determinate sentence prison
+                                        inflows by sentence band.
+
+police_charges_hist_file                Historical receipts, compiled for
+                                        consistency with the court receipt
+                                        forecasts under the various police
+                                        charge scenarios.
+                                     
+--------------------------------------------------------------------------------
+
