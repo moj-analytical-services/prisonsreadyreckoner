@@ -67,7 +67,7 @@ load_cc_capacity <- function(cc_capacity_file, start_date, forecast_start_date, 
   
   cc_capacity <- trim_dates(cc_capacity, start_date, forecast_start_date, forecast_end_date) %>%
                    dplyr::select(date, sitting_days, hours_per_day) %>%
-                   dplyr::arrange(date)
+                   dplyr::arrange(date)   # Do not remove this arrange as it is relied upon by calculate_hours_ringfenced_delta().
   
   return(cc_capacity)
 }
@@ -176,19 +176,19 @@ calculate_hours_ringfenced_delta <- function(cc_output, cc_capacity) {
 }
 
 
-# Join cc_output and cc_capacity to calculate Crown Court disposals. Then
-# sort these disposals by "route", and calculate the number of disposals per
-# route. Note that "receipt_type_desc" is ignored, as we know that all cases go
-# via the Crown Court (e.g. receipt_type_desc = "ind" with route = "e_other" is
-# counted as the same route as receipt_type_desc = "tew" with route =
-# "e_other").
+# Join cc_output and cc_capacity to calculate Crown Court disposals and
+# calculate the number of additional disposals per route. Note that
+# "receipt_type_desc" is ignored, as we know that all cases go via the Crown
+# Court (e.g. receipt_type_desc = "ind" with route = "e_other" is counted as the
+# same route as receipt_type_desc = "tew" with route = "e_other").
 calculate_cc_disposals_delta <- function(cc_output, cc_capacity) {
   
   cc_disposals <- dplyr::left_join(cc_output, cc_capacity, by = c("date")) %>%
                     dplyr::mutate(n_disposals_delta = n_disposals_ringfenced_delta + (capacity_delta - hours_ringfenced_delta) * backlog_rate) %>%
                     dplyr::select(date, receipt_type_desc, route, 
                                   ringfenced,                          # Retain so we may check whether disposals deplete the backlog.
-                                  n_receipts_delta, n_disposals_delta)
+                                  n_receipts_delta,                    # Not currently used. Consider deleting.
+                                  n_disposals_delta)
   
 }
 

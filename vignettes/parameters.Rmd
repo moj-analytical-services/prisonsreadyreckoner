@@ -47,8 +47,16 @@ used by the Shiny app to provide context for the package's forecasts.
 Parameter                               Description                      
 --------------------------------------- ----------------------------------------
 lever_police_charges_scenario           The name of the police charge scenario
-                                        defining court receipt volumes. See
-                                        below for available values.
+                                        defining court receipt volumes.
+                                        Available values include:<br /><br />
+                                        **central** - The current central
+                                        forecast which ramps to a plateau over
+                                        24 months.<br />
+                                        **ramp_12m** - As in the central but
+                                        ramping over 12 months.<br />
+                                        **ramp_36m** - Ramping over 36
+                                        months.<br />
+                                        **ramp_48m** - 48 months.
                                         
 lever_extra_cc_sitting_days             The number of Crown Court sitting days
                                         to be added *per month* after the
