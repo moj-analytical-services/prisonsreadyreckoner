@@ -166,14 +166,90 @@ non-ringfenced disposals afforded by whatever capacity was available after
 accounting for ringfenced disposals. 
 
 
-
-
 ## Sentencing outcomes
+
+Sentencing relies on a linear regression model constructed with the
+[prisonsreadyreckonerupdater](https://github.com/moj-analytical-services/prisonsreadyreckonerupdater)
+package. Briefly, historical prison reception volumes by
+[sentence band][sentence-bands], taken from the Fullsample data set, are
+regressed against historical data for magistrates' court and Crown Court
+disposals. The model generated is then used by `prisonsreadyreckoner` to
+forecast determinate sentence prison receptions from forecast magistrates' court
+and Crown Court disposals.
+
+***ASSUMPTION:** At the time of writing (August 2023), the predictors of the
+regression model are.
+
+Sentence band 1:
+* Effective trial, early guilty plea, late guilty plea and cracked guilty pleas in the Crown Court,
+* Cases committed for sentence in the Crown Court
+* Summary cases in the magistrates' court and
+* Triable-either-way cases in the magistrates' court.
+
+Sentence band 2: Same as for Band 1 but without the summary cases.
+
+Sentence band 3: Same as for Band 2 but without the triable-either-way cases.
+
+Sentence band 4: Same as for Band 3.*
+
+This model avoids relying on predictors that cover the same cases or that are
+irrelevant for the sentence band in question. For example, Under the Criminal 
+Justice Act 2003 magistrates' have had powers to impose a maximum of 6 month’s
+imprisonment for a summary only offence so summary cases cannot be predictors of
+sentence band 2 or above.
+
+See the latest assumptions log for the latest model.
+
+
+# Remand (Levers 1 and 2)
+
+Remand impacts are non-trivial because many on remand will be released after the
+custody time limit if their cases have not yet been disposed. In a simple model,
+it is not reasonable to trace the volumes on remand as they pass through the
+courts, potentially waiting changeable time as outstanding caseload. Instead, we
+model, crudely, the impacts that each receipt or disposal has on remand
+population and make simplistic adjustments for custody time limits (CTL).
+
+***ASSUMPTION: Marginal remand prisoner inflows and outflows are forecast
+primarily by applying to court receipts and Crown Court disposals, respectively,
+historical ratios of remand inflows to court receipts and remand outflows to
+Crown Court disposals. Magistrates' court receipts are taken as a proxy for
+court receipts and only indictable-only and triable-either-way receipts are
+considered (as summary cases are unlikely to involve remand).*
+
+***ASSUMPTION: 20% of additional remand _inflows_ are assumed to be held
+indefinitely until disposal. The remaining 80% are assumed to be placed in the
+court backlog and released after six months.*
+
+***ASSUMPTION: 20% of additional remand _outflows_ are assumed to have been held
+on remand since receipt at court. The remaining 80% are assumed to be drawn from
+the wider pool of remand prisoners and would have otherwise left remand, even
+without disposal, at varying lags from one to six months.*
+
+
+These assumptions mean that most (80%) of any marginal change in receipts or
+disposals will have only a transient impact on remand population. The transient
+impacts are asymmetrical with respect to receipt and disposal because receipts
+resulting in remand are imagined to add to outstanding caseload (backlog) and
+wait at least six months for a disposal while disposals are imagined to come
+from both the backlog and recent arrivals and may release some from remand
+within the CTL.
+
+In the model, the transient and long-term impacts of marginal changes in
+receipts and disposals are captured in filters constructed at the top of the
+`run_prisonsreadyreckoner()` function. These are convolved with marginal
+receipts and disposals, respectively, and summed in the
+`calculate_pop_remand_delta()` function.
+
+
+# Prison inflows (Lever 3)
+
 
 
 
 <!-- Cross-vignette references -->
 [parameters]: ./parameters.html#parameters "Parameters"
+[sentence-bands]: ./sentence-bands.html#sentence-bands "Sentence bands"
 
 
 
