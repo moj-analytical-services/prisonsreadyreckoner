@@ -31,6 +31,19 @@ also be of interest to those wishing to understand our modelling assumptions. A
 briefer, more high-level assumptions log is available separately from the CJS
 Modelling Team.
 
+# General approach
+
+The ready reckoner does not seek to recreate all the facets of the existing
+prison projections used for publication and internal risk management. Instead,
+it generates a *baseline*, representing the main ('central') projection from the
+most recent projections, and a *scenario*, representing deviations from the
+assumptions of the central projection. The output of the main package function
+includes both baseline and scenario but it is only their difference that should
+be used, superimposed on the central projection, if desired, to illustrate
+impacts of marginal changes in population drivers. For some casetypes and
+levers, the baseline is zero under default settings and completely
+uninformative.
+
 
 # Police charge scenarios (Lever 1)
 
@@ -166,14 +179,134 @@ non-ringfenced disposals afforded by whatever capacity was available after
 accounting for ringfenced disposals. 
 
 
-
-
 ## Sentencing outcomes
 
+Sentencing relies on a linear regression model constructed with the
+[prisonsreadyreckonerupdater](https://github.com/moj-analytical-services/prisonsreadyreckonerupdater)
+package. Briefly, historical prison reception volumes by
+[sentence length band][sentence-bands], taken from the Fullsample data set, are
+regressed against historical data for magistrates' court and Crown Court
+disposals. The model generated is then used by `prisonsreadyreckoner` to
+forecast determinate sentence prison receptions from forecast magistrates' court
+and Crown Court disposals.
+
+***ASSUMPTION:** At the time of writing (August 2023), the predictors of the
+regression model are.
+
+Sentence band 1:
+* Effective trial, early guilty plea, late guilty plea and cracked guilty pleas in the Crown Court,
+* Cases committed for sentence in the Crown Court
+* Summary cases in the magistrates' court and
+* Triable-either-way cases in the magistrates' court.
+
+Sentence band 2: Same as for Band 1 but without the summary cases.
+
+Sentence band 3: Same as for Band 2 but without the triable-either-way cases.
+
+Sentence band 4: Same as for Band 3.*
+
+This model avoids relying on predictors that cover the same cases or that are
+irrelevant for the sentence band in question. For example, Under the Criminal 
+Justice Act 2003 magistrates' have had powers to impose a maximum of 6 month’s
+imprisonment for a summary only offence so summary cases cannot be predictors of
+sentence band 2 or above.
+
+See the latest assumptions log for the latest model.
+
+
+# Remand (Levers 1 and 2)
+
+Remand impacts are non-trivial because many on remand will be released after the
+custody time limit if their cases have not yet been disposed. In a simple model,
+it is not reasonable to trace the volumes on remand as they pass through the
+courts, potentially waiting changeable time as outstanding caseload. Instead, we
+model, crudely, the impacts that each receipt or disposal has on remand
+population and make simplistic adjustments for custody time limits (CTL).
+
+***ASSUMPTION: Marginal remand prisoner inflows and outflows are forecast
+primarily by applying to court receipts and Crown Court disposals, respectively,
+historical ratios of remand inflows to court receipts and remand outflows to
+Crown Court disposals. Magistrates' court receipts are taken as a proxy for
+court receipts and only indictable-only and triable-either-way receipts are
+considered (as summary cases are unlikely to involve remand).*
+
+***ASSUMPTION: 20% of additional remand _inflows_ are assumed to be held
+indefinitely until disposal. The remaining 80% are assumed to be placed in the
+court backlog and released after six months.*
+
+***ASSUMPTION: 20% of additional remand _outflows_ are assumed to have been held
+on remand since receipt at court. The remaining 80% are assumed to be drawn from
+the wider pool of remand prisoners and would have otherwise left remand, even
+without disposal, at varying lags from one to six months.*
+
+
+These assumptions mean that most (80%) of any marginal change in receipts or
+disposals will have only a transient impact on remand population. The transient
+impacts are asymmetrical with respect to receipt and disposal because receipts
+resulting in remand are imagined to add to outstanding caseload (backlog) and
+wait at least six months for a disposal while disposals are imagined to come
+from both the backlog and recent arrivals and may release some from remand
+within the CTL.
+
+In the model, the transient and long-term impacts of marginal changes in
+receipts and disposals are captured in filters constructed at the top of the
+`run_prisonsreadyreckoner()` function. These are convolved with marginal
+receipts and disposals, respectively, and summed in the
+`calculate_pop_remand_delta()` function.
+
+
+# Prison inflows (Lever 3)
+
+Levers for prison receptions refer to determinate sentence prisoners only.
+
+***ASSUMPTION: We do not currently model changes in indeterminate inflows. These
+are low volume and historically stable.*
+
+***ASSUMPTION: Determinate sentence prisoners are aggregated to four
+[sentence length band][sentence-bands]. In the baseline run, inflows are as in
+the central scenario from the latest prison projection, _considering only those
+entering prison in the forecast period_. When the prison inflow lever is set to
+a non-zero value, additional prison inflows are added to the relevant band.*
+
+The prison population resulting from prison inflows in the baseline is modelled
+by *convolving* the inflow time series with filters representing the the
+distribution of time served by prisoners within the selected sentence band. This
+generates a second time series of prison outflows and the population timeseries
+is derived as the cumulative sum of inflows minus outflows.
+
+The same procedure is applied to the model scenario run so that the volumes in
+the scenario minus those in the baseline indicate the impact of the lever
+setting with respect to the baseline conditions.
+
+
+# Time served (Lever 4)
+
+When the time served lever is set, the distributions of time served used to
+generate prison population are stretched or squeezed appropriately so that
+prison outflows are either delayed or brought forward, respectively. The result
+is that prison population goes up or down from the impact date chosen.
+
+***ASSUMPTION: Changes to the time served lever affect only determinate 
+sentence prisoners arriving in the forecast period. This includes those in the
+baseline as well as the additional inflows resulting from more upstream levers,
+such as sitting days or prison inflows.*
+
+By applying the time served lever to baseline as well as scenario inflows, the
+impact (scenario minus baseline) indicates the impact that time served has on
+all prisoners entering in the forecast period, not just any additional ones
+provoked by upstream levers. Note that we are not retrospectively
+changing the sentence lengths of offenders arriving in the historical period or
+any arriving before the chosen impact date.
+
+Stretching and squeezing of baseline time served distributions is performed by
+interpolation using an off-the-shelf function. This is a time-consuming
+operation so care is taken to trim time series and time served distributions
+to the minimum required to cover the forecast period.
 
 
 <!-- Cross-vignette references -->
 [parameters]: ./parameters.html#parameters "Parameters"
+[sentence-bands]: ./sentence-bands.html#sentence-bands "Sentence bands"
 
 
 

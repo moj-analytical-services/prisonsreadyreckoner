@@ -1,0 +1,41 @@
+---
+title: "Determinate sentence bands"
+author: "Brian G Burton"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Determinate sentence bands}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+<!---
+```{r setup}
+#library(prisonsreadyreckoner)
+```
+--->
+
+
+# Definitions{#sentence-bands}
+
+Modelling of determinate sentence prisoners is on the basis of four sentence
+length bands. Relevant levers are defined in these terms. Bands are:
+
+1. Sentence band 1: Prisoners serving a sentence shorter than six months.
+
+2. Sentence band 2: Prisoners serving a sentence of length of at least six months
+and shorter than twelve months.
+
+3. Sentence band 3: Prisoners serving a sentence of length of at least twelve
+months and shorter than four years.
+
+4. Sentence band 4: Prisoners serving a sentence of length of at least four
+years. Extended Determinate Sentence (EDS) prisoners are included within this
+band.
