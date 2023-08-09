@@ -31,6 +31,19 @@ also be of interest to those wishing to understand our modelling assumptions. A
 briefer, more high-level assumptions log is available separately from the CJS
 Modelling Team.
 
+# General approach
+
+The ready reckoner does not seek to recreate all the facets of the existing
+prison projections used for publication and internal risk management. Instead,
+it generates a *baseline*, representing the main ('central') projection from the
+most recent projections, and a *scenario*, representing deviations from the
+assumptions of the central projection. The output of the main package function
+includes both baseline and scenario but it is only their difference that should
+be used, superimposed on the central projection, if desired, to illustrate
+impacts of marginal changes in population drivers. For some casetypes and
+levers, the baseline is zero under default settings and completely
+uninformative.
+
 
 # Police charge scenarios (Lever 1)
 
@@ -171,7 +184,7 @@ accounting for ringfenced disposals.
 Sentencing relies on a linear regression model constructed with the
 [prisonsreadyreckonerupdater](https://github.com/moj-analytical-services/prisonsreadyreckonerupdater)
 package. Briefly, historical prison reception volumes by
-[sentence band][sentence-bands], taken from the Fullsample data set, are
+[sentence length band][sentence-bands], taken from the Fullsample data set, are
 regressed against historical data for magistrates' court and Crown Court
 disposals. The model generated is then used by `prisonsreadyreckoner` to
 forecast determinate sentence prison receptions from forecast magistrates' court
@@ -244,7 +257,51 @@ receipts and disposals, respectively, and summed in the
 
 # Prison inflows (Lever 3)
 
+Levers for prison receptions refer to determinate sentence prisoners only.
 
+***ASSUMPTION: We do not currently model changes in indeterminate inflows. These
+are low volume and historically stable.*
+
+***ASSUMPTION: Determinate sentence prisoners are aggregated to four
+[sentence length band][sentence-bands]. In the baseline run, inflows are as in
+the central scenario from the latest prison projection, _considering only those
+entering prison in the forecast period_. When the prison inflow lever is set to
+a non-zero value, additional prison inflows are added to the relevant band.*
+
+The prison population resulting from prison inflows in the baseline is modelled
+by *convolving* the inflow time series with filters representing the the
+distribution of time served by prisoners within the selected sentence band. This
+generates a second time series of prison outflows and the population timeseries
+is derived as the cumulative sum of inflows minus outflows.
+
+The same procedure is applied to the model scenario run so that the volumes in
+the scenario minus those in the baseline indicate the impact of the lever
+setting with respect to the baseline conditions.
+
+
+# Time served (Lever 4)
+
+When the time served lever is set, the distributions of time served used to
+generate prison population are stretched or squeezed appropriately so that
+prison outflows are either delayed or brought forward, respectively. The result
+is that prison population goes up or down from the impact date chosen.
+
+***ASSUMPTION: Changes to the time served lever affect only determinate 
+sentence prisoners arriving in the forecast period. This includes those in the
+baseline as well as the additional inflows resulting from more upstream levers,
+such as sitting days or prison inflows.*
+
+By applying the time served lever to baseline as well as scenario inflows, the
+impact (scenario minus baseline) indicates the impact that time served has on
+all prisoners entering in the forecast period, not just any additional ones
+provoked by upstream levers. Note that we are not retrospectively
+changing the sentence lengths of offenders arriving in the historical period or
+any arriving before the chosen impact date.
+
+Stretching and squeezing of baseline time served distributions is performed by
+interpolation using an off-the-shelf function. This is a time-consuming
+operation so care is taken to trim time series and time served distributions
+to the minimum required to cover the forecast period.
 
 
 <!-- Cross-vignette references -->
