@@ -156,6 +156,9 @@ stretch_profiles <- function(profiles, lever_profiles_det_stretch_factors, min_s
 
 
 
+#' Stretch time on recall by a user-defined factor
+#' 
+#'#' @export
 stretch_recall_time_lever <- function(recall_time, lever_profiles_recall_stretch_factors) {
   
   recall_time_levered      <-  multiply_two_named_vectors(recall_time, lever_profiles_recall_stretch_factors, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
