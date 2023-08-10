@@ -154,3 +154,18 @@ stretch_profiles <- function(profiles, lever_profiles_det_stretch_factors, min_s
   return(profiles_resampled)
 }
 
+
+
+stretch_recall_time_lever <- function(recall_time, lever_profiles_recall_stretch_factors) {
+  
+  recall_time_levered      <-  multiply_two_named_vectors(recall_time, lever_profiles_recall_stretch_factors, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
+  
+  profiles_recall_levered  <- make_lag_filters(recall_time_levered)
+  
+  profiles_recall_levered_post <- dplyr::mutate(profiles_recall_levered, phase = "post_impact", .after=1)
+  profiles_recall_levered_pre  <- dplyr::filter(profiles_recall, phase == "pre_impact")
+  
+  profiles_recall_levered <- dplyr::bind_rows(profiles_recall_levered_post, profiles_recall_levered_pre) %>%
+    dplyr::mutate(dplyr::across(c(all_of(names(dplyr::select(., -c("senband", "phase"))))), ~tidyr::replace_na(.,0))) 
+  
+}
