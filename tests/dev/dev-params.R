@@ -37,6 +37,9 @@ dev_set_params <- function() {
   params$lever_recall_rate                       <- signif(c(senband1 = 0.234774346793349, senband2 = 0.1003465003465, senband3 = 0.048357569686712, senband4 = 0.0213297380452349), 3)   # 20230505 - Charlotte Wallace - Updated prison projections .msg
   params$lever_recall_rate_impact_date           <- "2024-01-01"
   
+  # Factors for stretching profiles of time in recall, broken down by sentence band
+  params$lever_profiles_recall_stretch_factors      <- c(senband1 = 1, senband2 = 1, senband3 = 1, senband4 = 1)
+  params$lever_profiles_recall_stretch_impact_date  <- "2024-01-01"
   
   
   ################################################################################

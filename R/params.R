@@ -10,6 +10,8 @@ format_params <- function(params) {
   # app.
   params$lever_profiles_det_stretch_factor_min   <- 0.5
   params$lever_profiles_det_stretch_factor_max   <- 2
+  params$lever_profiles_recall_stretch_factor_min   <- 0.5
+  params$lever_profiles_recall_stretch_factor_max   <- 2
 
   # Convert expected file start date strings to dates.
   params$start_date$police_charges_cc <- as.Date(params$start_date$police_charges_cc)

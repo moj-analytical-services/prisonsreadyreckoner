@@ -89,8 +89,8 @@ calculate_pop_remand_delta <- function(mc_disposals, cc_disposals, profiles_rema
   
   # Convert change in receipts to population impact.
   pop_remand_delta_in <- mojstockr_mconv(receipts_remand_delta, profiles_remand_in, c("casetype"))
-
-
+  
+  
   # Find Crown Court disposals relevant for remand.
   disposals_remand_delta <- dplyr::group_by(cc_disposals, .data$date) %>%
     dplyr::summarise(n_disposals_delta = sum(.data$n_disposals_delta), .groups = "drop") %>%
@@ -107,7 +107,7 @@ calculate_pop_remand_delta <- function(mc_disposals, cc_disposals, profiles_rema
   pop_remand_delta <- rbind(pop_remand_delta_in, pop_remand_delta_out) %>%
     dplyr::group_by(.data$casetype) %>%
     dplyr::summarise((dplyr::across(tidyselect::where(is.numeric), sum)), .groups = 'drop')
-
+  
 }
 
 
@@ -117,7 +117,7 @@ check_pop_remand <- function(pop_remand_delta, published_remand_pop) {
     warning("Assumption violation: ",
             "The remand population fell below zero. ",
             "Please provide a scenario with more court receipts or fewer sitting days.")
-    
+  
 }
 
 
@@ -131,16 +131,16 @@ check_pop_remand <- function(pop_remand_delta, published_remand_pop) {
 load_inflows_det <- function(prison_inflows_file, start_date, forecast_start_date, forecast_end_date) {
   
   inflows_det <- import_s3_file(prison_inflows_file, sheet = "determinate_flows") %>%
-                   dplyr::rename(date = Date, senband = Band) %>%
-                   dplyr::filter(DataType == "Forecast")
+    dplyr::rename(date = Date, senband = Band) %>%
+    dplyr::filter(DataType == "Forecast")
   
   inflows_det <- trim_dates(inflows_det, start_date, forecast_start_date, forecast_end_date) %>%
-                   dplyr::select(date, senband, inflows)
-    
+    dplyr::select(date, senband, inflows)
+  
   inflows_det <- dplyr::mutate(inflows_det, senband = stringr::str_replace_all(senband, c(Band = "senband", EDS = "senband4"))) %>%
-                   dplyr::group_by(date, senband) %>%
-                   dplyr::summarise(inflows = sum(inflows), .groups = "drop") %>%
-                   tidyr::pivot_wider(names_from = date, values_from = inflows, values_fill = 0)
+    dplyr::group_by(date, senband) %>%
+    dplyr::summarise(inflows = sum(inflows), .groups = "drop") %>%
+    tidyr::pivot_wider(names_from = date, values_from = inflows, values_fill = 0)
   
 }
 
@@ -149,7 +149,7 @@ load_inflows_det <- function(prison_inflows_file, start_date, forecast_start_dat
 load_profiles_det <- function(profiles_file, projection_length_months, lever_profiles_det_stretch_factor_min, non_data_cols = c("senband", "phase")) {
   
   profiles <- import_s3_file(profiles_file)
-
+  
   # We use all.equal() rather than a simple x!=y test because some profiles may
   # not add up to 1 exactly owing to rounding error.
   if (!isTRUE(all.equal(sum(profiles[, !names(profiles) %in% non_data_cols]), nrow(profiles))))
@@ -171,17 +171,20 @@ load_profiles_det <- function(profiles_file, projection_length_months, lever_pro
 
 
 # Add phase
-add_phases <- function(inflows, impact_date) {
+add_phases <- function(time_series, impact_date = NULL) {
   
-  inflows_post           <- inflows %>% dplyr::mutate(phase = "post_impact", .after = 1)
-  inflows_pre            <- inflows_post %>% dplyr::mutate(phase = "pre_impact")
-  inflows                <- rbind(inflows_post, inflows_pre)
-  coldates_post          <- c(FALSE, FALSE, as.Date(names(inflows[-c(1,2)])) >= as.Date(impact_date))
-  coldates_pre           <- c(FALSE, FALSE, as.Date(names(inflows[-c(1,2)])) < as.Date(impact_date))
-  inflows[coldates_post] <- inflows[coldates_post] * c(1,1,1,1,0,0,0,0)
-  inflows[coldates_pre]  <- inflows[coldates_pre] * c(0,0,0,0,1,1,1,1)
-
-  return(inflows)
+  time_series_post           <- time_series %>% dplyr::mutate(phase = "post_impact", .after = 1)
+  time_series_pre            <- time_series_post %>% dplyr::mutate(phase = "pre_impact")
+  time_series                <- rbind(time_series_post, time_series_pre)
+  
+  if (!is.null(impact_date)) {
+    coldates_post          <- c(FALSE, FALSE, as.Date(names(time_series[-c(1,2)])) >= as.Date(impact_date))
+    coldates_pre           <- c(FALSE, FALSE, as.Date(names(time_series[-c(1,2)])) < as.Date(impact_date))
+    time_series[coldates_post] <- time_series[coldates_post] * c(1,1,1,1,0,0,0,0)
+    time_series[coldates_pre]  <- time_series[coldates_pre] * c(0,0,0,0,1,1,1,1)
+  }
+  
+  return(time_series)
 }
 
 
@@ -235,7 +238,7 @@ load_profiles_lic <- function(profiles_file, projection_length_months) {
   
   profiles <- suppressMessages(import_s3_file(profiles_file)) %>%
     dplyr::rename(senband = SenBand)
-
+  
   # We use all.equal() rather than a simple x!=y test because some profiles may
   # not add up to 1 exactly owing to rounding error.
   non_data_cols <- c('senband')
@@ -270,7 +273,7 @@ load_recall_params <- function(recall_file, start_date, forecast_start_date, for
     dplyr::arrange(senband) %>%
     tibble::deframe()
   
-
+  
   # Recall rate. Currently, a time series is provided. We will assume the steady
   # state values.
   recall_rate_exclPSS <- import_s3_file(recall_file, sheet = "recall_rate_exclPSS") %>%
@@ -436,8 +439,5 @@ split_populations_by_gender <- function(pop, gender_splits) {
     dplyr::mutate(population = population * prop_sex) %>%
     #dplyr::arrange(run, date, casetype, senband, sex) %>%    # Commented for speed. No need to sort here.
     dplyr::select(run, date, casetype, senband, sex, population)
-
+  
 }
-
-
-
