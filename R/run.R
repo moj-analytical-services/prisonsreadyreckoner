@@ -155,11 +155,9 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
   recall_rate_levered             <- params$lever_recall_rate
   recall_rate_impact_date_levered <- params$lever_recall_rate_impact_date
   
-  recall_time_levered      <-  multiply_two_named_vectors(recall_time, params$lever_profiles_recall_stretch_factors, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
-  profiles_recall_levered  <- make_lag_filters(recall_time_levered) %>%
-    dplyr::mutate(phase = "post_impact", .after=1) %>%
-    dplyr::bind_rows(profiles_recall %>% dplyr::filter(phase == "pre_impact")) %>%
-    dplyr::mutate(dplyr::across(c(all_of(names(dplyr::select(., -c("senband", "phase"))))), ~tidyr::replace_na(.,0))) 
+  # LEVER: Stretch recall profiles
+  profiles_recall_levered      <- stretch_recall_time_lever(recall_time, params$lever_profiles_recall_stretch_factors)
+  
   
   print("profiles_recall")
   print(profiles_recall)
