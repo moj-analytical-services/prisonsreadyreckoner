@@ -171,17 +171,20 @@ load_profiles_det <- function(profiles_file, projection_length_months, lever_pro
 
 
 # Add phase
-add_phases <- function(inflows, impact_date) {
+add_phases <- function(time_series, impact_date = NULL) {
   
-  inflows_post           <- inflows %>% dplyr::mutate(phase = "post_impact", .after = 1)
-  inflows_pre            <- inflows_post %>% dplyr::mutate(phase = "pre_impact")
-  inflows                <- rbind(inflows_post, inflows_pre)
-  coldates_post          <- c(FALSE, FALSE, as.Date(names(inflows[-c(1,2)])) >= as.Date(impact_date))
-  coldates_pre           <- c(FALSE, FALSE, as.Date(names(inflows[-c(1,2)])) < as.Date(impact_date))
-  inflows[coldates_post] <- inflows[coldates_post] * c(1,1,1,1,0,0,0,0)
-  inflows[coldates_pre]  <- inflows[coldates_pre] * c(0,0,0,0,1,1,1,1)
+  time_series_post           <- time_series %>% dplyr::mutate(phase = "post_impact", .after = 1)
+  time_series_pre            <- time_series_post %>% dplyr::mutate(phase = "pre_impact")
+  time_series                <- rbind(time_series_post, time_series_pre)
   
-  return(inflows)
+  if (!is.null(impact_date)) {
+    coldates_post          <- c(FALSE, FALSE, as.Date(names(time_series[-c(1,2)])) >= as.Date(impact_date))
+    coldates_pre           <- c(FALSE, FALSE, as.Date(names(time_series[-c(1,2)])) < as.Date(impact_date))
+    time_series[coldates_post] <- time_series[coldates_post] * c(1,1,1,1,0,0,0,0)
+    time_series[coldates_pre]  <- time_series[coldates_pre] * c(0,0,0,0,1,1,1,1)
+  }
+  
+  return(time_series)
 }
 
 

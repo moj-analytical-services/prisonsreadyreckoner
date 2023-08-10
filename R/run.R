@@ -40,7 +40,9 @@ run_prisonsreadyreckoner <- function(params) {
   # Make filters for recall outflows.
   recall_time     <- multiply_two_named_vectors(average_time_on_recall, recall_profile_adjustments, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
   profiles_recall <- make_lag_filters(recall_time)
-  
+  profiles_recall <- add_phases(profiles_recall)
+
+
   # Calculate baseline with only original inflows.
   pop_baseline <- run_baseline(params, inflows_det_loaded, profiles_det_loaded,
                                nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall)
@@ -50,7 +52,7 @@ run_prisonsreadyreckoner <- function(params) {
   
   # Run scenario and find overall population changes.
   #pop_scenario <- run_scenario(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, sentencing_rates_loaded, inflows_det_loaded, profiles_det_loaded, nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall)
-  pop_scenario <- run_scenario(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, profiles_remand_in, profiles_remand_out, sentencing_rates_loaded, inflows_det_loaded, profiles_det_loaded, nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall)
+  pop_scenario <- run_scenario(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, profiles_remand_in, profiles_remand_out, sentencing_rates_loaded, inflows_det_loaded, profiles_det_loaded, nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall, recall_time)
   
   # Combine with the baseline and pivot for ease of splitting by gender.
   pop_combined <- rbind(pop_baseline, pop_scenario) %>%
@@ -66,7 +68,7 @@ run_prisonsreadyreckoner <- function(params) {
   # dev_plot_population(pop_combined, "remand", "Remand delta")
   # dev_plot_population(pop_combined, "determinate", "Determinate")
   # dev_plot_population(pop_combined, "indeterminate", "Indeterminate")
-  # dev_plot_population(pop_combined, "recall", "Recall")
+  dev_plot_population(pop_combined, "recall", "Recall")
   
   return(dplyr::arrange(pop_combined, run, date, casetype, senband, sex))
 }
@@ -100,7 +102,7 @@ run_baseline <- function(params, inflows_det_loaded, profiles_det_loaded,
   
   
   pop_recall         <- run_prison_recall_module(outflows_det, nomis_out_delius_in_ratio, profiles_lic,
-                                                 recall_rate_exclPSS, recall_rate_exclPSS, params$forecast_start_date, profiles_recall)
+                                                 recall_rate_exclPSS, recall_rate_exclPSS, params$forecast_start_date, profiles_recall, params$forecast_start_date)
   
   pop_baseline <- combine_casetypes(pop_remand_delta, pop_det, pop_indet, pop_recall, "baseline")
 }
@@ -111,7 +113,7 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
                          profiles_remand_in, profiles_remand_out,
                          sentencing_rates_loaded,
                          inflows_det_loaded, profiles_det_loaded,
-                         nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall) {
+                         nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall, recall_time) {
   
   # LEVER: Add police charges.
   cc_receipts_delta  <- cc_receipts_delta_loaded_list[[params$lever_police_charges_scenario]]
@@ -153,8 +155,21 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
   recall_rate_levered             <- params$lever_recall_rate
   recall_rate_impact_date_levered <- params$lever_recall_rate_impact_date
   
+  recall_time_levered      <-  multiply_two_named_vectors(recall_time, params$lever_profiles_recall_stretch_factors, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
+  profiles_recall_levered  <- make_lag_filters(recall_time_levered) %>%
+    dplyr::mutate(phase = "post_impact", .after=1) %>%
+    dplyr::bind_rows(profiles_recall %>% dplyr::filter(phase == "pre_impact")) %>%
+    dplyr::mutate(dplyr::across(c(all_of(names(dplyr::select(., -c("senband", "phase"))))), ~tidyr::replace_na(.,0))) 
+  
+  print("profiles_recall")
+  print(profiles_recall)
+  print("profiles_recall_levered")
+  print(profiles_recall_levered)
+  
+  profiles_recall_stretch_impact_date_levered  <- params$lever_profiles_recall_stretch_impact_date
+  
   pop_recall         <- run_prison_recall_module(outflows_det, nomis_out_delius_in_ratio, profiles_lic,
-                                                 recall_rate_exclPSS, recall_rate_levered, recall_rate_impact_date_levered, profiles_recall)
+                                                 recall_rate_exclPSS, recall_rate_levered, recall_rate_impact_date_levered, profiles_recall_levered, profiles_recall_stretch_impact_date_levered)
   
   
   pop_scenario <- combine_casetypes(pop_remand_delta, pop_det, pop_indet, pop_recall, "scenario")
@@ -201,7 +216,7 @@ run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disp
 #' @export
 run_prison_determinate_module <- function(inflows_det, lever_profiles_det_stretch_impact_date, profiles_det_levered) {
   
-  inflows_det              <- add_phases(inflows_det, lever_profiles_det_stretch_impact_date)
+  inflows_det              <- add_phases(inflows_det, impact_date = lever_profiles_det_stretch_impact_date)
   outflows_det             <- mojstockr_mconv(inflows_det, profiles_det_levered, c("senband", "phase"))
   inflows_det              <- combine_phases(inflows_det)
   outflows_det             <- combine_phases(outflows_det)
@@ -224,15 +239,21 @@ run_prison_indeterminate_module <- function(month_names, inflows_indet_mean) {
 
 #' @export
 run_prison_recall_module <- function(outflows_det, nomis_out_delius_in_ratio, profiles_lic,
-                                     recall_rate_exclPSS, lever_recall_rate, lever_recall_rate_impact_date, profiles_recall) {
+                                     recall_rate_exclPSS, lever_recall_rate, lever_recall_rate_impact_date, profiles_recall_levered, lever_profiles_recall_stretch_impact_date) {
   
   inflows_lic              <- apply_ratios(outflows_det, nomis_out_delius_in_ratio)
   outflows_lic             <- mojstockr_mconv(inflows_lic, profiles_lic, c("senband"))
   pop_lic                  <- mojstockr_build_stock(inflows_lic, outflows_lic, c("senband"))
   
   inflows_recall           <- apply_ratios(pop_lic, recall_rate_exclPSS, postimpact_ratios = lever_recall_rate, impact_date = lever_recall_rate_impact_date)
-  outflows_recall          <- mojstockr_mconv(inflows_recall, profiles_recall, c("senband"))
+  inflows_recall           <- add_phases(inflows_recall, impact_date = lever_profiles_recall_stretch_impact_date)
+  outflows_recall          <- mojstockr_mconv(inflows_recall, profiles_recall_levered, c("senband", "phase"))
+  inflows_recall           <- combine_phases(inflows_recall)
+  outflows_recall          <- combine_phases(outflows_recall)
   pop_recall               <- mojstockr_build_stock(inflows_recall, outflows_recall, c("senband"))
+  
+  # outflows_recall          <- mojstockr_mconv(inflows_recall, profiles_recall, c("senband"))
+  # pop_recall               <- mojstockr_build_stock(inflows_recall, outflows_recall, c("senband"))
   
   return(pop_recall)
 }
