@@ -156,14 +156,7 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
   recall_rate_impact_date_levered <- params$lever_recall_rate_impact_date
   
   # LEVER: Stretch recall profiles
-  profiles_recall_levered      <- stretch_recall_time_lever(recall_time, params$lever_profiles_recall_stretch_factors)
-  
-  
-  print("profiles_recall")
-  print(profiles_recall)
-  print("profiles_recall_levered")
-  print(profiles_recall_levered)
-  
+  profiles_recall_levered      <- stretch_recall_time_lever(recall_time, params$lever_profiles_recall_stretch_factors, params$lever_profiles_recall_stretch_factor_min, params$lever_profiles_recall_stretch_factor_max)
   profiles_recall_stretch_impact_date_levered  <- params$lever_profiles_recall_stretch_impact_date
   
   pop_recall         <- run_prison_recall_module(outflows_det, nomis_out_delius_in_ratio, profiles_lic,
@@ -249,9 +242,6 @@ run_prison_recall_module <- function(outflows_det, nomis_out_delius_in_ratio, pr
   inflows_recall           <- combine_phases(inflows_recall)
   outflows_recall          <- combine_phases(outflows_recall)
   pop_recall               <- mojstockr_build_stock(inflows_recall, outflows_recall, c("senband"))
-  
-  # outflows_recall          <- mojstockr_mconv(inflows_recall, profiles_recall, c("senband"))
-  # pop_recall               <- mojstockr_build_stock(inflows_recall, outflows_recall, c("senband"))
   
   return(pop_recall)
 }
