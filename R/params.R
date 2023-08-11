@@ -63,8 +63,8 @@ set_defaults <- function(params, recall_rate_exclPSS) {
   defaults$recall_rate                                <- recall_rate_exclPSS
   defaults$recall_rate_impact_date                    <- default_impact_date
   
-  defaults$lever_profiles_recall_stretch_factors      <- c(senband1 = 1, senband2 = 1, senband3 = 1, senband4 = 1)
-  defaults$lever_profiles_recall_stretch_impact_date  <- default_impact_date
+  defaults$profiles_recall_stretch_factors            <- c(senband1 = 1, senband2 = 1, senband3 = 1, senband4 = 1)
+  defaults$profiles_recall_stretch_impact_date        <- default_impact_date
 
   return(defaults)
 }
