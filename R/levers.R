@@ -158,7 +158,7 @@ stretch_profiles <- function(profiles, lever_profiles_det_stretch_factors, min_s
 
 #' Stretch time on recall by a user-defined factor
 #' 
-#'#' @export
+#' @export
 stretch_recall_time_lever <- function(recall_time, lever_profiles_recall_stretch_factors, min_stretch_factor, max_stretch_factor) {
   
   for (stretch_factor_name in names(lever_profiles_recall_stretch_factors)) {
