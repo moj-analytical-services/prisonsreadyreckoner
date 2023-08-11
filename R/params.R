@@ -51,17 +51,20 @@ set_defaults <- function(params, recall_rate_exclPSS) {
   # Number of extra police charges
   defaults$lever_police_charges_scenario     <- "central"
   
-  defaults$extra_cc_sitting_days             <- 0             # [month^-1]
-  defaults$extra_cc_sitting_days_impact_date <- default_impact_date
+  defaults$extra_cc_sitting_days                      <- 0             # [month^-1]
+  defaults$extra_cc_sitting_days_impact_date          <- default_impact_date
 
-  defaults$extra_inflows_det                 <- c(senband1 = 0, senband2 = 0, senband3 = 0, senband4 = 0)
-  defaults$extra_inflows_det_impact_date     <- default_impact_date
+  defaults$extra_inflows_det                          <- c(senband1 = 0, senband2 = 0, senband3 = 0, senband4 = 0)
+  defaults$extra_inflows_det_impact_date              <- default_impact_date
     
-  defaults$profiles_det_stretch_factors      <- c(senband1 = 1, senband2 = 1, senband3 = 1, senband4 = 1)
-  defaults$profiles_det_stretch_impact_date  <- default_impact_date
+  defaults$profiles_det_stretch_factors               <- c(senband1 = 1, senband2 = 1, senband3 = 1, senband4 = 1)
+  defaults$profiles_det_stretch_impact_date           <- default_impact_date
 
-  defaults$recall_rate                       <- recall_rate_exclPSS
-  defaults$recall_rate_impact_date           <- default_impact_date
+  defaults$recall_rate                                <- recall_rate_exclPSS
+  defaults$recall_rate_impact_date                    <- default_impact_date
+  
+  defaults$lever_profiles_recall_stretch_factors      <- c(senband1 = 1, senband2 = 1, senband3 = 1, senband4 = 1)
+  defaults$lever_profiles_recall_stretch_impact_date  <- default_impact_date
 
   return(defaults)
 }
