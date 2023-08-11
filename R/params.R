@@ -27,10 +27,11 @@ format_params <- function(params) {
   
   # Convert lever date strings to dates and floor to the beginning of the month
   # for good measure. Our model only operates on a monthly basis.
-  params$lever_extra_cc_sitting_days_impact_date <- lubridate::floor_date(as.Date(params$lever_extra_cc_sitting_days_impact_date), "month")
-  params$lever_extra_inflows_det_impact_date     <- lubridate::floor_date(as.Date(params$lever_extra_inflows_det_impact_date), "month")
-  params$lever_profiles_det_stretch_impact_date  <- lubridate::floor_date(as.Date(params$lever_profiles_det_stretch_impact_date), "month")
-  params$lever_recall_rate_impact_date           <- lubridate::floor_date(as.Date(params$lever_recall_rate_impact_date), "month")
+  params$lever_extra_cc_sitting_days_impact_date    <- lubridate::floor_date(as.Date(params$lever_extra_cc_sitting_days_impact_date), "month")
+  params$lever_extra_inflows_det_impact_date        <- lubridate::floor_date(as.Date(params$lever_extra_inflows_det_impact_date), "month")
+  params$lever_profiles_det_stretch_impact_date     <- lubridate::floor_date(as.Date(params$lever_profiles_det_stretch_impact_date), "month")
+  params$lever_recall_rate_impact_date              <- lubridate::floor_date(as.Date(params$lever_recall_rate_impact_date), "month")
+  params$lever_profiles_recall_stretch_impact_date  <- lubridate::floor_date(as.Date(params$lever_profiles_recall_stretch_impact_date), "month")
 
   return(params)
 }
