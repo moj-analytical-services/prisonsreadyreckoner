@@ -12,5 +12,5 @@ stretch_recall_time_lever(
 )
 }
 \description{
-#' @export
+Stretch time on recall by a user-defined factor
 }
