@@ -11,5 +11,4 @@
 .Ruserdata
 inst/doc
 core
-tests/visuals/*.html
-tests/sandbox/*.html
+*.html
