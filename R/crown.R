@@ -153,7 +153,7 @@ augment_cc_capacity <- function(cc_capacity, cc_output) {
 # n_receipts_delta only.
 add_cc_receipts_delta <- function(cc_output, receipts_delta) {
   
-  cc_output <- dplyr::left_join(cc_output, receipts_delta, by = c("date", "receipt_type_desc", "route"), suffix = c("", ".y"), unmatched = "drop") %>%
+  cc_output <- dplyr::left_join(cc_output, receipts_delta, by = c("date", "receipt_type_desc", "route"), suffix = c("", ".y"), unmatched = "error") %>%
                  dplyr::mutate(n_receipts_delta = n_receipts_delta.y,
                                n_disposals_ringfenced_delta = n_receipts_delta.y * ringfenced) %>%
                  dplyr::select(-n_receipts_delta.y)

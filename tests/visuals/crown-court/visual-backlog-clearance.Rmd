@@ -30,7 +30,7 @@ bounds are exceeded.
 
 ```{r include = FALSE}
 
-source("../dev/dev-params.R")
+source("../../dev/dev-params.R")
 
 
 # Files and parameters for the original April 2023 analysis.
@@ -53,6 +53,8 @@ set_crown_params <- function() {
 
 
 # Same as equivalent package function but adding n_backlog to the output.
+# NOTE: THIS FUNCTIONALITY WAS LATER ADDED TO THE PACKAGE FUNCTION BUT IS LEFT
+# HERE FOR CONVENIENCE.
 load_crown_data_test <- function(cc_output_file, cc_capacity_file, ringfenced_lookup_file, start_date, forecast_start_date, forecast_end_date) {
     
   # Read baseline inputs, which are disposals for ring-fenced cases and time
@@ -75,6 +77,8 @@ load_crown_data_test <- function(cc_output_file, cc_capacity_file, ringfenced_lo
 
 
 # Same as package function but adding n_backlog to the output.
+# NOTE: THIS FUNCTIONALITY WAS LATER ADDED TO THE PACKAGE FUNCTION BUT IS LEFT
+# HERE FOR CONVENIENCE.
 load_crown_output_with_backlog <- function(cc_output_file, start_date, forecast_start_date, forecast_end_date) {
   
   col_types <-

@@ -27,7 +27,7 @@ add_cc_sitting_days <- function(cc_capacity, lever_extra_cc_sitting_days, capaci
 add_inflows_det_delta_lever <- function(inflows_det, lever_extra_inflows_det, lever_extra_inflows_det_impact_date, non_data_cols = "senband") {
   
   inflows_det <- inflows_det %>%
-    dplyr::mutate(dplyr::across(c(all_of(names(dplyr::select(., -c("senband"))))), ~tidyr::replace_na(.,0)))
+    dplyr::mutate(dplyr::across(c(all_of(names(dplyr::select(., -tidyselect::all_of(c("senband")))))), ~tidyr::replace_na(.,0)))
   
   coldates_post <- c(FALSE, as.Date(names(inflows_det[-c(1)])) >= as.Date(lever_extra_inflows_det_impact_date))
   
@@ -58,7 +58,7 @@ stretch_profiles <- function(profiles, lever_profiles_det_stretch_factors, min_s
   }
   
   # Check that all columns are numeric
-  if (!is.numeric(dplyr::select(profiles, -all_of(non_data_cols)) %>% as.matrix))
+  if (!is.numeric(dplyr::select(profiles, -tidyselect::all_of(non_data_cols)) %>% as.matrix))
     stop("The input tibble \"profiles\" contains some non-numeric values outside of the columns \"non_data_cols\". Please check that your tibble contains no non-numeric values apart from in the columns specified in the character vector \"non_data_cols\".")
   
   
@@ -113,10 +113,10 @@ stretch_profiles <- function(profiles, lever_profiles_det_stretch_factors, min_s
       
       profile_post_impact_non_data_cols <- profile %>%
         dplyr::filter(phase == "post_impact") %>%
-        dplyr::select(all_of(non_data_cols))
+        dplyr::select(tidyselect::all_of(non_data_cols))
       profile_post_impact <- profile %>%
         dplyr::filter(phase == "post_impact") %>%
-        dplyr::select(-all_of(non_data_cols))
+        dplyr::select(-tidyselect::all_of(non_data_cols))
       
       # Resample post-impact profile for this senband using the bare minimum
       # of the profile.

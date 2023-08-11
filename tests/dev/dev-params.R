@@ -74,8 +74,12 @@ dev_set_params <- function() {
   params$start_date$recall_rate        <- "2023-03-01"
   params$start_date$cc_files           <- "2022-11-01"
   
-  
   params$projection_length_months <- 49         # To March 2027. '20230525 - To Ceri Cooper - Actions from our ready reckoner meeting just now_.msg'
+
+  
+  # Paths to parameter tables
+  #params$ringfenced_lookup_file  <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/ringfenced-lookup-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  params$ringfenced_lookup_file  <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup-2.0.0.csv"
   
   
   # Police charge parameters
@@ -103,10 +107,7 @@ dev_set_params <- function() {
   # Input paths
   params$cc_output_file          <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/crown-output-apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
   params$cc_capacity_file        <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/sd_htpsd_adjusted_apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
-  
-  # Paths to parameter tables
-  params$ringfenced_lookup_file  <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/ringfenced-lookup-20230502-shiny-v0.0.0-OFFICIAL.csv"
-  
+
   
   # Sentencing parameters
   # Remand rates.

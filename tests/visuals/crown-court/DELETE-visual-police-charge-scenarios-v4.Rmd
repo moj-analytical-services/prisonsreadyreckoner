@@ -1,7 +1,7 @@
 ---
-title: "Police charge comparison. Crown Court disposals."
+title: "Police charge comparison. Crown Court disposals with alternative ringfenced table."
 author: "Brian Burton"
-date: "06/06/2023"
+date: "10/08/2023"
 output: html_document
 ---
 
@@ -17,22 +17,35 @@ To demonstrate that, when package functions are applied to police charge
 scenario files, as provided by the Court team, the forecast Crown Court
 disposals are similar to those predicted by the CJST.
 
+In a departure from the assumptions used for prisonsreadyreckoner v1.0.0, we are
+assuming that late guilty pleas, late other and other cracked are ringfenced
+with a lag indicaed by files provided by the Courts team.
+
+
 A close match would confirm that our calculations of disposal volumes by
 `receipt_type_desc` and `actual_route` correctly capture the relationship
 between police charge scenarios and court disposals.
 
-This test is closely related to visual-crown-court-module-v3.Rmd, which
+
+### Related tests
+
+* This test is closely related to visual-crown-court-module-v3.Rmd, which
 examined performance of our Crown Court disposals forecasts when sitting days
 were increased, as in the December 2022 prison projection. The current test
 differs in that we are changing Crown Court receipts, not sitting days and our
 benchmark is the April 2023 forecast.
 
-This test is also closely related to visual-police-charge-scenarios-v2.Rmd,
+* This test is also closely related to visual-police-charge-scenarios-v2.Rmd,
 which examined performance of our Crown Court receipts calculations when
 provided with the the same police scenario files used here. Our benchmark here,
 however, includes the impacts of various adjustments to Court receipts made by
 the Courts team so deviations exhibited here indicate how much 'accuracy' is
 lost in forecasts, which do not have any of these adjustments.
+
+* This test supersedes visual-police-charge-scenarios-v3.Rmd, which was
+developed on the assumption that late guilty pleas, late other and other cracked
+are non-ringfenced. Here we assume they are ring-fenced with a delay chosen from
+files provided by the Courts team.
 
 
 ## Method
@@ -42,6 +55,11 @@ lost in forecasts, which do not have any of these adjustments.
   relevant mapping to convert the receipts from a format split by
   `receipt_type_desc` and offence group to one split by `receipt_type_desc` and
   `route`.
+  
+* Adjust the ringfenced-lookup table to make sure late guilty pleas, late other
+  and other cracked are ringfenced.
+  
+* Add a lag to all cases, as appropriate.
 
 * Call further package functions to generate Crown Court disposals.
   
@@ -116,6 +134,7 @@ plot_disposals_delta <- function(cc_disposals_delta_actual, cc_disposals_delta_e
   police_charges_cc_route_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/crown_court_modelling/ccs_snapshot_20230125_jan23version/routes.csv"   # '20230518 - Chun-yee Cheng - cjst pre-covid route distribution.msg'  
 
   
+  # Tables of disposals and capacity used in our Crown modelling.
   cc_output_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/crown-output-apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
   cc_capacity_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sd_htpsd_adjusted_apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
   
@@ -135,6 +154,9 @@ plot_disposals_delta <- function(cc_disposals_delta_actual, cc_disposals_delta_e
   # Create model disposals using package functions.
   cc_receipts_delta_loaded_list <- load_police_charges_cc_data_list(police_charges_cc_route_file, police_charges_cc_files, start_date, forecast_start_date, forecast_end_date)
     cc_receipts_delta <- cc_receipts_delta_loaded_list$ramp_48m
+    
+  # Add a delay to the receipts delta.
+    
 
   cc_data <- load_crown_data(cc_output_file, cc_capacity_file, ringfenced_lookup_file, start_date, forecast_start_date, forecast_end_date)
     cc_output_loaded   <- cc_data$cc_output

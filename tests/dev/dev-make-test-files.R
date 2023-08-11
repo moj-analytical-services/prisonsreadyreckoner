@@ -11,13 +11,32 @@
 # Crown Court disposal volumes.
 make_ringfenced_lookup <- function(mode = 'save') {
   
-  path_ringfenced_lookup <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup.csv"
   
   switch(
     mode,
     'save' = {
-      lookup <- prisonsreadyreckonerupdater::update_ringfenced_lookup()
-      botor::s3_write(lookup$data, readr::write_csv, path_ringfenced_lookup)
+      # No lag. Developed for versions <= 1.0.0
+      path_ringfenced_lookup <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup.csv"
+      lookup <- tibble::tibble(receipt_type_desc = c("app", "ind", "ind", "ind", "ind", "ind", "ind", "ind", "sent", "tew", "tew", "tew", "tew", "tew", "tew", "tew"),
+                               route = c(
+                                 "app", "e_other", "effective", "egp", "gp_cracked", "l_other", "lgp", "other_cracked", "sent", "e_other", "effective", "egp", "gp_cracked", "l_other", "lgp", "other_cracked"),
+                               ringfenced = c(TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE)
+      )
+      botor::s3_write(lookup, readr::write_csv, path_ringfenced_lookup)
+      
+      
+      # Introduces a lag and assumes a different distribution of ring-fenced
+      # cases from previous version. Developed for versions >= 2.0.0
+      path_ringfenced_lookup <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup-2.0.0.csv"
+      lookup <- tibble::tibble(receipt_type_desc = c("app", "ind", "ind", "ind", "ind", "ind", "ind", "ind", "sent", "tew", "tew", "tew", "tew", "tew", "tew", "tew"),
+                               route = c(
+                                 "app", "e_other", "effective", "egp", "gp_cracked", "l_other", "lgp", "other_cracked", "sent", "e_other", "effective", "egp", "gp_cracked", "l_other", "lgp", "other_cracked"),
+                               ringfenced = c(TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE),
+                               lag_months = c(2,    2,    0,     2,    0,     0,     0,     0,     2,    2,    0,     2,    0,     0,     0,     0)
+      )
+      botor::s3_write(lookup, readr::write_csv, path_ringfenced_lookup)
+      
+      
     },
     'report' = {},
     stop("Unrecognised mode, '", mode, "'.")
