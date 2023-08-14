@@ -170,7 +170,9 @@ load_profiles_det <- function(profiles_file, projection_length_months, lever_pro
 }
 
 
-# Add phase
+#' Add phase (pre- or post-impact) to time series
+#'
+#' @export
 add_phases <- function(time_series, impact_date = NULL) {
   
   time_series_post           <- time_series %>% dplyr::mutate(phase = "post_impact", .after = 1)
