@@ -3,6 +3,7 @@
 export("%>%")
 export(add_cc_sitting_days)
 export(add_inflows_det_delta_lever)
+export(add_phases)
 export(combine_casetypes)
 export(format_params)
 export(load_datasets)
