@@ -1,0 +1,132 @@
+---
+title: "User guide"
+author: "Alex Dickinson"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Assumptions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  echo = TRUE,
+  comment = "#>"
+)
+```
+
+```{css, echo=FALSE}
+.html-widget {
+    height: 100% !important;
+    width: 100% !important;
+}
+```
+
+<!---
+```{r setup}
+#library(mojmodel)
+```
+--->
+
+
+The model `prisonsreadyreckoner` generates projections of how the prison
+population will change in future. These projections are influenced by six
+**Levers**.
+
+```{r, echo=FALSE}
+mojflowchart::flowchart("prisonsreadyreckoner-flow-chart.mmd", height=10, width=2)
+```
+
+
+## Vary number of offenders entering prison
+
+The user can vary the number of offenders entering prison using a combination of
+**Lever 1**, **Lever 2** and **Lever 3**. **Lever 1** and **Lever 2** capture
+the effects of changes to the number of court cases and to Crown Court capacity,
+whereas **Lever 3** simply adds a specified number of offenders beginning
+determinate prison sentences. Although all three levers can be varied
+simultaneously, to gain an understanding of the effect of changes to the
+criminal justice system we strongly recommend that you pull either **Lever 1**
+and **Lever 2** or **Lever 3**.
+
+
+### **Lever 1**: Vary number of court cases
+
+The user can load scenarios that capture changes to the number of cases received
+by the magistrates' courts and the Crown Courts. The user is free to define
+these scenarios. Scenarios could reflect, for instance, increases in received
+cases due to increases in the number of charges brought by police.
+
+See functions `load_police_charges_cc_data_list()` and
+`load_police_charges_mc_data()`.
+
+
+### **Lever 2**: Vary number of court sitting days {#lever-vary-number-of-court-sitting-days}
+
+The user can add an additional number of court sitting days per year, beginning
+on a specified **Impact date**.
+
+See function `add_cc_sitting_days()`.
+
+
+### **Lever 3**: Add additional determinate sentence prisoners {#lever-add-additional-determinate-sentence-prisoners}
+
+The user can specify an additional number of offenders who will begin
+determinate prison sentences each month. Different changes can be specified for
+different [Sentence bands][sentence-bands], and changes will come into effect on
+a specified **Impact date**. Note that this lever is completely independent from
+**Lever 1** and **Lever 2**, and provides a way to simply add an arbitrary
+number of determinate sentence prisoners.
+
+See function `add_inflows_det_delta_lever()`.
+
+
+## Vary time served in prison
+
+### **Lever 4**: Vary time served in prison by determinate sentence prisoners {#lever-vary-time-served-in-prison-by-determinate-sentence-prisoners}
+
+The user can scale the time served in prison by determinate sentence prisoners
+by a specified factor. Different factors can be specified for each [Sentence
+band][sentence-bands], and will affect offenders who enter prison after a
+specified **Impact date**. Note that this lever adjusts only the time served
+during a prisoner’s sentence, and does not adjust the time spent on remand or in
+recall.
+
+See function `stretch_profiles()`.
+
+
+## Vary number of licensees recalled to prison
+
+### **Lever 5**: Vary percentage of determinate sentence offenders recalled to prison {#lever-vary-percentage-of-offenders-recalled-to-prison}
+
+The user can change the percentage of determinate sentence offenders who are
+released on licence and subsequently recalled to prison (per month). Different
+percentages can be specified for each [Sentence band][sentence-bands], and changes will come into
+effect on a specified **Impact date**. Note that this lever affects only offenders
+who enter prison after April 2023 and who are subsequently released on licence.
+
+
+## Vary time served by licensees recalled to prison
+
+### **Lever 6**: Scale time served in prison by recalled licensees
+
+The user can scale the time served in prison by recalled licensees by a selected
+factor. For instance, selecting a factor of 2 will double the time served.
+Different factors can be specified for each [Sentence band][sentence-bands], and will affect
+licensees who are recalled after a specified **Impact date**.
+
+See function `stretch_recall_time_lever()`.
+
+
+<!-- Cross-vignette references -->
+[parameters]: ./parameters.html#parameters "Parameters"
+[sentence-bands]: ./sentence-bands.html#sentence-bands "Sentence bands"
+
+
+
+
+
+
+
