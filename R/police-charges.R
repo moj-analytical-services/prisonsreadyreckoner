@@ -58,7 +58,7 @@ load_police_charges_cc_file <- function(police_charges_cc_file, start_date, fore
     )
 
   # Suppress message about adding a new column name.
-  extra_police_charges_cc <- suppressMessages(import_s3_file(police_charges_cc_file, col_select = col_select, col_types = col_types))
+  extra_police_charges_cc <- suppressMessages(import_s3_file(police_charges_cc_file, col_select = tidyselect::all_of(col_select), col_types = col_types))
   
   extra_police_charges_cc <- dplyr::rename(extra_police_charges_cc, date = month_year) %>%
     trim_dates(start_date, forecast_start_date, forecast_end_date) %>%
@@ -124,7 +124,8 @@ add_lag_by_cc_route <- function(extra_police_charges_cc, ringfenced_lookup, fore
     dplyr::filter(.data$receipt_type_desc != "dummy") %>%
     tidyr::pivot_longer(!c("receipt_type_desc", "route"), names_to = "date", values_to = "n_receipts_delta")
 
-  # Tidy
+  # Tidy. Re-arranges columns into the original order and orders rows by date a
+  # a date.
   extra_police_charges_cc <- dplyr::select(extra_police_charges_cc, tidyselect::all_of(c("date", "receipt_type_desc", "route", "n_receipts_delta"))) %>%
     dplyr::mutate(date = as.Date(.data$date)) %>%
     dplyr::arrange(.data$date, .data$receipt_type_desc, .data$route, .data$n_receipts_delta)

@@ -6,7 +6,6 @@
 # Crown Court files
 ################################################################################
 
-# test-ringfenced-lookup.csv
 # Created for developing the sequence of functions responsible for modelling
 # Crown Court disposal volumes.
 make_ringfenced_lookup <- function(mode = 'save') {
@@ -36,7 +35,6 @@ make_ringfenced_lookup <- function(mode = 'save') {
       )
       botor::s3_write(lookup, readr::write_csv, path_ringfenced_lookup)
       
-      
     },
     'report' = {},
     stop("Unrecognised mode, '", mode, "'.")
@@ -51,7 +49,6 @@ make_ringfenced_lookup <- function(mode = 'save') {
 # Receptions
 ################################################################################
 
-# test-receptions-model-data.csv
 # Created to visualise construction of a linear model for converting disposals
 # to sentences.
 # See visual-prison-receptions.Rmd
@@ -90,7 +87,6 @@ make_test_receptions_model_data <- function(mode = 'save') {
 }
 
 
-# test-reception-rates.csv
 # Created to save a table of coefficients for converting disposal types to
 # receptions by sentence band. Used for developing code only.
 # This function uses data exactly as used in the April 2023 prison projections,
@@ -128,7 +124,6 @@ make_test_reception_rates <- function(mode = 'save') {
 # Prison flow
 ################################################################################
 
-# profiles_2019-03-14_to_2020-03-13.csv
 # Created for testing the ability of profiles generated with the NEW FULLSAMPLE
 # for producing forecasts that match an example prison projection.
 # Not used in initial development because the prisons projection team were still
@@ -157,7 +152,6 @@ make_test_determinate_profiles <- function(mode = 'save') {
 }
 
 
-# profiles_2019-03-14_to_2020-03-13.csv
 # Created for testing the ability of profiles generated with the OLD FULLSAMPLE
 # for producing forecasts that match an example prison projection.
 # Used in initial development because the prisons projection team were still
@@ -186,5 +180,29 @@ make_test_determinate_profiles_old <- function(mode = 'save') {
 }
 
 
+# Created for whole model testing
+# See, e.g., test-prisonsreadyreckoner.R
+make_test_gender_splits_old <- function(mode = 'save') {
+  
+  period_start    <- "2022-01-01"   # '20230503 - Charlotte Wallace - RE_ Gender split and remand ratio_.msg'
+  period_end      <- "2022-12-31"   # '20230503 - Charlotte Wallace - RE_ Gender split and remand ratio_.msg'
+  path_gender_splits <- paste0("s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-gender-splits-old-", period_start, "-to-", period_end, ".csv")
+
+  path_fullsample   <- "s3://alpha-prison-forecasting-data/FULLSAMPLE/FULLSAMPLE_230331.csv"   # '20230205 - Jordan Carroll - RE_ Which fullsample_.msg'
+
+  switch(
+    mode,
+    'save' = {
+      gender_splits <- prisonsreadyreckonerupdater::update_gender_splits_old(period_start, period_end, path_fullsample, visualise = FALSE)
+      botor::s3_write(gender_splits$data, readr::write_csv, path_gender_splits)
+    },
+    'report' = {},
+    stop("Unrecognised mode, '", mode, "'.")
+  )
+  
+  return(list(path_gender_splits = path_gender_splits, path_fullsample = path_fullsample, period_start = period_start,
+              period_end = period_end))
+}
 
 
+  

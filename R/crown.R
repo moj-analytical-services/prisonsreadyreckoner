@@ -67,7 +67,7 @@ load_cc_capacity <- function(cc_capacity_file, start_date, forecast_start_date, 
   
   cc_capacity <- trim_dates(cc_capacity, start_date, forecast_start_date, forecast_end_date) %>%
                    dplyr::select(date, sitting_days, hours_per_day) %>%
-                   dplyr::arrange(date)   # Do not remove this arrange as it is relied upon by calculate_hours_ringfenced_delta().
+                   dplyr::arrange(date)   # IMPORTANT: Do not remove this arrange as it is relied upon by calculate_hours_ringfenced_delta().
   
   return(cc_capacity)
 }

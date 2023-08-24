@@ -7,22 +7,33 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
 devtools::load_all()
+
+library(magrittr)
+source("../../dev/dev-params.R")
+
+
+# Files and parameters for the original April 2023 analysis.
+set_recall_params <- function() {
+  
+  params <- dev_set_params()
+  params <- format_params(params)
+
+  params$licence_profiles_file <- "s3://alpha-prison-forecasting-data/JC_test/recall/adjusted_license_profile.csv"
+  params$projection_length_months <- 100
+
+  return(params)
+}
+
 ```
 
 ```{r include=FALSE}
-library(magrittr)
 
-source("../dev/dev-params.R")
-
-params <- dev_set_params() %>% format_params()
-params$licence_profiles_file <- "s3://alpha-prison-forecasting-data/JC_test/recall/adjusted_license_profile.csv"
-params$projection_length_months <- 100
+params <- set_recall_params()
 
 licence_recall_target_file <- params$recall_file
 prison_inflows_file <- params$prison_inflows_file
-
-
 
 date_steady_start <- "2028-01-01"
 date_steady_end   <- "2029-12-01"
