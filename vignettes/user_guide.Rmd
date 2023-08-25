@@ -32,7 +32,7 @@ knitr::opts_chunk$set(
 
 
 The model `prisonsreadyreckoner` generates projections of how the prison
-population will change in future. These projections are influenced by six
+population will change in future. These projections are influenced by five
 **Levers**.
 
 ```{r, echo=FALSE}
@@ -108,16 +108,16 @@ effect on a specified **Impact date**. Note that this lever affects only offende
 who enter prison after April 2023 and who are subsequently released on licence.
 
 
-## Vary time served by licensees recalled to prison
+<!-- ## Vary time served by licensees recalled to prison -->
 
-### **Lever 6**: Scale time served in prison by recalled licensees
+<!-- ### **Lever 6**: Scale time served in prison by recalled licensees -->
 
-The user can scale the time served in prison by recalled licensees by a selected
-factor. For instance, selecting a factor of 2 will double the time served.
-Different factors can be specified for each [Sentence band][sentence-bands], and will affect
-licensees who are recalled after a specified **Impact date**.
+<!-- The user can scale the time served in prison by recalled licensees by a selected -->
+<!-- factor. For instance, selecting a factor of 2 will double the time served. -->
+<!-- Different factors can be specified for each [Sentence band][sentence-bands], and will affect -->
+<!-- licensees who are recalled after a specified **Impact date**. -->
 
-See function `stretch_recall_time_lever()`.
+<!-- See function `stretch_recall_time_lever()`. -->
 
 
 <!-- Cross-vignette references -->
