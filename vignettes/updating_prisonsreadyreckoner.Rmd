@@ -1,0 +1,87 @@
+---
+title: "Updating `prisonsreadyreckoner`"
+author: "Alex Dickinson"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Assumptions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  echo = TRUE,
+  comment = "#>"
+)
+```
+
+```{css, echo=FALSE}
+.html-widget {
+    height: 100% !important;
+    width: 100% !important;
+}
+```
+
+<!---
+```{r setup}
+#library(mojmodel)
+```
+--->
+
+
+Assuming that underlying modelling assumptions do not change, and changes are due simply to updates to Central forecast files.
+
+To update `prisonsreadyreckoner`, follow these steps:
+
+1. Obtain updated versions of files that are . Some of these files are simply copies of files supplied directly by modelling teams. Other files are created using the package `prisonsreadyreckonerupdater`.
+ 
+* **Upstream and Courts Modelling team**. Team leader for current version: Ceri Cooper.
+  +	**File:** `police_charges_cc_files`. Analyst for current version: David Verry.
+  + **File:** `police_charges_mc_file`. Analyst for current version: Katie Mahon.
+  + **File:** `police_charges_cc_route_file`. Analyst for current version: Chun-yee Cheng.
+  + **File:** `cc_output_file`. Analyst for current version: Chun-yee Cheng.
+  + **File:** `cc_capacity_file`. Analyst for current version: Chun-yee Cheng.
+* **Prison Demand Modelling team**. Team leader for current version: Charlotte Wallace.
+  + **File:** `prison_inflows_file`. Analyst for current version: Charlotte Wallace.
+  + **File:** `recall_file`. Analyst for current version: Charlotte Wallace.
+  + **File:** `licence_profiles_file`. Analyst for current version: Jordan Carroll.
+  + **Numerical parameters:** `remand_rates`. Analyst for current version: Jordan Carroll.
+
+prisonsreadyreckoner also relies on files that are created using the package `prisonsreadyreckonerupdater`. To update these files, follow these steps:
+
+*	**File:** `sentencing_rates_file`.
+  + Obtain updated version of **file** `path_rdo_data`. Maintained by Prison Demand Modelling team. Current version provided by Claire O’Neill.
+  + Obtain updated version of **file** `path_cc_disposals`. Maintained by Prison Demand Modelling team. Current version provided by Claire O’Neill.
+  + Run `prisonsreadyreckoner` function `update_reception_rates_old()`. This function uses the old version of fullsample.
+* **File:** `profiles_file`.
+  + Obtain updated version of **file** `path_flows` – Maintained by Prison Demand Modelling team. Current version provided by Charlotte Wallace.
+  + Run `prisonsreadyreckoner` function `update_determinate_profiles_old()`. This function uses the old version of fullsample.
+* **File:** `gender_splits_file`. Run `prisonsreadyreckoner` function `update_gender_splits_old()`. This function uses the old version of fullsample.
+
+The following files are unchanged:
+
+* **File:** `ringfenced_lookup_file`.
+
+2)	Run prisonsreadyreckonerupdater
+3)	Decide app parameters
+
+Subsidiary details for use in app:
+1)	Historical data
+2)	Population file
+3)	Capacity file
+
+
+
+
+<!-- Cross-vignette references -->
+[parameters]: ./parameters.html#parameters "Parameters"
+[sentence-bands]: ./sentence-bands.html#sentence-bands "Sentence bands"
+
+
+
+
+
+
+

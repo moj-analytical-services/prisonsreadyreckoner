@@ -154,3 +154,33 @@ stretch_profiles <- function(profiles, lever_profiles_det_stretch_factors, min_s
   return(profiles_resampled)
 }
 
+
+
+#' Stretch time on recall by a user-defined factor
+#' 
+#' @export
+stretch_recall_time_lever <- function(recall_time, lever_profiles_recall_stretch_factors, min_stretch_factor, max_stretch_factor) {
+  
+  for (stretch_factor_name in names(lever_profiles_recall_stretch_factors)) {
+    
+    stretch_factor = lever_profiles_recall_stretch_factors[[stretch_factor_name]]
+    
+    if (stretch_factor < min_stretch_factor)
+      stop("The value for entry \"", stretch_factor_name, "\" in the list \"lever_profiles_recall_stretch_factors\" is smaller than the parameter \"min_stretch_factor\". Please set all values in the list \"lever_profiles_recall_stretch_factors\" to be greater than or equal to \"min_stretch_factor\".")
+    
+    if (stretch_factor > max_stretch_factor)
+      stop("The value for entry \"", stretch_factor_name, "\" in the list \"lever_profiles_recall_stretch_factors\" is greater than the parameter \"max_stretch_factor\". Please set all values in the list \"lever_profiles_recall_stretch_factors\" to be smaller than or equal to \"max_stretch_factor\".")
+  }
+  
+  profiles_recall <- make_lag_filters(recall_time)
+  
+  recall_time_levered      <-  multiply_two_named_vectors(recall_time, lever_profiles_recall_stretch_factors, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
+  profiles_recall_levered  <- make_lag_filters(recall_time_levered)
+  
+  profiles_recall_levered_post <- dplyr::mutate(profiles_recall_levered, phase = "post_impact", .after=1)
+  profiles_recall_levered_pre  <- dplyr::mutate(profiles_recall, phase = "pre_impact", .after=1)
+  
+  profiles_recall_levered <- dplyr::bind_rows(profiles_recall_levered_post, profiles_recall_levered_pre) %>%
+    dplyr::mutate(dplyr::across(c(all_of(names(dplyr::select(., -c("senband", "phase"))))), ~tidyr::replace_na(.,0))) 
+  
+}

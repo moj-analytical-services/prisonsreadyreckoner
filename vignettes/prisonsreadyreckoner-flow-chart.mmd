@@ -1,0 +1,48 @@
+flowchart LR
+
+  A("Lever 1: <br> Select police <br> charge scenario")
+  B("Lever 2: <br> Vary number of <br> court sitting days")
+  C("Lever 3: <br> Add additional <br> determinate sentence <br> prisoners")
+  D("Lever 4: <br> Vary time served <br> in prison by <br> determinate sentence <br> prisoners")
+  E("Lever 5: <br> Vary percentage <br> of offenders <br> recalled to prison")
+  F["Output: <br> Modified projection <br> of prison populations <br> and capacity gap"]
+  
+  
+  subgraph policechargemodellingsubgraph["Police Charge Submodel"]
+    direction TB
+    A
+  end
+  
+  subgraph courtsmodellingsubgraph["Courts Submodel"]
+    direction TB
+    B
+  end
+  
+  A--> B
+  B --> D
+  C --> D
+  
+  subgraph prisonsmodellingsubgraph["Prisons Submodel"]
+    direction TB
+    D --> E
+  end
+  
+  E --> F
+  
+  class A nodeMoJBlack
+  class B nodeMoJCoreGreen
+  class C nodeMoJCoreGrey
+  class D,E nodeMoJCoreOrange
+  class F nodeMoJBrightGrey
+  
+  class policechargemodellingsubgraph subgraphMoJBlack;
+  class courtsmodellingsubgraph subgraphMoJCoreGreen;
+  class prisonsmodellingsubgraph subgraphMoJCoreOrange;
+  
+  click A "#lever-select-police-charge-scenario" "Details on selecting a police charge scenario"
+  click B "#lever-vary-number-of-court-sitting-days" "Details on varying the number of courts sitting days"
+  click C "#lever-add-additional-determinate-sentence-prisoners" "Details on adding additional determinate sentence prisoners"
+  click D "#lever-vary-time-served-in-prison-by-determinate-sentence-prisoners" "Details on varying the time served in prison by determinate sentence prisoners"
+  click E "#lever-vary-percentage-of-offenders-recalled-to-prison" "Details on varying the percentage of offenders recalled to prison"
+  
+
