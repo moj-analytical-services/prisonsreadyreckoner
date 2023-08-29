@@ -177,10 +177,7 @@ calculate_hours_ringfenced_delta <- function(cc_output, cc_capacity) {
 
 
 # Join cc_output and cc_capacity to calculate Crown Court disposals and
-# calculate the number of additional disposals per route. Note that
-# "receipt_type_desc" is ignored, as we know that all cases go via the Crown
-# Court (e.g. receipt_type_desc = "ind" with route = "e_other" is counted as the
-# same route as receipt_type_desc = "tew" with route = "e_other").
+# calculate the number of additional disposals per receipt type and route.
 calculate_cc_disposals_delta <- function(cc_output, cc_capacity) {
   
   cc_disposals <- dplyr::left_join(cc_output, cc_capacity, by = c("date")) %>%

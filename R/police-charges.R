@@ -124,7 +124,7 @@ add_lag_by_cc_route <- function(extra_police_charges_cc, ringfenced_lookup, fore
     dplyr::filter(.data$receipt_type_desc != "dummy") %>%
     tidyr::pivot_longer(!c("receipt_type_desc", "route"), names_to = "date", values_to = "n_receipts_delta")
 
-  # Tidy. Re-arranges columns into the original order and orders rows by date a
+  # Tidy. Re-arranges columns into the original order and orders rows by date as
   # a date.
   extra_police_charges_cc <- dplyr::select(extra_police_charges_cc, tidyselect::all_of(c("date", "receipt_type_desc", "route", "n_receipts_delta"))) %>%
     dplyr::mutate(date = as.Date(.data$date)) %>%
