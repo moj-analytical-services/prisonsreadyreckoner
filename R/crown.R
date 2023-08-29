@@ -67,7 +67,7 @@ load_cc_capacity <- function(cc_capacity_file, start_date, forecast_start_date, 
   
   cc_capacity <- trim_dates(cc_capacity, start_date, forecast_start_date, forecast_end_date) %>%
                    dplyr::select(date, sitting_days, hours_per_day) %>%
-                   dplyr::arrange(date)   # Do not remove this arrange as it is relied upon by calculate_hours_ringfenced_delta().
+                   dplyr::arrange(date)   # IMPORTANT: Do not remove this arrange as it is relied upon by calculate_hours_ringfenced_delta().
   
   return(cc_capacity)
 }
@@ -153,7 +153,7 @@ augment_cc_capacity <- function(cc_capacity, cc_output) {
 # n_receipts_delta only.
 add_cc_receipts_delta <- function(cc_output, receipts_delta) {
   
-  cc_output <- dplyr::left_join(cc_output, receipts_delta, by = c("date", "receipt_type_desc", "route"), suffix = c("", ".y"), unmatched = "drop") %>%
+  cc_output <- dplyr::left_join(cc_output, receipts_delta, by = c("date", "receipt_type_desc", "route"), suffix = c("", ".y"), unmatched = "error") %>%
                  dplyr::mutate(n_receipts_delta = n_receipts_delta.y,
                                n_disposals_ringfenced_delta = n_receipts_delta.y * ringfenced) %>%
                  dplyr::select(-n_receipts_delta.y)
@@ -177,10 +177,7 @@ calculate_hours_ringfenced_delta <- function(cc_output, cc_capacity) {
 
 
 # Join cc_output and cc_capacity to calculate Crown Court disposals and
-# calculate the number of additional disposals per route. Note that
-# "receipt_type_desc" is ignored, as we know that all cases go via the Crown
-# Court (e.g. receipt_type_desc = "ind" with route = "e_other" is counted as the
-# same route as receipt_type_desc = "tew" with route = "e_other").
+# calculate the number of additional disposals per receipt type and route.
 calculate_cc_disposals_delta <- function(cc_output, cc_capacity) {
   
   cc_disposals <- dplyr::left_join(cc_output, cc_capacity, by = c("date")) %>%

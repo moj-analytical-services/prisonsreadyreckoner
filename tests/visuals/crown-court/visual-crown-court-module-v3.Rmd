@@ -39,59 +39,6 @@ original scenarios indicates the model is performing well.
 
 
 ```{r include = FALSE}
-# Files for the original April 2023 analysis.
-load_crown_scenario_data_apr23 <- function() {
-  
-  start_date <- as.Date("2022-11-01")    # cc_output start date
-  forecast_start_date     <- start_date
-  forecast_end_date       <- lubridate::add_with_rollback(start_date, months(7*12 - 1), roll_to_first = TRUE) 
-  
-  # File names
-  ringfenced_lookup_file  <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup.csv"
-
-  cc_output_file_base <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/crown-output-apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
-  cc_output_file_high <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/crown-output-apr23_s1.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
-  cc_output_file_low <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/crown-output-apr23_s3.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
-
-  cc_capacity_file_base <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sd_htpsd_adjusted_apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
-
-  
-  # Reading
-  ringfenced_lookup <- load_ringfenced_lookup(ringfenced_lookup_file)
-
-  cc_scenario_base <- load_crown_data_apr23(cc_output_file_base, cc_capacity_file_base, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup)
-  cc_scenario_high <- load_crown_data_apr23(cc_output_file_high, cc_capacity_file_base, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup)
-  cc_scenario_low  <- load_crown_data_apr23(cc_output_file_low, cc_capacity_file_base, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup)
-
-  return(list(cc_output_base = cc_scenario_base$cc_output,
-              cc_output_high = cc_scenario_high$cc_output,
-              cc_output_low = cc_scenario_low$cc_output,
-              cc_capacity_base = cc_scenario_base$cc_capacity,
-              cc_capacity_high = cc_scenario_high$cc_capacity,
-              cc_capacity_low = cc_scenario_low$cc_capacity))
-}
-
-
-# The equivalent of load_crown_data() but for October 2022 data.
-load_crown_data_apr23 <- function(cc_output_file, cc_capacity_file, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup) {
-
-  # Read baseline inputs, which are disposals for ring-fenced cases and time
-  # series for sitting days and hours available per sitting day.
-  cc_output   <- load_crown_output(cc_output_file, start_date, forecast_start_date, forecast_end_date)
-  cc_capacity <- load_cc_capacity(cc_capacity_file, start_date, forecast_start_date, forecast_end_date)
-  #check_cc_inputs(cc_output, cc_capacity)
-
-
-  # Add ring-fenced status. Calculate backlog case rate and hours per disposal.
-  cc_output <- augment_crown_output(cc_output, ringfenced_lookup)
-
-  # Make capacity monitor
-  cc_capacity  <- augment_cc_capacity(cc_capacity, cc_output)
-  
-  return(list(cc_output = cc_output, cc_capacity = cc_capacity))
-}
-
-
 # Files for the the October 2022 analysis.
 load_crown_scenario_data_oct22 <- function() {
   
@@ -154,8 +101,67 @@ load_crown_data_oct22 <- function(cc_output_file, cc_capacity_file, start_date, 
   
   return(list(cc_output = cc_output, cc_capacity = cc_capacity))
 }
+```
 
 
+<!-- ```{r include = FALSE} -->
+<!-- # Files for the original April 2023 analysis. -->
+<!-- load_crown_scenario_data_apr23 <- function() { -->
+
+<!--   start_date <- as.Date("2022-11-01")    # cc_output start date -->
+<!--   forecast_start_date     <- start_date -->
+<!--   forecast_end_date       <- lubridate::add_with_rollback(start_date, months(7*12 - 1), roll_to_first = TRUE)  -->
+
+<!--   # File names -->
+<!--   ringfenced_lookup_file  <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup.csv" -->
+
+<!--   cc_output_file_base <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/crown-output-apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg' -->
+<!--   cc_output_file_high <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/crown-output-apr23_s1.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg' -->
+<!--   cc_output_file_low <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/crown-output-apr23_s3.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg' -->
+
+<!--   cc_capacity_file_base <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sd_htpsd_adjusted_apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg' -->
+
+
+<!--   # Reading -->
+<!--   ringfenced_lookup <- load_ringfenced_lookup(ringfenced_lookup_file) -->
+
+<!--   cc_scenario_base <- load_crown_data_apr23(cc_output_file_base, cc_capacity_file_base, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup) -->
+<!--   cc_scenario_high <- load_crown_data_apr23(cc_output_file_high, cc_capacity_file_base, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup) -->
+<!--   cc_scenario_low  <- load_crown_data_apr23(cc_output_file_low, cc_capacity_file_base, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup) -->
+
+<!--   return(list(cc_output_base = cc_scenario_base$cc_output, -->
+<!--               cc_output_high = cc_scenario_high$cc_output, -->
+<!--               cc_output_low = cc_scenario_low$cc_output, -->
+<!--               cc_capacity_base = cc_scenario_base$cc_capacity, -->
+<!--               cc_capacity_high = cc_scenario_high$cc_capacity, -->
+<!--               cc_capacity_low = cc_scenario_low$cc_capacity)) -->
+<!-- } -->
+
+
+<!-- # The equivalent of load_crown_data() but for April 2023 data. -->
+<!-- load_crown_data_apr23 <- function(cc_output_file, cc_capacity_file, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup) { -->
+
+<!--   # Read baseline inputs, which are disposals for ring-fenced cases and time -->
+<!--   # series for sitting days and hours available per sitting day. -->
+<!--   cc_output   <- load_crown_output(cc_output_file, start_date, forecast_start_date, forecast_end_date) -->
+<!--   cc_capacity <- load_cc_capacity(cc_capacity_file, start_date, forecast_start_date, forecast_end_date) -->
+<!--   #check_cc_inputs(cc_output, cc_capacity) -->
+
+
+<!--   # Add ring-fenced status. Calculate backlog case rate and hours per disposal. -->
+<!--   cc_output <- augment_crown_output(cc_output, ringfenced_lookup) -->
+
+<!--   # Make capacity monitor -->
+<!--   cc_capacity  <- augment_cc_capacity(cc_capacity, cc_output) -->
+
+<!--   return(list(cc_output = cc_output, cc_capacity = cc_capacity)) -->
+<!-- } -->
+
+<!-- ``` -->
+
+
+
+```{r include = FALSE}
 compare_disposals_delta <- function(cc_output, cc_capacity, cc_output_diff, cc_capacity_diff, cumul = FALSE) {
   
   cc_capacity <- add_cc_sitting_days_test(cc_capacity, cc_capacity_diff)
@@ -407,80 +413,6 @@ legend("topright",
 )
 
 ```
-
-<!-- ## Case mix in the original scenarios -->
-
-<!-- Below shows the backlog rate (non-ringfenced disposals per hour) from the -->
-<!-- original scenarios. -->
-
-<!-- ```{r echo = FALSE} -->
-
-<!-- cc_output_base <- dplyr::mutate(scenario_data$cc_output_base, disposal_type = paste0(receipt_type_desc, "_", route)) -->
-<!-- cc_output_high <- dplyr::mutate(scenario_data$cc_output_high, disposal_type = paste0(receipt_type_desc, "_", route)) -->
-<!-- cc_output_low <- dplyr::mutate(scenario_data$cc_output_low, disposal_type = paste0(receipt_type_desc, "_", route)) -->
-
-<!-- disposal_types <- unique(cc_output_base$disposal_type) -->
-<!-- for (disposal_type in disposal_types) { -->
-
-<!--   base <- dplyr::filter(cc_output_base, disposal_type == !!disposal_type) %>% -->
-<!--             dplyr::arrange(date) -->
-<!--   high <- dplyr::filter(cc_output_high, disposal_type == !!disposal_type) %>% -->
-<!--             dplyr::arrange(date) -->
-<!--   low <- dplyr::filter(cc_output_low, disposal_type == !!disposal_type) %>% -->
-<!--             dplyr::arrange(date) -->
-
-<!--   x <- as.Date(base$date) -->
-<!--   y <- data.frame(base = base$backlog_rate, high = high$backlog_rate, low = low$backlog_rate) -->
-<!--   matplot(x, -->
-<!--         y, -->
-<!--         type = 'l', -->
-<!--         xlab = "Date", -->
-<!--         main = paste0("Comparison of non-ringfenced disposal rates, ", disposal_type), -->
-<!--         ylab = "Disposal rate [per hour]", -->
-<!--         lty = 1, -->
-<!--         col = c(1, 2, 3) -->
-<!--   ) -->
-<!--   legend("topright", -->
-<!--        inset = 0.02, -->
-<!--        legend = c("Base", "High", "Low"), -->
-<!--        lty = 1, -->
-<!--         col = c(1, 2, 3)  ) -->
-<!-- } -->
-<!-- ``` -->
-
-<!-- ## Hours per disposal in the original scenarios -->
-
-<!-- Below shows the hours per disposal from the original scenarios. -->
-
-<!-- ```{r echo = FALSE} -->
-
-<!-- for (disposal_type in disposal_types) { -->
-
-<!--   base <- dplyr::filter(cc_output_base, disposal_type == !!disposal_type) %>% -->
-<!--             dplyr::arrange(date) -->
-<!--   high <- dplyr::filter(cc_output_high, disposal_type == !!disposal_type) %>% -->
-<!--             dplyr::arrange(date) -->
-<!--   low <- dplyr::filter(cc_output_low, disposal_type == !!disposal_type) %>% -->
-<!--             dplyr::arrange(date) -->
-
-<!--   x <- as.Date(base$date) -->
-<!--   y <- data.frame(base = base$hours_per_disposal, high = high$hours_per_disposal, low = low$hours_per_disposal) -->
-<!--   matplot(x, -->
-<!--         y, -->
-<!--         type = 'l', -->
-<!--         xlab = "Date", -->
-<!--         main = paste0("Comparison of non-ringfenced hours per disposal, ", disposal_type), -->
-<!--         ylab = "Hours per disposal", -->
-<!--         lty = 1, -->
-<!--         col = c(1, 2, 3) -->
-<!--   ) -->
-<!--   legend("topright", -->
-<!--        inset = 0.02, -->
-<!--        legend = c("Base", "High", "Low"), -->
-<!--        lty = 1, -->
-<!--         col = c(1, 2, 3)  ) -->
-<!-- } -->
-<!-- ``` -->
 
 
 ## Monthly disposals

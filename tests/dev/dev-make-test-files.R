@@ -6,18 +6,37 @@
 # Crown Court files
 ################################################################################
 
-# test-ringfenced-lookup.csv
 # Created for developing the sequence of functions responsible for modelling
 # Crown Court disposal volumes.
 make_ringfenced_lookup <- function(mode = 'save') {
   
-  path_ringfenced_lookup <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup.csv"
   
   switch(
     mode,
     'save' = {
-      lookup <- prisonsreadyreckonerupdater::update_ringfenced_lookup()
-      botor::s3_write(lookup$data, readr::write_csv, path_ringfenced_lookup)
+      # No lag. Developed for versions <= 1.0.0
+      path_ringfenced_lookup <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup.csv"
+      ringfenced_lookup <- tibble::tibble(receipt_type_desc = c("app", "ind", "ind", "ind", "ind", "ind", "ind", "ind", "sent", "tew", "tew", "tew", "tew", "tew", "tew", "tew"),
+                               route = c(
+                                 "app", "e_other", "effective", "egp", "gp_cracked", "l_other", "lgp", "other_cracked", "sent", "e_other", "effective", "egp", "gp_cracked", "l_other", "lgp", "other_cracked"),
+                               ringfenced = c(TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE)
+      )
+      botor::s3_write(ringfenced_lookup, readr::write_csv, path_ringfenced_lookup)
+      
+      
+      # Introduces a lag and assumes a different distribution of ring-fenced
+      # cases from previous version. Developed for versions >= 2.0.0
+      path_ringfenced_lookup <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup-2.0.0.csv"
+      path_priority_off <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/crown_court_modelling/ccs_snapshot_20230619_jun23version/priority_off.csv"
+      ringfenced_lookup <- prisonsreadyreckonerupdater::update_ringfenced_lookup(path_priority_off, visualise = FALSE)
+      # ringfenced_lookup <- tibble::tibble(receipt_type_desc = c("app", "ind", "ind", "ind", "ind", "ind", "ind", "ind", "sent", "tew", "tew", "tew", "tew", "tew", "tew", "tew"),
+      #                                     route = c(
+      #                                       "app", "e_other", "effective", "egp", "gp_cracked", "l_other", "lgp", "other_cracked", "sent", "e_other", "effective", "egp", "gp_cracked", "l_other", "lgp", "other_cracked"),
+      #                                     ringfenced = c(TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE),
+      #                                     lag_months = c(2,    2,    0,     2,    0,     0,     0,     0,     2,    2,    0,     2,    0,     0,     0,     0)
+      # )
+      botor::s3_write(ringfenced_lookup$data, readr::write_csv, path_ringfenced_lookup)
+      
     },
     'report' = {},
     stop("Unrecognised mode, '", mode, "'.")
@@ -32,7 +51,6 @@ make_ringfenced_lookup <- function(mode = 'save') {
 # Receptions
 ################################################################################
 
-# test-receptions-model-data.csv
 # Created to visualise construction of a linear model for converting disposals
 # to sentences.
 # See visual-prison-receptions.Rmd
@@ -71,7 +89,6 @@ make_test_receptions_model_data <- function(mode = 'save') {
 }
 
 
-# test-reception-rates.csv
 # Created to save a table of coefficients for converting disposal types to
 # receptions by sentence band. Used for developing code only.
 # This function uses data exactly as used in the April 2023 prison projections,
@@ -109,7 +126,6 @@ make_test_reception_rates <- function(mode = 'save') {
 # Prison flow
 ################################################################################
 
-# profiles_2019-03-14_to_2020-03-13.csv
 # Created for testing the ability of profiles generated with the NEW FULLSAMPLE
 # for producing forecasts that match an example prison projection.
 # Not used in initial development because the prisons projection team were still
@@ -138,7 +154,6 @@ make_test_determinate_profiles <- function(mode = 'save') {
 }
 
 
-# profiles_2019-03-14_to_2020-03-13.csv
 # Created for testing the ability of profiles generated with the OLD FULLSAMPLE
 # for producing forecasts that match an example prison projection.
 # Used in initial development because the prisons projection team were still
@@ -167,5 +182,29 @@ make_test_determinate_profiles_old <- function(mode = 'save') {
 }
 
 
+# Created for whole model testing
+# See, e.g., test-prisonsreadyreckoner.R
+make_test_gender_splits_old <- function(mode = 'save') {
+  
+  period_start    <- "2022-01-01"   # '20230503 - Charlotte Wallace - RE_ Gender split and remand ratio_.msg'
+  period_end      <- "2022-12-31"   # '20230503 - Charlotte Wallace - RE_ Gender split and remand ratio_.msg'
+  path_gender_splits <- paste0("s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-gender-splits-old-", period_start, "-to-", period_end, ".csv")
+
+  path_fullsample   <- "s3://alpha-prison-forecasting-data/FULLSAMPLE/FULLSAMPLE_230331.csv"   # '20230205 - Jordan Carroll - RE_ Which fullsample_.msg'
+
+  switch(
+    mode,
+    'save' = {
+      gender_splits <- prisonsreadyreckonerupdater::update_gender_splits_old(period_start, period_end, path_fullsample, visualise = FALSE)
+      botor::s3_write(gender_splits$data, readr::write_csv, path_gender_splits)
+    },
+    'report' = {},
+    stop("Unrecognised mode, '", mode, "'.")
+  )
+  
+  return(list(path_gender_splits = path_gender_splits, path_fullsample = path_fullsample, period_start = period_start,
+              period_end = period_end))
+}
 
 
+  

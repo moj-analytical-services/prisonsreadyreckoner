@@ -12,9 +12,9 @@ devtools::load_all()
 
 ```{r include=FALSE}
 library(magrittr)
-library(fullsample)
+#library(fullsample)
 
-source("../dev/dev-make-test-files.R")
+source("../../dev/dev-make-test-files.R")
 
 params <- make_test_receptions_model_data(mode = 'report')
 

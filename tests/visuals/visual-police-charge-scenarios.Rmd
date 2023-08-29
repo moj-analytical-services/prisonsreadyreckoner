@@ -97,9 +97,12 @@ plot_disposals <- function(series, title, ylim, ylab) {
 
 ```{r echo=FALSE}
 
+# DEVELOPMENT NOTE: TO KEEP UP TO DATE, TRY SETTING PARAMETERS WITH
+# dev_set_params(). See, for example, visual-backlog-clearance.Rmd.
 params <- list()
 
-# Police charge parameters
+# Paths to parameter tables
+  params$ringfenced_lookup_file  <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup-2.0.0.csv"
 
 # Magistrates' courts - new files from Katie Mahon
 params$police_charges_mc_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/020623_mags_sensitivity_output.xlsx"
@@ -143,7 +146,10 @@ params$forecast_start_date <- as.Date("2023-03-01")
 params$forecast_end_date   <- as.Date("2027-03-01")
 
 
-cc_receipts_delta_loaded_list  <- load_police_charges_cc_data_list(params$police_charges_cc_route_file, params$police_charges_cc_files, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
+# Read parameter tables for police charge and Crown modules
+ringfenced_lookup <- load_ringfenced_lookup(params$ringfenced_lookup_file)
+
+cc_receipts_delta_loaded_list  <- load_police_charges_cc_data_list(params$police_charges_cc_route_file, params$police_charges_cc_files, ringfenced_lookup, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
 
 mc_disposals_delta_loaded_list <- load_police_charges_mc_data(params$police_charges_mc_file, params$police_charges_mc_scenarios, params$police_charges_mc_sheet, params$mc_remand_lookup, params$start_date$police_charges_mc, params$forecast_start_date, params$forecast_end_date)
 
@@ -178,14 +184,16 @@ David supplied four files, each of which records deviations of Crown Court recei
 
 
 
-```{r echo=FALSE}
-cc_receipts <- cc_receipts_delta_loaded_list[["central"]]
+<!-- Nothing to plot now fomr the central scenario, which is read in as NA for -->
+<!-- efficiency. -->
+<!-- ```{r echo=FALSE} -->
+<!-- cc_receipts <- cc_receipts_delta_loaded_list[["central"]] -->
 
-cc_receipts <- format_crown_court_receipts(cc_receipts)
+<!-- cc_receipts <- format_crown_court_receipts(cc_receipts) -->
 
-plot_crown_court_receipts(cc_receipts, "Central projection (i.e. 24-month ramp)", c(-150,150), "Deviation in number of disposals from central projection")
+<!-- plot_crown_court_receipts(cc_receipts, "Central projection (i.e. 24-month ramp)", c(-150,150), "Deviation in number of disposals from central projection") -->
 
-```
+<!-- ``` -->
 
 ```{r echo=FALSE}
 cc_receipts <- cc_receipts_delta_loaded_list[["ramp_12m"]]

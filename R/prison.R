@@ -428,7 +428,7 @@ apply_ratios <- function(input_values, preimpact_ratios, column_to_match = "senb
 load_gender_splits <- function(gender_splits_file) {
   
   gender_splits <- import_s3_file(gender_splits_file) %>%
-    dplyr::select(-c("n_sex"))
+    dplyr::select(-tidyselect::any_of(c("n_sex")))
   
 }
 

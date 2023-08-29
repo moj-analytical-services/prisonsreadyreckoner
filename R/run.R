@@ -97,7 +97,7 @@ run_baseline <- function(params, inflows_det_loaded, profiles_det_loaded,
   pop_det          <- prison_det_outputs$pop_det
   
   
-  month_names        <- names(dplyr::select(inflows_det_loaded, -c("senband")))
+  month_names        <- names(dplyr::select(inflows_det_loaded, -tidyselect::any_of(c("senband"))))
   pop_indet          <- run_prison_indeterminate_module(month_names, params$inflows_indet_mean)
   
   
@@ -143,10 +143,10 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
   #print(paste0("stretch_profiles took ", Sys.time() - t0_stretch, " seconds"))
   
   prison_det_outputs <- run_prison_determinate_module(inflows_det_levered, profiles_det_stretch_impact_date_levered, profiles_det_levered)
-  outflows_det     <- prison_det_outputs$outflows_det
-  pop_det          <- prison_det_outputs$pop_det
-  
-  month_names        <- names(dplyr::select(inflows_det_loaded, -c("senband")))
+    outflows_det     <- prison_det_outputs$outflows_det
+    pop_det          <- prison_det_outputs$pop_det
+
+  month_names        <- names(dplyr::select(inflows_det_loaded, -tidyselect::any_of(c("senband"))))
   pop_indet          <- run_prison_indeterminate_module(month_names, params$inflows_indet_mean)
   
   
@@ -177,8 +177,11 @@ run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disp
                               sentencing_rates, inflows_det) {
   
   # Add additional Crown Court receipts (and disposals for ring-fenced cases).
-  cc_output <- add_cc_receipts_delta(cc_output, cc_receipts_delta)
-  
+  # NA signals the default condition, in which cases there are no extra receipts
+  # to add.
+  if (!is.na(cc_receipts_delta))
+    cc_output <- add_cc_receipts_delta(cc_output, cc_receipts_delta)
+
   # Add extra ring-fenced hours to the capacity table.
   cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity)
   check_cc_capacity(cc_capacity)
@@ -268,11 +271,11 @@ combine_casetypes <- function(pop_remand_delta, pop_det, pop_indet, pop_recall, 
 dev_plot_population <- function(pop_combined, casetype, casetype_label) {
   
   pop_baseline <- dplyr::filter(pop_combined, run == "baseline", casetype == !!casetype, sex == "All") %>%
-    dplyr::select(-c("run", "casetype", "sex")) %>%
-    tidyr::pivot_wider(names_from = date, values_from = population, values_fill = 0)
+                    dplyr::select(-tidyselect::any_of(c("run", "casetype", "sex"))) %>%
+                    tidyr::pivot_wider(names_from = date, values_from = population, values_fill = 0)
   pop_scenario <- dplyr::filter(pop_combined, run == "scenario", casetype == !!casetype, sex == "All") %>%
-    dplyr::select(-c("run", "casetype", "sex")) %>%
-    tidyr::pivot_wider(names_from = date, values_from = population, values_fill = 0)
+                    dplyr::select(-tidyselect::any_of(c("run", "casetype", "sex"))) %>%
+                    tidyr::pivot_wider(names_from = date, values_from = population, values_fill = 0)
   
   N <- nrow(pop_baseline)
   if (N > 1)
