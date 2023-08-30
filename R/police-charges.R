@@ -117,7 +117,7 @@ add_lag_by_cc_route <- function(extra_police_charges_cc, ringfenced_lookup, fore
                   date = as.Date(mapply(add.months, .data$date, .data$lag_months), origin = "1970-01-01")) %>%
     dplyr::select(tidyselect::all_of(c("date", "receipt_type_desc", "route", "n_receipts_delta"))) %>%
     dplyr::filter(.data$date <= forecast_end_date)
-    
+
   # Add a dummy time series and pivot to add zeros to vacated dates.
   extra_police_charges_cc <- rbind(extra_police_charges_cc, data.frame(date = seq(forecast_start_date, forecast_end_date, by = "month"), receipt_type_desc = "dummy", route = "dummy", n_receipts_delta = 0)) %>%
     tidyr::pivot_wider(names_from = "date", values_from = "n_receipts_delta", values_fill = 0) %>%
