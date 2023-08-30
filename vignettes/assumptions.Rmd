@@ -26,7 +26,7 @@ knitr::opts_chunk$set(
 # Introduction{#introduction}
 
 The following provides a summary of the main calculations employed in realising
-the efects of each lever. This summary is intended for model developers but may
+the effects of each lever. This summary is intended for model developers but may
 also be of interest to those wishing to understand our modelling assumptions. A
 briefer, more high-level assumptions log is available separately from the CJS
 Modelling Team.

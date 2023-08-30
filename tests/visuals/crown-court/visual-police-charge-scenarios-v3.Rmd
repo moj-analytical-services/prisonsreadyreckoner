@@ -1,7 +1,7 @@
 ---
 title: "Police charge comparison. Crown Court disposals."
 author: "Brian Burton"
-date: "06/06/2023"
+date: "11/08/2023"
 output: html_document
 ---
 
@@ -21,13 +21,15 @@ A close match would confirm that our calculations of disposal volumes by
 `receipt_type_desc` and `actual_route` correctly capture the relationship
 between police charge scenarios and court disposals.
 
-This test is closely related to visual-crown-court-module-v3.Rmd, which
+### Related tests
+
+* This test is closely related to visual-crown-court-module-v3.Rmd, which
 examined performance of our Crown Court disposals forecasts when sitting days
 were increased, as in the December 2022 prison projection. The current test
 differs in that we are changing Crown Court receipts, not sitting days and our
 benchmark is the April 2023 forecast.
 
-This test is also closely related to visual-police-charge-scenarios-v2.Rmd,
+* This test is also closely related to visual-police-charge-scenarios-v2.Rmd,
 which examined performance of our Crown Court receipts calculations when
 provided with the the same police scenario files used here. Our benchmark here,
 however, includes the impacts of various adjustments to Court receipts made by
@@ -100,12 +102,18 @@ plot_disposals_delta <- function(cc_disposals_delta_actual, cc_disposals_delta_e
 
 ```{r include = FALSE}
 
-  start_date          <- "2022-11-01"    # First month of the forecast. Used for verifying inputs.
-  forecast_start_date <- "2022-11-01"
-  forecast_end_date   <- "2030-03-01"
+  params <- list()
+
+  params$start_date$police_charges_cc <- as.Date("2022-11-01")    # First month of the forecast. Used for verifying inputs.
+  params$forecast_start_date          <- as.Date("2022-11-01")
+  params$forecast_end_date            <- as.Date("2030-03-01")
   
+  # Paths to parameter tables
+  params$ringfenced_lookup_file <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup-2.0.0.csv"
+
+
   # Example receipts by receipt_type_desc and offence from police charge scenarios.
-  police_charges_cc_files <- list(# central = "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-police-demand-scenarios/April23_mid_pandemic_real_for_ready_reckoner.csv", # Records the total number of Crown Court receipts used as a baseline in the April 2023 projections. Includes background values from various sources, and an increase in charge numbers over a 24-month period.
+  params$police_charges_cc_files <- list(# central = "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-police-demand-scenarios/April23_mid_pandemic_real_for_ready_reckoner.csv", # Records the total number of Crown Court receipts used as a baseline in the April 2023 projections. Includes background values from various sources, and an increase in charge numbers over a 24-month period.
                                   # ramp_12m = "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-police-demand-scenarios/April23_mid_pandemic_real_12m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 12-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
                                   # ramp_36m = "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-police-demand-scenarios/April23_mid_pandemic_real_36m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 36-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
                                   ramp_48m = "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-police-demand-scenarios/April23_mid_pandemic_real_48m_ramp_for_ready_reckoner.csv" # Records how Crown Court receipts would change if police charge numbers were increased over a 48-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
@@ -113,34 +121,32 @@ plot_disposals_delta <- function(cc_disposals_delta_actual, cc_disposals_delta_e
 
   # Table from Chun-Yee for converting police charge tables to Court disposals
   # by court_route_desc and route.
-  police_charges_cc_route_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/crown_court_modelling/ccs_snapshot_20230125_jan23version/routes.csv"   # '20230518 - Chun-yee Cheng - cjst pre-covid route distribution.msg'  
+  params$police_charges_cc_route_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/crown_court_modelling/ccs_snapshot_20230125_jan23version/routes.csv"   # '20230518 - Chun-yee Cheng - cjst pre-covid route distribution.msg'  
 
   
-  cc_output_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/crown-output-apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
-  cc_capacity_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sd_htpsd_adjusted_apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
+  params$cc_output_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/crown-output-apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
+  params$cc_capacity_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sd_htpsd_adjusted_apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
   
   
-  # Paths to parameter tables
-  #ringfenced_lookup_file <- "s3://alpha-prison-forecasting-data/flowcast/data/ringfenced-lookup-20230502-shiny-v0.0.0-OFFICIAL.csv"
-  ringfenced_lookup_file <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup.csv"
-
-
   # Crown Court disposals generated by CJST when supplied with the same
   # inflows as above.
-  path_target_central <- cc_output_file   # '20230606 - Chun-yee Cheng - RE_ QA of ready reckoner Crown receipt calculations.msg'
+  path_target_central <- params$cc_output_file   # '20230606 - Chun-yee Cheng - RE_ QA of ready reckoner Crown receipt calculations.msg'
   path_target_ramp_48m <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_RR_receipts_ramp_48m_230531_1101/crown-output-apr23_s4.csv"   # '20230606 - Chun-yee Cheng - RE_ QA of ready reckoner Crown receipt calculations.msg'
 
  
   
-  # Create model disposals using package functions.
-  cc_receipts_delta_loaded_list <- load_police_charges_cc_data_list(police_charges_cc_route_file, police_charges_cc_files, start_date, forecast_start_date, forecast_end_date)
-    cc_receipts_delta <- cc_receipts_delta_loaded_list$ramp_48m
+  # Read parameter tables for police charge and Crown modules
+  ringfenced_lookup <- load_ringfenced_lookup(params$ringfenced_lookup_file)
 
-  cc_data <- load_crown_data(cc_output_file, cc_capacity_file, ringfenced_lookup_file, start_date, forecast_start_date, forecast_end_date)
+  # Create model disposals using package functions.
+  cc_receipts_delta_loaded_list <- load_police_charges_cc_data_list(params$police_charges_cc_route_file, params$police_charges_cc_files, ringfenced_lookup, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
+    cc_receipts_delta <- cc_receipts_delta_loaded_list$ramp_48m
+    
+  cc_data <- load_crown_data(params$cc_output_file, params$cc_capacity_file, ringfenced_lookup, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
     cc_output_loaded   <- cc_data$cc_output
     cc_capacity_loaded <- cc_data$cc_capacity
 
-  cc_capacity_levered  <- add_cc_sitting_days(cc_capacity_loaded, 0, forecast_start_date)
+  cc_capacity_levered  <- add_cc_sitting_days(cc_capacity_loaded, 0, params$forecast_start_date)
 
   cc_output_adj <- add_cc_receipts_delta(cc_output_loaded, cc_receipts_delta)
   
@@ -154,11 +160,11 @@ plot_disposals_delta <- function(cc_disposals_delta_actual, cc_disposals_delta_e
   target_central <- import_s3_file(path_target_central) %>%
     dplyr::rename(route = actual_route) %>%
     dplyr::select(date, receipt_type_desc, route, n_disposals) %>%
-    trim_dates(start_date, forecast_start_date, forecast_end_date)
+    trim_dates(params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
   target_ramp_48m <- import_s3_file(path_target_ramp_48m) %>%
     dplyr::rename(route = actual_route) %>%
     dplyr::select(date, receipt_type_desc, route, n_disposals) %>%
-    trim_dates(start_date, forecast_start_date, forecast_end_date)
+    trim_dates(params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
   cc_disposals_delta_expected <- dplyr::left_join(target_central, target_ramp_48m, by = c("date", "receipt_type_desc", "route")) %>%
     dplyr::mutate(n_disposals_delta = n_disposals.y - n_disposals.x, .keep = "unused")
 

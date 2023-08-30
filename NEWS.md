@@ -14,10 +14,25 @@ e.g. (#2, @bgburton)
 -->
 
 
-# prisonsreadyreckoner 1.1.0.9000
+# prisonsreadyreckoner 2.0.0.9000
 
 Prepared to introduce more sophisticated treatment of time on recall and police
 charge scenarios, as requested on 15 June 2023.
+
+* Introduces a lag into the ring-fenced Crown Court disposals. This aligns the
+model with the main projection better.
+
+* Introduces a lever to allow the user to change the time spent on recall.
+
+This version is also expected to be used with more police charge scenarios,
+although this does not have an impact on the function of the model itself.
+
+
+## Breaking changes
+
+This version is not backwards compatible with version 1.0.0 because additional
+parameters are required to generate the lag in ring-fenced Crown Court disposals
+and to implement time on recall impacts.
 
 
 
@@ -27,7 +42,6 @@ First release for sharing with customers. Adds:
 
 * Simplistic remand calculations accounting for the release of a proportion of
 remand prisoners following expiry of custody time limits.
-
 
 ## Breaking changes
 

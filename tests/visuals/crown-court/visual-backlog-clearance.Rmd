@@ -5,10 +5,32 @@ date: "26/07/2023"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE)#, dpi = 50, fig.width = 15, fig.height = 10)
 
 devtools::load_all()
+
+source("../../dev/dev-params.R")
+
+
+# Files and parameters for the original April 2023 analysis.
+set_crown_params <- function() {
+  
+  silence_botor()
+  
+  params <- dev_set_params()
+  params <- format_params(params)
+
+  # Number of extra police charges
+  params$lever_police_charges_scenario           <- "central" #"ramp_48m"
+  
+  # Number of extra court sitting days per month
+  params$lever_extra_cc_sitting_days             <- 20000 / 12             # [month^-1]
+  params$lever_extra_cc_sitting_days_impact_date <- "2023-03-01"
+
+  return(params)
+}
+
 ```
 
 
@@ -30,39 +52,16 @@ bounds are exceeded.
 
 ```{r include = FALSE}
 
-source("../dev/dev-params.R")
-
-
-# Files and parameters for the original April 2023 analysis.
-set_crown_params <- function() {
-  
-  silence_botor()
-  
-  params <- dev_set_params()
-  params <- format_params(params)
-
-  # Number of extra police charges
-  params$lever_police_charges_scenario           <- "central" #"ramp_48m"
-  
-  # Number of extra court sitting days per month
-  params$lever_extra_cc_sitting_days             <- 20000 / 12             # [month^-1]
-  params$lever_extra_cc_sitting_days_impact_date <- "2023-03-01"
-
-  return(params)
-}
-
-
 # Same as equivalent package function but adding n_backlog to the output.
-load_crown_data_test <- function(cc_output_file, cc_capacity_file, ringfenced_lookup_file, start_date, forecast_start_date, forecast_end_date) {
+# NOTE: THIS FUNCTIONALITY WAS LATER ADDED TO THE PACKAGE FUNCTION BUT IS LEFT
+# HERE FOR CONVENIENCE.
+load_crown_data_test <- function(cc_output_file, cc_capacity_file, ringfenced_lookup, start_date, forecast_start_date, forecast_end_date) {
     
   # Read baseline inputs, which are disposals for ring-fenced cases and time
   # series for sitting days and hours available per sitting day.
   cc_output   <- load_crown_output_with_backlog(cc_output_file, start_date, forecast_start_date, forecast_end_date)
   cc_capacity <- load_cc_capacity(cc_capacity_file, start_date, forecast_start_date, forecast_end_date)
   #check_cc_inputs(cc_output, cc_capacity)
-  
-  # Read parameter tables for Crown module
-  ringfenced_lookup    <- load_ringfenced_lookup(ringfenced_lookup_file)
   
   # Add ring-fenced status. Calculate backlog case rate and hours per disposal.
   cc_output <- augment_crown_output(cc_output, ringfenced_lookup)
@@ -75,6 +74,8 @@ load_crown_data_test <- function(cc_output_file, cc_capacity_file, ringfenced_lo
 
 
 # Same as package function but adding n_backlog to the output.
+# NOTE: THIS FUNCTIONALITY WAS LATER ADDED TO THE PACKAGE FUNCTION BUT IS LEFT
+# HERE FOR CONVENIENCE.
 load_crown_output_with_backlog <- function(cc_output_file, start_date, forecast_start_date, forecast_end_date) {
   
   col_types <-
@@ -153,16 +154,21 @@ plot_backlog <- function(cc_disposals_delta, cc_backlog, disposal_type, colour) 
 
 }
 
+```
 
+```{r include = FALSE}
 
 params <- set_crown_params()
 
+# Read parameter tables for police charge and Crown modules
+ringfenced_lookup    <- load_ringfenced_lookup(params$ringfenced_lookup_file)
+  
 # Load data for police charges module
-  cc_receipts_delta_loaded_list  <- load_police_charges_cc_data_list(params$police_charges_cc_route_file, params$police_charges_cc_files, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
-  mc_disposals_delta_loaded_list <- load_police_charges_mc_data(params$police_charges_mc_file, params$police_charges_mc_scenarios, params$police_charges_mc_sheet, params$mc_remand_lookup, params$start_date$police_charges_mc, params$forecast_start_date, params$forecast_end_date)
+cc_receipts_delta_loaded_list  <- load_police_charges_cc_data_list(params$police_charges_cc_route_file, params$police_charges_cc_files, ringfenced_lookup, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
+mc_disposals_delta_loaded_list <- load_police_charges_mc_data(params$police_charges_mc_file, params$police_charges_mc_scenarios, params$police_charges_mc_sheet, params$mc_remand_lookup, params$start_date$police_charges_mc, params$forecast_start_date, params$forecast_end_date)
   
 # Load data for Crown Court module
-cc_data <- load_crown_data_test(params$cc_output_file, params$cc_capacity_file, params$ringfenced_lookup_file, params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date)
+cc_data <- load_crown_data_test(params$cc_output_file, params$cc_capacity_file, ringfenced_lookup, params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date)
   cc_output_loaded   <- cc_data$cc_output
   cc_capacity_loaded <- cc_data$cc_capacity
 
@@ -173,14 +179,19 @@ mc_disposals_delta <- mc_disposals_delta_loaded_list[[params$lever_police_charge
 # LEVER: Add (or subtract) sitting days.
 cc_capacity_levered  <- add_cc_sitting_days(cc_capacity_loaded, params$lever_extra_cc_sitting_days, params$lever_extra_cc_sitting_days_impact_date)
 
-
 # Add additional Crown Court receipts (and disposals for ring-fenced cases).
-cc_output <- add_cc_receipts_delta(cc_output_loaded, cc_receipts_delta)
+# NA signals the default condition, in which cases there are no extra receipts
+# to add.
+if (!is.na(cc_receipts_delta)) {
+  cc_output <- add_cc_receipts_delta(cc_output_loaded, cc_receipts_delta)
+} else {
+  cc_output <- cc_output_loaded
+}
 
 # Add extra ring-fenced hours to the capacity table.
 cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity_levered)
 check_cc_capacity(cc_capacity)
-  
+
 # Join the capacity table with the crown output table and calculate disposals
 # delta for non-ring-fenced cases, assuming current non-ring-fenced disposal
 # case mix.
