@@ -4,7 +4,7 @@ author: "Alex Dickinson"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Assumptions}
+  %\VignetteIndexEntry{User guide}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -33,12 +33,14 @@ knitr::opts_chunk$set(
 
 The model `prisonsreadyreckoner` generates projections of how the prison
 population will change in future. These projections are influenced by five
-**Levers**.
+**Levers**, which may all be set by adjusting the values of the relevant
+[parameters][parameters].
 
+<div>
 ```{r, echo=FALSE}
-mojflowchart::flowchart("prisonsreadyreckoner-flow-chart.mmd", height=10, width=2)
+mojflowchart::flowchart("prisonsreadyreckoner-flow-chart.mmd")
 ```
-
+</div>
 
 ## Vary number of offenders entering prison
 
@@ -105,7 +107,7 @@ The user can change the percentage of determinate sentence offenders who are
 released on licence and subsequently recalled to prison (per month). Different
 percentages can be specified for each [Sentence band][sentence-bands], and changes will come into
 effect on a specified **Impact date**. Note that this lever affects only offenders
-who enter prison after April 2023 and who are subsequently released on licence.
+who enter prison in the forecast period and who are subsequently released on licence.
 
 
 <!-- ## Vary time served by licensees recalled to prison -->

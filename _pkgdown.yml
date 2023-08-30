@@ -1,0 +1,27 @@
+url: https://model-redevelopment-website.apps.alpha.mojanalytics.xyz/packages/r/prisonsreadyreckoner
+template:
+  bootstrap: 5
+
+home:
+  links:
+  - text: Our website
+    href: https://model-redevelopment-website.apps.alpha.mojanalytics.xyz
+
+
+# Remove the reference section to allow pkgdown::build_site() to make its own
+# index. Recompile with pkgdown::build_reference_index().
+reference:
+- title: "Running the model"
+  contents:
+  - matches("run_prisonsreadyreckoner")
+- title: "General functions"
+  desc: >
+    Functions for implementing linear system dynamics ('stock and flow').
+  contents:
+  - starts_with("mojstockr_")
+- title: "Shiny app functions"
+  desc: >
+    The following functions are exported only so that they may be used by a
+    Shiny app. These are not intended for users of package?prisonsreadyreckoner.
+  contents:
+  - -matches("^mojstockr_|^run_prisonsreadyreckoner")

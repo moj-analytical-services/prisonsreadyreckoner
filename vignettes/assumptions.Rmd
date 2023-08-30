@@ -191,7 +191,7 @@ forecast determinate sentence prison receptions from forecast magistrates' court
 and Crown Court disposals.
 
 ***ASSUMPTION:** At the time of writing (August 2023), the predictors of the
-regression model are.
+regression model are.*
 
 Sentence band 1:
 * Effective trial, early guilty plea, late guilty plea and cracked guilty pleas in the Crown Court,
@@ -223,18 +223,18 @@ courts, potentially waiting changeable time as outstanding caseload. Instead, we
 model, crudely, the impacts that each receipt or disposal has on remand
 population and make simplistic adjustments for custody time limits (CTL).
 
-***ASSUMPTION: Marginal remand prisoner inflows and outflows are forecast
+***ASSUMPTION:** Marginal remand prisoner inflows and outflows are forecast
 primarily by applying to court receipts and Crown Court disposals, respectively,
 historical ratios of remand inflows to court receipts and remand outflows to
 Crown Court disposals. Magistrates' court receipts are taken as a proxy for
 court receipts and only indictable-only and triable-either-way receipts are
 considered (as summary cases are unlikely to involve remand).*
 
-***ASSUMPTION: 20% of additional remand _inflows_ are assumed to be held
+***ASSUMPTION:** 20% of additional remand _inflows_ are assumed to be held
 indefinitely until disposal. The remaining 80% are assumed to be placed in the
 court backlog and released after six months.*
 
-***ASSUMPTION: 20% of additional remand _outflows_ are assumed to have been held
+***ASSUMPTION:** 20% of additional remand _outflows_ are assumed to have been held
 on remand since receipt at court. The remaining 80% are assumed to be drawn from
 the wider pool of remand prisoners and would have otherwise left remand, even
 without disposal, at varying lags from one to six months.*
@@ -259,10 +259,10 @@ receipts and disposals, respectively, and summed in the
 
 Levers for prison receptions refer to determinate sentence prisoners only.
 
-***ASSUMPTION: We do not currently model changes in indeterminate inflows. These
+***ASSUMPTION:** We do not currently model changes in indeterminate inflows. These
 are low volume and historically stable.*
 
-***ASSUMPTION: Determinate sentence prisoners are aggregated to four
+***ASSUMPTION:** Determinate sentence prisoners are aggregated to four
 [sentence length band][sentence-bands]. In the baseline run, inflows are as in
 the central scenario from the latest prison projection, _considering only those
 entering prison in the forecast period_. When the prison inflow lever is set to
@@ -281,27 +281,93 @@ setting with respect to the baseline conditions.
 
 # Time served (Lever 4)
 
-When the time served lever is set, the distributions of time served used to
-generate prison population are stretched or squeezed appropriately so that
-prison outflows are either delayed or brought forward, respectively. The result
-is that prison population goes up or down from the impact date chosen.
+When the time served lever is set for a given scenario, the distributions of
+time served used to generate prison population are stretched or squeezed
+appropriately so that prison outflows are either delayed or brought forward,
+respectively. The result is that prison population goes up or down from the
+impact date chosen.
 
-***ASSUMPTION: Changes to the time served lever affect only determinate 
-sentence prisoners arriving in the forecast period. This includes those in the
+***ASSUMPTION:** Changes to the time served lever affect only determinate 
+sentence prisoners arriving after the impact date. This includes those in the
 baseline as well as the additional inflows resulting from more upstream levers,
 such as sitting days or prison inflows.*
 
-By applying the time served lever to baseline as well as scenario inflows, the
-impact (scenario minus baseline) indicates the impact that time served has on
-all prisoners entering in the forecast period, not just any additional ones
-provoked by upstream levers. Note that we are not retrospectively
-changing the sentence lengths of offenders arriving in the historical period or
-any arriving before the chosen impact date.
+That is, we are not retrospectively changing the sentence lengths of offenders
+arriving in the historical period or any arriving before the chosen impact date
+but are considering all offenders arriving after the impact date.
 
 Stretching and squeezing of baseline time served distributions is performed by
 interpolation using an off-the-shelf function. This is a time-consuming
 operation so care is taken to trim time series and time served distributions
 to the minimum required to cover the forecast period.
+
+
+# Licence
+
+Licence populations in the baseline and scenario are generated in a similar way
+to the prison population. We convolve licence inflows with a profile
+representing time on licence to generate a time series of licence outflows. The
+population is found as the cumulative difference between inflows and outflows.
+
+Licence inflows are provided by the determinate outflow time series.
+
+***ASSUMPTION:** For reasons to do with differences between prison and probation
+book-keeping, licence inflows are pro-rated to match prison outflows with
+probation inflows.*
+
+***ASSUMPTION:** To account crudely for post-recall releases, we take licence
+profiles from the Prisons Team. These have been calibrated so that licence
+population predictions in the historical period match actual licence
+population.*
+
+***ASSUMPTION:** Again we model licence and recall only for determinate sentence
+prisoners. Indeterminate prisoners will not be released in the time frame of our
+simulation.*
+
+
+# Recall
+
+## Recall inflows (Lever 5)
+
+Recall inflows are based on a simple relationship to licence population:
+
+***ASSUMPTION:** We assume that monthly recall inflows can be approximated as a
+fraction of the licence population (appropriately excluding those on post
+sentence supervision, who cannot be recalled).*
+
+Recall rates may be levered by the user.
+
+***ASSUMPTION:** Changes to the recall rate lever affect only determinate 
+sentence prisoners sentenced in the forecast period who are on licence after
+the lever impact date.*
+
+
+## Time on recall
+<!-- ## Time on recall (Lever 6) -->
+
+Having generated an inflow time series, we convolve recall inflows with a
+profile representing time on recall to generate a time series of outflows. The
+recall population is found as the cumulative difference between inflows and
+outflows.
+
+***ASSUMPTION:** Determinate recall prisoners are assumed to spend a fixed
+length of time on recall, which may differ between sentence length bands. The
+time assumed for each sentence band as well as an adjustment, calibrated to
+optimise population predictions, is provided by the Prisons Team.*
+
+<!-- Where the time on recall lever is different from the default, a different -->
+<!-- time on recall is applied for those recalled after the impact date. As with the -->
+<!-- other levers, only individuals sentenced in the forecast period are affected. -->
+
+Owing to all the adjustments and the highly simplified treatment of a system
+that, in reality, can involve multiple return visits to prison, the recall
+parameters are best thought as empirical figures that allow for a reasonable
+forecast of recall population driven by licensee population. The fixed time on
+recall is crude but fast to compute and apply.
+
+***ASSUMPTION:** We currently make no allowance for the balance between fixed
+and standard recall.*
+
 
 
 <!-- Cross-vignette references -->
