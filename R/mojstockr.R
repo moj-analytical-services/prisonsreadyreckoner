@@ -139,6 +139,8 @@ mojstockr_resample_profile <- function(x, probabilities, x_resampled = NULL, str
       stop("stretch_factor < 0. It is not possible to stretch the probability distribution by a negative factor. Please set stretch_factor to be greater than 0.")
     if (stretch_factor == 0)
       stop("stretch_factor cannot equal 0. Please set stretch_factor to be greater than 0.")
+
+    # IMPORTANT: I DON'T BELIEVE THE NEXT LINE IS APPROPRIATAE WHEN MIN(X)!=0
     x_resampled <- seq(min(x), by = 1, length.out = ceiling(length(x) * stretch_factor))
     #x_resampled <- seq(from = min(x * stretch_factor), to = max(x * stretch_factor), length.out = ceiling(length(x) * stretch_factor))
   } else

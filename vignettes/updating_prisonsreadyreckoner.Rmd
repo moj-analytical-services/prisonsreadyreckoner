@@ -1,10 +1,10 @@
 ---
-title: "Updating `prisonsreadyreckoner`"
+title: "Updating prisonsreadyreckoner"
 author: "Alex Dickinson"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Assumptions}
+  %\VignetteIndexEntry{Updating prisonsreadyreckoner}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
