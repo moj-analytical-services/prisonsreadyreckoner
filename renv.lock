@@ -374,6 +374,24 @@
       "Hash": "cf6b206a045a684728c3267ef7596190",
       "Requirements": []
     },
+    "downlit": {
+      "Package": "downlit",
+      "Version": "0.4.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "ba63dc9ab5a31f3209892437e40c5f60",
+      "Requirements": [
+        "brio",
+        "desc",
+        "digest",
+        "evaluate",
+        "fansi",
+        "memoise",
+        "rlang",
+        "vctrs",
+        "yaml"
+      ]
+    },
     "dplyr": {
       "Package": "dplyr",
       "Version": "1.1.0",
@@ -592,6 +610,18 @@
         "rlang"
       ]
     },
+    "htmlwidgets": {
+      "Package": "htmlwidgets",
+      "Version": "1.5.4",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "76147821cd3fcd8c4b04e1ef0498e7fb",
+      "Requirements": [
+        "htmltools",
+        "jsonlite",
+        "yaml"
+      ]
+    },
     "httr": {
       "Package": "httr",
       "Version": "1.4.2",
@@ -748,6 +778,19 @@
       "Repository": "RSPM",
       "Hash": "18e9c28c1d3ca1560ce30658b22ce104",
       "Requirements": []
+    },
+    "mojflowchart": {
+      "Package": "mojflowchart",
+      "Version": "0.0.0.9000",
+      "Source": "git",
+      "RemoteType": "git",
+      "RemoteUrl": "git@github.com:moj-analytical-services/mojflowchart.git",
+      "RemoteRef": "v0.0.0.9000",
+      "Hash": "f04f3aa76f2c28c83f15e54cbfd875b8",
+      "Requirements": [
+        "htmltools",
+        "htmlwidgets"
+      ]
     },
     "mojmetr": {
       "Package": "mojmetr",
@@ -1022,6 +1065,35 @@
       "Hash": "01f28d4278f15c76cddbea05899c5d6f",
       "Requirements": []
     },
+    "pkgdown": {
+      "Package": "pkgdown",
+      "Version": "2.0.2",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "1ef66f10b752bb5f17e33fe9fa861005",
+      "Requirements": [
+        "bslib",
+        "callr",
+        "crayon",
+        "desc",
+        "digest",
+        "downlit",
+        "fs",
+        "httr",
+        "jsonlite",
+        "magrittr",
+        "memoise",
+        "purrr",
+        "ragg",
+        "rlang",
+        "rmarkdown",
+        "tibble",
+        "whisker",
+        "withr",
+        "xml2",
+        "yaml"
+      ]
+    },
     "pkgload": {
       "Package": "pkgload",
       "Version": "1.2.4",
@@ -1064,13 +1136,13 @@
     },
     "prisonsreadyreckonerupdater": {
       "Package": "prisonsreadyreckonerupdater",
-      "Version": "1.0.0",
+      "Version": "2.0.0.9000",
       "Source": "git",
       "RemoteType": "git",
       "RemoteUrl": "git@github.com:moj-analytical-services/prisonsreadyreckonerupdater.git",
-      "RemoteRef": "v1.0.0",
+      "RemoteRef": "v2.0.0.9000",
       "Remotes": "git::git@github.com:moj-analytical-services/fullsample.git,\n    git::git@github.com:moj-analytical-services/mojmetr.git,\n    git::git@github.com:moj-analytical-services/Rdbtools.git",
-      "Hash": "b304d46a374e64e59a5121c8390751fb",
+      "Hash": "68b5671a4602c14df4b3e1146305123f",
       "Requirements": [
         "Rdbtools",
         "dplyr",
@@ -1135,6 +1207,17 @@
         "magrittr",
         "rlang",
         "vctrs"
+      ]
+    },
+    "ragg": {
+      "Package": "ragg",
+      "Version": "1.2.2",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "14932bb6f2739c771ca4ceaba6b4248e",
+      "Requirements": [
+        "systemfonts",
+        "textshaping"
       ]
     },
     "rappdirs": {
@@ -1405,6 +1488,16 @@
       "Hash": "b227d13e29222b4574486cfcbde077fa",
       "Requirements": []
     },
+    "systemfonts": {
+      "Package": "systemfonts",
+      "Version": "1.0.4",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "90b28393209827327de889f49935140a",
+      "Requirements": [
+        "cpp11"
+      ]
+    },
     "testthat": {
       "Package": "testthat",
       "Version": "3.1.2",
@@ -1431,6 +1524,17 @@
         "rlang",
         "waldo",
         "withr"
+      ]
+    },
+    "textshaping": {
+      "Package": "textshaping",
+      "Version": "0.3.6",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "1ab6223d3670fac7143202cb6a2d43d5",
+      "Requirements": [
+        "cpp11",
+        "systemfonts"
       ]
     },
     "tibble": {
