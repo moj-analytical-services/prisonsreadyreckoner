@@ -296,7 +296,7 @@ load_recall_params <- function(recall_file, start_date, forecast_start_date, for
   average_time_on_recall <- import_s3_file(recall_file, sheet = "average_time_on_recall") %>%
     dplyr::rename(senband = SenBand) %>%
     dplyr::filter(senband > 0) %>%
-    dplyr::mutate(average = average / 30.4375,
+    dplyr::mutate(average = average * 12 / 365.25,
                   senband = paste0("senband", senband)) %>%
     dplyr::arrange(senband) %>%
     tibble::deframe()
