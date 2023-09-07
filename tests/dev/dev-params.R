@@ -19,7 +19,7 @@ dev_set_params <- function() {
   ################################################################################
   
   # Number of extra police charges
-  params$lever_police_charges_scenario           <- "central"
+  params$lever_police_charges_scenario           <- "apr23_central"
   
   # Number of extra court sitting days per month
   params$lever_extra_cc_sitting_days             <- 0 / 12             # [month^-1]
@@ -88,16 +88,19 @@ dev_set_params <- function() {
   
   # Police charge parameters
   # Magistrates' courts
-  params$police_charges_mc_file <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/020623_mags_sensitivity_output.xlsx"   # '202306026- Katie Mahon - RE_ mags outputs template.eml'
-  params$police_charges_mc_sheet <- "020623_mags_sensitivity_output-"
-  params$police_charges_mc_scenarios <- list(central = "apr23_central",
-                                             ramp_12m = "apr23_central_12m",
-                                             ramp_36m = "apr23_central_36m",
-                                             ramp_48m = "apr23_central_48m"
-  )
+  # params$police_charges_mc_file <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/020623_mags_sensitivity_output.xlsx"   # '202306026- Katie Mahon - RE_ mags outputs template.eml'
+  # params$police_charges_mc_sheet <- "020623_mags_sensitivity_output-"
+  # params$police_charges_mc_scenarios <- list(central = "apr23_central",
+  #                                            ramp_12m = "apr23_central_12m",
+  #                                            ramp_36m = "apr23_central_36m",
+  #                                            ramp_48m = "apr23_central_48m"
+  # )
+  params$police_charges_mc_files <- c("s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-police-charges-mc001.csv",
+                                      "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-police-charges-mc002.csv")
+  params$police_charges_mc_central_scenario <- "apr23_central"
 
   # Crown Court
-  params$police_charges_cc_files <- list(central = "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/April23_mid_pandemic_real_for_ready_reckoner.csv", # Records the total number of Crown Court receipts used as a baseline in the April 2023 projections. Includes background values from various sources, and an increase in charge numbers over a 24-month period. It has non-zero values throughout.
+  params$police_charges_cc_files <- list(apr23_central = "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/April23_mid_pandemic_real_for_ready_reckoner.csv", # Records the total number of Crown Court receipts used as a baseline in the April 2023 projections. Includes background values from various sources, and an increase in charge numbers over a 24-month period. It has non-zero values throughout.
                                       ramp_12m = "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/April23_mid_pandemic_real_12m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 12-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
                                       ramp_36m = "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/April23_mid_pandemic_real_36m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 36-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
                                       ramp_48m = "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/April23_mid_pandemic_real_48m_ramp_for_ready_reckoner.csv" # Records how Crown Court receipts would change if police charge numbers were increased over a 48-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.

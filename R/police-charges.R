@@ -136,48 +136,87 @@ add_lag_by_cc_route <- function(extra_police_charges_cc, ringfenced_lookup, fore
 
 ### NEW MAGISTRATES' COURT FUNCTIONS USING DATA FROM KATIE MAHON ###
 
-load_police_charges_mc_data <- function(police_charges_mc_file, police_charges_mc_scenarios, police_charges_mc_sheet, mc_remand_lookup, start_date, forecast_start_date, forecast_end_date) {
+load_police_charges_mc_data <- function(police_charges_mc_files, police_charges_mc_central_scenario, mc_remand_lookup, start_date, forecast_start_date, forecast_end_date) {
+
+  # Build up a combined tibble from each file
+  extra_police_charges_mc <- tibble::tibble(scenario = character(), date = as.Date(numeric()), disposal_type = character(), n_disposals = numeric())
+  for (police_charges_mc_file in police_charges_mc_files)
+    extra_police_charges_mc <- import_s3_file(police_charges_mc_file) %>% rbind(extra_police_charges_mc)
   
-  extra_police_charges_mc <- suppressMessages(import_s3_file(police_charges_mc_file, sheet = police_charges_mc_sheet)) %>%
-    dplyr::filter(rdos_type == "DISPOSALS") %>%
-    dplyr::select(tidyselect::all_of(c("year_month", "type", "forecast_count", "scenario"))) %>%
-    dplyr::mutate(date = as.Date(year_month),
-                  disposal_type = type,
-                  n_disposals = forecast_count,
-                  .keep = "unused") %>%
-    dplyr::mutate(disposal_type = dplyr::if_else(disposal_type == "IO", "mc_ind", disposal_type),
-                  disposal_type = dplyr::if_else(disposal_type == "SM_other", "mc_sm", disposal_type),
-                  disposal_type = dplyr::if_else(disposal_type == "SNM_other", "mc_snm", disposal_type),
-                  disposal_type = dplyr::if_else(disposal_type == "TEW", "mc_tew", disposal_type))
-
-
+  # # Some rudimentary checks
+  # tally <- dplyr::group_by(extra_police_charges_mc, .data$scenario) %>%
+  #            dplyr::count()
+  # if (length(unique(tally$n)) != 1)
+  #   stop("inpcompatible data n MC police charges file.")
+  
   police_charges_mc_central_scenario <- extra_police_charges_mc %>%
-    dplyr::filter(scenario == police_charges_mc_scenarios[["central"]]) %>%
-    trim_dates(start_date, forecast_start_date, forecast_end_date)
+      dplyr::filter(scenario == police_charges_mc_central_scenario) %>%
+      trim_dates(start_date, forecast_start_date, forecast_end_date)
   
   
   # Add flag for indicating which disposals are relevant for calculating remand.
   extra_police_charges_mc <- dplyr::left_join(extra_police_charges_mc, mc_remand_lookup, by = "disposal_type", unmatched = "error")
-    
-  
+
+
   extra_police_charges_mc_list <- list()
-  
-  for (police_charges_mc_scenario in names(police_charges_mc_scenarios)) {
-    
-    police_charges_mc_scenario_columnvalue <- police_charges_mc_scenarios[[police_charges_mc_scenario]]
+  police_charges_mc_scenarios <- unique(extra_police_charges_mc$scenario)
+  for (police_charges_mc_scenario in police_charges_mc_scenarios) {
     
     extra_police_charges_mc_scenario <- extra_police_charges_mc %>%
-      dplyr::filter(scenario == police_charges_mc_scenario_columnvalue) %>%
+      dplyr::filter(scenario == police_charges_mc_scenario) %>%
       dplyr::right_join(police_charges_mc_central_scenario, by = c("date", "disposal_type")) %>%
       dplyr::select(-tidyselect::any_of(c("scenario.x", "scenario.y"))) %>%
       dplyr::mutate(n_disposals_delta = n_disposals.x - n_disposals.y) %>%
       dplyr::select(-tidyselect::any_of(c("n_disposals.x", "n_disposals.y")))
-      
+    
     extra_police_charges_mc_list[[police_charges_mc_scenario]] <- extra_police_charges_mc_scenario
     
   }
   
   return(extra_police_charges_mc_list)
-  
 }
+
+# load_police_charges_mc_data <- function(police_charges_mc_file, police_charges_mc_scenarios, police_charges_mc_sheet, mc_remand_lookup, start_date, forecast_start_date, forecast_end_date) {
+#   
+#   extra_police_charges_mc <- suppressMessages(import_s3_file(police_charges_mc_file, sheet = police_charges_mc_sheet)) %>%
+#     dplyr::filter(rdos_type == "DISPOSALS") %>%
+#     dplyr::select(tidyselect::all_of(c("year_month", "type", "forecast_count", "scenario"))) %>%
+#     dplyr::mutate(date = as.Date(year_month),
+#                   disposal_type = type,
+#                   n_disposals = forecast_count,
+#                   .keep = "unused") %>%
+#     dplyr::mutate(disposal_type = dplyr::if_else(disposal_type == "IO", "mc_ind", disposal_type),
+#                   disposal_type = dplyr::if_else(disposal_type == "SM_other", "mc_sm", disposal_type),
+#                   disposal_type = dplyr::if_else(disposal_type == "SNM_other", "mc_snm", disposal_type),
+#                   disposal_type = dplyr::if_else(disposal_type == "TEW", "mc_tew", disposal_type))
+# 
+#   police_charges_mc_central_scenario <- extra_police_charges_mc %>%
+#     dplyr::filter(scenario == police_charges_mc_scenarios[["central"]]) %>%
+#     trim_dates(start_date, forecast_start_date, forecast_end_date)
+#   
+#   
+#   # Add flag for indicating which disposals are relevant for calculating remand.
+#   extra_police_charges_mc <- dplyr::left_join(extra_police_charges_mc, mc_remand_lookup, by = "disposal_type", unmatched = "error")
+#     
+#   
+#   extra_police_charges_mc_list <- list()
+#   
+#   for (police_charges_mc_scenario in names(police_charges_mc_scenarios)) {
+#     
+#     police_charges_mc_scenario_columnvalue <- police_charges_mc_scenarios[[police_charges_mc_scenario]]
+#     
+#     extra_police_charges_mc_scenario <- extra_police_charges_mc %>%
+#       dplyr::filter(scenario == police_charges_mc_scenario_columnvalue) %>%
+#       dplyr::right_join(police_charges_mc_central_scenario, by = c("date", "disposal_type")) %>%
+#       dplyr::select(-tidyselect::any_of(c("scenario.x", "scenario.y"))) %>%
+#       dplyr::mutate(n_disposals_delta = n_disposals.x - n_disposals.y) %>%
+#       dplyr::select(-tidyselect::any_of(c("n_disposals.x", "n_disposals.y")))
+#       
+#     extra_police_charges_mc_list[[police_charges_mc_scenario]] <- extra_police_charges_mc_scenario
+#     
+#   }
+#   
+#   return(extra_police_charges_mc_list)
+#   
+# }
 
