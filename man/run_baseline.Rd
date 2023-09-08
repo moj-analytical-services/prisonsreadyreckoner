@@ -11,7 +11,7 @@ run_baseline(
   nomis_out_delius_in_ratio,
   profiles_lic,
   recall_rate_exclPSS,
-  profiles_recall
+  recall_time
 )
 }
 \value{
