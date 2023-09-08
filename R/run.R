@@ -51,7 +51,6 @@ run_prisonsreadyreckoner <- function(params) {
   t0 <- Sys.time()
   
   # Run scenario and find overall population changes.
-  #pop_scenario <- run_scenario(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, sentencing_rates_loaded, inflows_det_loaded, profiles_det_loaded, nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall)
   pop_scenario <- run_scenario(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, profiles_remand_in, profiles_remand_out, sentencing_rates_loaded, inflows_det_loaded, profiles_det_loaded, nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, profiles_recall, recall_time)
   
   # Combine with the baseline and pivot for ease of splitting by gender.
@@ -65,10 +64,10 @@ run_prisonsreadyreckoner <- function(params) {
   print(paste0("pop_scenario and gender split took ", Sys.time() - t0, " seconds"))
   
   # # Plotting routines to be used in development to assess model output.
-  dev_plot_population(pop_combined, "remand", "Remand delta")
-  dev_plot_population(pop_combined, "determinate", "Determinate")
-  dev_plot_population(pop_combined, "indeterminate", "Indeterminate")
-  dev_plot_population(pop_combined, "recall", "Recall")
+  # dev_plot_population(pop_combined, "remand", "Remand delta")
+  # dev_plot_population(pop_combined, "determinate", "Determinate")
+  # dev_plot_population(pop_combined, "indeterminate", "Indeterminate")
+  # dev_plot_population(pop_combined, "recall", "Recall")
   
   return(dplyr::arrange(pop_combined, run, date, casetype, senband, sex))
 }
@@ -176,16 +175,18 @@ run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disp
                               profiles_remand_in, profiles_remand_out, published_remand_pop,
                               sentencing_rates, inflows_det) {
   
-  # Add additional Crown Court receipts (and disposals for ring-fenced cases).
   # NA signals the default condition, in which cases there are no extra receipts
-  # to add.
-  if (!is.na(cc_receipts_delta))
-    cc_output <- add_cc_receipts_delta(cc_output, cc_receipts_delta)
+  # to add and no extra ringfenced disposals.
+  if (is.data.frame(cc_receipts_delta)) {
 
-  # Add extra ring-fenced hours to the capacity table.
-  cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity)
-  check_cc_capacity(cc_capacity)
-  
+    # Add additional Crown Court receipts (and disposals for ring-fenced cases).
+    cc_output <- add_cc_receipts_delta(cc_output, cc_receipts_delta)
+    
+    # Add extra ring-fenced hours to the capacity table.
+    cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity)
+    check_cc_capacity(cc_capacity)
+  }
+
   # Join the capacity table with the crown output table and calculate disposals
   # delta for non-ring-fenced cases, assuming current non-ring-fenced disposal
   # case mix.
@@ -278,10 +279,11 @@ dev_plot_population <- function(pop_combined, casetype, casetype_label) {
                     tidyr::pivot_wider(names_from = date, values_from = population, values_fill = 0)
   
   N <- nrow(pop_baseline)
-  if (N > 1)
+  if (N > 1) {
     labels <- c(paste0("Baseline, ", pop_baseline$senband), paste0("Scenario, ", pop_scenario$senband))
-  else
+  } else {
     labels <- c("Baseline", "Scenario")
+  }
   
   x <- as.Date(names(pop_baseline[, -1]))
   y <- rbind(pop_baseline[, -1], pop_scenario[, -1])

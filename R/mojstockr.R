@@ -143,8 +143,9 @@ mojstockr_resample_profile <- function(x, probabilities, x_resampled = NULL, str
     # IMPORTANT: I DON'T BELIEVE THE NEXT LINE IS APPROPRIATAE WHEN MIN(X)!=0
     x_resampled <- seq(min(x), by = 1, length.out = ceiling(length(x) * stretch_factor))
     #x_resampled <- seq(from = min(x * stretch_factor), to = max(x * stretch_factor), length.out = ceiling(length(x) * stretch_factor))
-  } else
+  } else {
     stretch_factor <- max(x_resampled) / max(x)
+  }
 
   # Recalibrate x to lie between 0 and 1
   temp_x <- x / max(x)
