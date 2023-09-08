@@ -3,46 +3,70 @@
 
 
 ################################################################################
+# Police charge scenarios
+################################################################################
+
+# Created for demonstrating the ability of the model to accept files containing
+# court receipts under various scenarios.
+make_police_charges_mc_scenarios <- function() {
+  
+  path_police_charges_mc001 <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-police-charges-mc001.csv"
+  path_police_charges_mc002 <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-police-charges-mc002.csv"
+  
+  # MC001. Ramps of different ramp rate, including the default 24 months.
+  path_police_charges_mc_file <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/020623_mags_sensitivity_output.xlsx"
+  police_charges_mc_sheet <- "020623_mags_sensitivity_output-"
+  
+  police_charges_mc001 <- prisonsreadyreckonerupdater::update_police_charges_mc001(path_police_charges_mc_file,
+                                                                                   police_charges_mc_sheet)
+  botor::s3_write(police_charges_mc001, readr::write_csv, path_police_charges_mc001)
+  
+  
+  # MC002. Ramps of different plateau, based on but not including the default.
+  path_police_charges_mc_file <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/020623_mags_sensitivity_output.xlsx"
+  police_charges_mc_sheet <- "020623_mags_sensitivity_output-"
+  police_charges_mc_scenario <- "apr23_central"
+  
+  police_charges_mc002 <- prisonsreadyreckonerupdater::update_police_charges_mc002(path_police_charges_mc_file,
+                                                                                   police_charges_mc_sheet,
+                                                                                   police_charges_mc_scenario)
+  botor::s3_write(police_charges_mc002, readr::write_csv, path_police_charges_mc002)
+  
+  
+}
+
+
+################################################################################
 # Crown Court files
 ################################################################################
 
 # Created for developing the sequence of functions responsible for modelling
 # Crown Court disposal volumes.
-make_ringfenced_lookup <- function(mode = 'save') {
+make_ringfenced_lookup <- function() {
   
-  
-  switch(
-    mode,
-    'save' = {
-      # No lag. Developed for versions <= 1.0.0
-      path_ringfenced_lookup <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup.csv"
-      ringfenced_lookup <- tibble::tibble(receipt_type_desc = c("app", "ind", "ind", "ind", "ind", "ind", "ind", "ind", "sent", "tew", "tew", "tew", "tew", "tew", "tew", "tew"),
-                               route = c(
-                                 "app", "e_other", "effective", "egp", "gp_cracked", "l_other", "lgp", "other_cracked", "sent", "e_other", "effective", "egp", "gp_cracked", "l_other", "lgp", "other_cracked"),
-                               ringfenced = c(TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE)
-      )
-      botor::s3_write(ringfenced_lookup, readr::write_csv, path_ringfenced_lookup)
-      
-      
-      # Introduces a lag and assumes a different distribution of ring-fenced
-      # cases from previous version. Developed for versions >= 2.0.0
-      path_ringfenced_lookup <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup-2.0.0.csv"
-      path_priority_off <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/crown_court_modelling/ccs_snapshot_20230619_jun23version/priority_off.csv"
-      ringfenced_lookup <- prisonsreadyreckonerupdater::update_ringfenced_lookup(path_priority_off, visualise = FALSE)
-      # ringfenced_lookup <- tibble::tibble(receipt_type_desc = c("app", "ind", "ind", "ind", "ind", "ind", "ind", "ind", "sent", "tew", "tew", "tew", "tew", "tew", "tew", "tew"),
-      #                                     route = c(
-      #                                       "app", "e_other", "effective", "egp", "gp_cracked", "l_other", "lgp", "other_cracked", "sent", "e_other", "effective", "egp", "gp_cracked", "l_other", "lgp", "other_cracked"),
-      #                                     ringfenced = c(TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE),
-      #                                     lag_months = c(2,    2,    0,     2,    0,     0,     0,     0,     2,    2,    0,     2,    0,     0,     0,     0)
-      # )
-      botor::s3_write(ringfenced_lookup$data, readr::write_csv, path_ringfenced_lookup)
-      
-    },
-    'report' = {},
-    stop("Unrecognised mode, '", mode, "'.")
+  # No lag. Developed for versions <= 1.0.0
+  path_ringfenced_lookup <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup.csv"
+  ringfenced_lookup <- tibble::tibble(receipt_type_desc = c("app", "ind", "ind", "ind", "ind", "ind", "ind", "ind", "sent", "tew", "tew", "tew", "tew", "tew", "tew", "tew"),
+                                      route = c(
+                                        "app", "e_other", "effective", "egp", "gp_cracked", "l_other", "lgp", "other_cracked", "sent", "e_other", "effective", "egp", "gp_cracked", "l_other", "lgp", "other_cracked"),
+                                      ringfenced = c(TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE)
   )
+  botor::s3_write(ringfenced_lookup, readr::write_csv, path_ringfenced_lookup)
   
-  return(list(path_ringfenced_lookup = path_ringfenced_lookup))
+  
+  # Introduces a lag and assumes a different distribution of ring-fenced
+  # cases from previous version. Developed for versions >= 2.0.0
+  path_ringfenced_lookup <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup-2.0.0.csv"
+  path_priority_off <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/crown_court_modelling/ccs_snapshot_20230619_jun23version/priority_off.csv"
+  ringfenced_lookup <- prisonsreadyreckonerupdater::update_ringfenced_lookup(path_priority_off, visualise = FALSE)
+  # ringfenced_lookup <- tibble::tibble(receipt_type_desc = c("app", "ind", "ind", "ind", "ind", "ind", "ind", "ind", "sent", "tew", "tew", "tew", "tew", "tew", "tew", "tew"),
+  #                                     route = c(
+  #                                       "app", "e_other", "effective", "egp", "gp_cracked", "l_other", "lgp", "other_cracked", "sent", "e_other", "effective", "egp", "gp_cracked", "l_other", "lgp", "other_cracked"),
+  #                                     ringfenced = c(TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE),
+  #                                     lag_months = c(2,    2,    0,     2,    0,     0,     0,     0,     2,    2,    0,     2,    0,     0,     0,     0)
+  # )
+  botor::s3_write(ringfenced_lookup$data, readr::write_csv, path_ringfenced_lookup)
+
 }
 
 
@@ -184,7 +208,7 @@ make_test_determinate_profiles_old <- function(mode = 'save') {
 
 # Created for whole model testing
 # See, e.g., test-prisonsreadyreckoner.R
-make_test_gender_splits_old <- function(mode = 'save') {
+make_test_gender_splits_old <- function() {
   
   period_start    <- "2022-01-01"   # '20230503 - Charlotte Wallace - RE_ Gender split and remand ratio_.msg'
   period_end      <- "2022-12-31"   # '20230503 - Charlotte Wallace - RE_ Gender split and remand ratio_.msg'
@@ -192,18 +216,9 @@ make_test_gender_splits_old <- function(mode = 'save') {
 
   path_fullsample   <- "s3://alpha-prison-forecasting-data/FULLSAMPLE/FULLSAMPLE_230331.csv"   # '20230205 - Jordan Carroll - RE_ Which fullsample_.msg'
 
-  switch(
-    mode,
-    'save' = {
-      gender_splits <- prisonsreadyreckonerupdater::update_gender_splits_old(period_start, period_end, path_fullsample, visualise = FALSE)
-      botor::s3_write(gender_splits$data, readr::write_csv, path_gender_splits)
-    },
-    'report' = {},
-    stop("Unrecognised mode, '", mode, "'.")
-  )
-  
-  return(list(path_gender_splits = path_gender_splits, path_fullsample = path_fullsample, period_start = period_start,
-              period_end = period_end))
+  gender_splits <- prisonsreadyreckonerupdater::update_gender_splits_old(period_start, period_end, path_fullsample, visualise = FALSE)
+  botor::s3_write(gender_splits$data, readr::write_csv, path_gender_splits)
+
 }
 
 

@@ -19,13 +19,19 @@ calculate_inflows_det_delta <- function(cc_disposals, mc_disposals, sentencing_r
                     dplyr::group_by(date, disposal_type) %>%
                     dplyr::summarise(n_disposals_delta = sum(n_disposals_delta, na.rm = TRUE), .groups = "drop")
   
-  mc_disposals <- dplyr::select(mc_disposals, -tidyselect::any_of(c("remanded")))
-  
-  # Combine Crown Court disposals with magistrates' court disposals.
-  disposals <- dplyr::bind_rows(cc_disposals, mc_disposals)
+  # NA signals the default condition, in which cases there are no extra receipts
+  # to add and no extra magistrates' court disposals.
+  if (is.data.frame(mc_disposals)) {
+   
+    # Combine Crown Court disposals with magistrates' court disposals.
+    mc_disposals <- dplyr::select(mc_disposals, -tidyselect::any_of(c("remanded")))
+    disposals <- dplyr::bind_rows(cc_disposals, mc_disposals)
+    
+  } else {
+    disposals <- cc_disposals
+  }
   
   inflows <- calculate_inflows_det_delta_SUB(disposals, sentencing_rates)
-
 }
 
 
