@@ -75,22 +75,6 @@ make_remand_filter_out <- function(remand_rate, no_bail_rate, ctl, projection_le
 
 calculate_pop_remand_delta <- function(mc_disposals, cc_disposals, profiles_remand_in, profiles_remand_out) {
   
-  # Find change in receipts relevant for remand.
-  # As magistrates' court disposals are generated from receipts without
-  # adjustment, it is acceptable to use disposals as a proxy for receipts.
-  receipts_remand_delta <- dplyr::filter(mc_disposals, .data$remanded == TRUE) %>%
-    dplyr::group_by(.data$date) %>%
-    dplyr::summarise(n_disposals_delta = sum(.data$n_disposals_delta), .groups = "drop") %>%
-    tidyr::pivot_wider(names_from = "date",
-                       values_from = "n_disposals_delta",
-                       values_fill = 0,
-                       names_sort = TRUE) %>%
-    dplyr::mutate(casetype = "remand", .before = 1)
-  
-  # Convert change in receipts to population impact.
-  pop_remand_delta_in <- mojstockr_mconv(receipts_remand_delta, profiles_remand_in, c("casetype"))
-  
-  
   # Find Crown Court disposals relevant for remand.
   disposals_remand_delta <- dplyr::group_by(cc_disposals, .data$date) %>%
     dplyr::summarise(n_disposals_delta = sum(.data$n_disposals_delta), .groups = "drop") %>%
@@ -102,12 +86,36 @@ calculate_pop_remand_delta <- function(mc_disposals, cc_disposals, profiles_rema
   
   # Convert Crown Court disposals to population impact.
   pop_remand_delta_out <- mojstockr_mconv(disposals_remand_delta, profiles_remand_out, c("casetype"))
+
   
+  # NA signals the default condition, in which cases there are no extra receipts
+  # to add and no extra magistrates' court disposals.
+  if (is.data.frame(mc_disposals)) {
+    
+    # Find change in receipts relevant for remand.
+    # As magistrates' court disposals are generated from receipts without
+    # adjustment, it is acceptable to use disposals as a proxy for receipts.
+    receipts_remand_delta <- dplyr::filter(mc_disposals, .data$remanded == TRUE) %>%
+      dplyr::group_by(.data$date) %>%
+      dplyr::summarise(n_disposals_delta = sum(.data$n_disposals_delta), .groups = "drop") %>%
+      tidyr::pivot_wider(names_from = "date",
+                         values_from = "n_disposals_delta",
+                         values_fill = 0,
+                         names_sort = TRUE) %>%
+      dplyr::mutate(casetype = "remand", .before = 1)
   
-  pop_remand_delta <- rbind(pop_remand_delta_in, pop_remand_delta_out) %>%
-    dplyr::group_by(.data$casetype) %>%
-    dplyr::summarise((dplyr::across(tidyselect::where(is.numeric), sum)), .groups = 'drop')
+    # Convert change in receipts to population impact.
+    pop_remand_delta_in <- mojstockr_mconv(receipts_remand_delta, profiles_remand_in, c("casetype"))
+    
+    pop_remand_delta <- rbind(pop_remand_delta_out, pop_remand_delta_in) %>%
+      dplyr::group_by(.data$casetype) %>%
+      dplyr::summarise((dplyr::across(tidyselect::where(is.numeric), sum)), .groups = 'drop')
+    
+  } else {
+    pop_remand_delta <- pop_remand_delta_out
+  }
   
+  return(pop_remand_delta)
 }
 
 
