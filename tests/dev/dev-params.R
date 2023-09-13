@@ -89,14 +89,11 @@ dev_set_params <- function() {
   # Police charge parameters
   params$police_charges_central_scenario <- "apr23_central"
   # Magistrates' courts
-  params$police_charges_mc_files <- c("s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-police-charges-mc001.csv",
-                                      "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-police-charges-mc002.csv")
+  params$police_charges_mc_files <- c("s3://alpha-app-prisonsreadyreckonerapp/2023-04B/police-charges-mc001-20230825-shiny-v2.0.0-OFFICIAL.csv",
+                                      "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/police-charges-mc002-20230825-shiny-v2.0.0-OFFICIAL.csv")
   # Crown Court
-  params$police_charges_cc_files <- list(apr23_central = "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/April23_mid_pandemic_real_for_ready_reckoner.csv", # Records the total number of Crown Court receipts used as a baseline in the April 2023 projections. Includes background values from various sources, and an increase in charge numbers over a 24-month period. It has non-zero values throughout.
-                                         apr23_central_12m = "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/April23_mid_pandemic_real_12m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 12-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
-                                         apr23_central_36m = "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/April23_mid_pandemic_real_36m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 36-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
-                                         apr23_central_48m = "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/April23_mid_pandemic_real_48m_ramp_for_ready_reckoner.csv" # Records how Crown Court receipts would change if police charge numbers were increased over a 48-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
-  )   # '20230525 - David Verry - RE_ Next steps on the CJS ready reckoner.eml'
+  params$police_charges_cc_files <- c("s3://alpha-app-prisonsreadyreckonerapp/2023-04B/police-charges-cc001-20230825-shiny-v2.0.0-OFFICIAL.csv",
+                                      "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/police-charges-cc002-20230825-shiny-v2.0.0-OFFICIAL.csv")
   
   # Table from Chun-Yee for converting Crown Court police charge tables
   params$police_charges_cc_route_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/crown_court_modelling/ccs_snapshot_20230125_jan23version/routes.csv"   # '20230518 - Chun-yee Cheng - cjst pre-covid route distribution.msg'  
