@@ -76,7 +76,7 @@ plot_disposals <- function(series, title, ylim, ylab) {
 #   extra_police_charges_mc <- import_s3_file(police_charges_mc_file) %>%
 #     dplyr::rename(date = mags_month,
 #                   disposal_type = receipt_type_desc,
-#                   n_disposals_delta = forecast_saved) %>%
+#                   n_disposals_delta = n_receipts_delta) %>%
 #     trim_dates(start_date, forecast_start_date, forecast_end_date) %>%
 #     dplyr::select(-c("forecast_id")) %>%
 #     dplyr::mutate(disposal_type = dplyr::if_else(disposal_type == "TEW", "mc_tew", disposal_type),
