@@ -6,34 +6,36 @@
 # Police charge scenarios
 ################################################################################
 
-# Created for demonstrating the ability of the model to accept files containing
-# court receipts under various scenarios.
-make_police_charges_mc_scenarios <- function() {
-  
-  path_police_charges_mc001 <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-police-charges-mc001.csv"
-  path_police_charges_mc002 <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-police-charges-mc002.csv"
-  
-  # MC001. Ramps of different ramp rate, including the default 24 months.
-  path_police_charges_mc_file <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/020623_mags_sensitivity_output.xlsx"
-  police_charges_mc_sheet <- "020623_mags_sensitivity_output-"
-  
-  police_charges_mc001 <- prisonsreadyreckonerupdater::update_police_charges_mc001(path_police_charges_mc_file,
-                                                                                   police_charges_mc_sheet)
-  botor::s3_write(police_charges_mc001, readr::write_csv, path_police_charges_mc001)
-  
-  
-  # MC002. Ramps of different plateau, based on but not including the default.
-  path_police_charges_mc_file <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/020623_mags_sensitivity_output.xlsx"
-  police_charges_mc_sheet <- "020623_mags_sensitivity_output-"
-  police_charges_mc_scenario <- "apr23_central"
-  
-  police_charges_mc002 <- prisonsreadyreckonerupdater::update_police_charges_mc002(path_police_charges_mc_file,
-                                                                                   police_charges_mc_sheet,
-                                                                                   police_charges_mc_scenario)
-  botor::s3_write(police_charges_mc002, readr::write_csv, path_police_charges_mc002)
-  
-  
-}
+# # Created for demonstrating the ability of the model to accept files containing
+# # court receipts under various scenarios.
+# make_police_charges_mc_scenarios <- function() {
+#   
+#   path_police_charges_mc001 <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-police-charges-mc001.csv"
+#   path_police_charges_mc002 <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-police-charges-mc002.csv"
+#   
+#   # MC001. Ramps of different ramp rate, including the default 24 months.
+#   # Uses prisonsreadyreckonerupdater, v2.0.0.
+#   path_police_charges_mc_file <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/020623_mags_sensitivity_output.xlsx"
+#   police_charges_mc_sheet <- "020623_mags_sensitivity_output-"
+#   
+#   police_charges_mc001 <- prisonsreadyreckonerupdater::update_police_charges_mc001(path_police_charges_mc_file,
+#                                                                                    police_charges_mc_sheet)
+#   botor::s3_write(police_charges_mc001, readr::write_csv, path_police_charges_mc001)
+#   
+#   
+#   # MC002. Ramps of different plateau, based on but not including the default.
+#   # Uses prisonsreadyreckonerupdater, v2.0.0.
+#   path_police_charges_mc_file <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/020623_mags_sensitivity_output.xlsx"
+#   police_charges_mc_sheet <- "020623_mags_sensitivity_output-"
+#   police_charges_mc_scenario <- "apr23_central"
+#   
+#   police_charges_mc002 <- prisonsreadyreckonerupdater::update_police_charges_mc002(path_police_charges_mc_file,
+#                                                                                    police_charges_mc_sheet,
+#                                                                                    police_charges_mc_scenario)
+#   botor::s3_write(police_charges_mc002, readr::write_csv, path_police_charges_mc002)
+#   
+#   
+# }
 
 
 ################################################################################
@@ -58,6 +60,7 @@ make_ringfenced_lookup <- function() {
   # cases from previous version. Developed for versions >= 2.0.0
   path_ringfenced_lookup <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup-2.0.0.csv"
   ## IMPORTANT: Only use the update_ringfenced_lookup() function if you have the latest version of the updater package installed.
+  # # Uses prisonsreadyreckonerupdater, v2.0.0.
   #ringfenced_lookup <- prisonsreadyreckonerupdater::update_ringfenced_lookup(visualise = FALSE)
   #botor::s3_write(ringfenced_lookup$data, readr::write_csv, path_ringfenced_lookup)
   ringfenced_lookup <- tibble::tibble(receipt_type_desc = c("app", "ind", "ind", "ind", "ind", "ind", "ind", "ind", "sent", "tew", "tew", "tew", "tew", "tew", "tew", "tew"),
@@ -133,6 +136,7 @@ make_test_reception_rates <- function(mode = 'save') {
   switch(
     mode,
     'save' = {
+      # Uses prisonsreadyreckonerupdater, v2.0.0.
       #reception_rates <- prisonsreadyreckonerupdater::update_reception_rates(path_rdo_data, path_cc_disposals, period_start, period_end)
       reception_rates <- prisonsreadyreckonerupdater::update_reception_rates_old(path_rdo_data, path_cc_disposals, period_start, period_end, path_fullsample, visualise = FALSE)
       botor::s3_write(reception_rates$data, readr::write_csv, path_reception_rates)
@@ -167,6 +171,7 @@ make_test_determinate_profiles <- function(mode = 'save') {
   switch(
     mode,
     'save' = {
+      # Uses prisonsreadyreckonerupdater, v2.0.0.
       determinate_profiles <- prisonsreadyreckonerupdater::update_determinate_profiles(period_start, period_end, visualise = FALSE)
       botor::s3_write(determinate_profiles$data, readr::write_csv, path_determinate_profiles)
     },
@@ -195,6 +200,7 @@ make_test_determinate_profiles_old <- function(mode = 'save') {
   switch(
     mode,
     'save' = {
+      # Uses prisonsreadyreckonerupdater, v2.0.0.
       determinate_profiles <- prisonsreadyreckonerupdater::update_determinate_profiles_old(period_start, period_end, path_fullsample, visualise = FALSE)
       botor::s3_write(determinate_profiles$data, readr::write_csv, path_determinate_profiles)
     },
@@ -217,6 +223,7 @@ make_test_gender_splits_old <- function() {
 
   path_fullsample   <- "s3://alpha-prison-forecasting-data/FULLSAMPLE/FULLSAMPLE_230331.csv"   # '20230205 - Jordan Carroll - RE_ Which fullsample_.msg'
 
+  # Uses prisonsreadyreckonerupdater, v2.0.0.
   gender_splits <- prisonsreadyreckonerupdater::update_gender_splits_old(period_start, period_end, path_fullsample, visualise = FALSE)
   botor::s3_write(gender_splits$data, readr::write_csv, path_gender_splits)
 
