@@ -14,12 +14,18 @@ applied, being remanded in custody.}
 kept in prison after their CTL has exceeded.}
 
 \item{ctl}{The custody time limit in months.}
+
+\item{projection_length_months}{The number of months in the forecast period.}
 }
 \value{
 A tibble representing, for lags starting from zero, the unit remand
 population impact of a magistrates' court receipt.
 }
 \description{
+Exported only for use by the Shiny app. Not to be used by a user of the
+package.
+}
+\details{
 Function to generate a linear response function (filter) representing the
 unit population impact of a receipt in the magistrates' court on remand
 population. It is assumed that only a fraction of relevant receipts will

@@ -2,16 +2,18 @@
 # sentence prisoner receptions.
 
 
-
 #' Calculate receptions by sentence band by applying reception rates to a series
 #' of disposal volumes by disposal type.
 #'
-#' @param cc_disposals A tibble representing a time series of disposal volumes
-#'   by type.
+#' @param cc_disposals A tibble representing a time series of Crown Court
+#'   disposal volumes by type.
+#' @param mc_disposals A tibble representing a time series of magistrates' court
+#'   disposal volumes by type.
 #' @param sentencing_rates A tibble with columns, \code{disposal_type},
 #'   \code{senband1}, \code{senband2}, \code{senband3} and \code{senband4},
 #'   representing the coefficients for converting disposal types to receptions
 #'   by sentence band.
+#' @return A table of prison inflows, split by sentence band.
 calculate_inflows_det_delta <- function(cc_disposals, mc_disposals, sentencing_rates) {
   
   # Sum over receipt_type_desc as our linear model is based on route only.

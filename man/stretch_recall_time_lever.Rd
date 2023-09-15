@@ -11,6 +11,22 @@ stretch_recall_time_lever(
   max_stretch_factor
 )
 }
+\arguments{
+\item{recall_time}{The recall times by sentence length band before
+stretching.}
+
+\item{lever_profiles_recall_stretch_factors}{The factors by sentence length
+band by which to strech profiles.}
+
+\item{min_stretch_factor}{A minimum allowed stretch factor.}
+
+\item{max_stretch_factor}{A maximum allowed stretch factor.}
+}
+\value{
+The new recall profiles with the post-impact profile stretched, as
+requested.
+}
 \description{
-Stretch time on recall by a user-defined factor
+Exported only for use by the Shiny app. Not to be used by a user of the
+package.
 }

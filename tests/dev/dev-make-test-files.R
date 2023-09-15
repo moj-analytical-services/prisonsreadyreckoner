@@ -1,5 +1,7 @@
 # Functions for creating tables used during development, testing or
-# visualisation.
+# visualisation. These should be files that do not exist elsewhere. Where a file
+# has been created by prisonsreadyreckonerupdater for a Shiny app release, these
+# should be linked directly and should not be recreated here.
 
 
 ################################################################################

@@ -10,6 +10,18 @@ add_cc_sitting_days(
   capacity_impact_date
 )
 }
+\arguments{
+\item{cc_capacity}{A table of Crown Court sitting days and hours per sitting
+day provided by the Courts Team.}
+
+\item{lever_extra_cc_sitting_days}{Additional sitting days to add.}
+
+\item{capacity_impact_date}{Date on which to add the extra sitting days.}
+}
+\value{
+The capacity table with adjusted sitting days.
+}
 \description{
-Increase Crown Court capacity
+Exported only for use by the Shiny app. Not to be used by a user of the
+package.
 }

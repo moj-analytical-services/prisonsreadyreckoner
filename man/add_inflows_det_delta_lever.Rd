@@ -7,15 +7,32 @@
 add_inflows_det_delta_lever(
   inflows_det,
   lever_extra_inflows_det,
-  lever_extra_inflows_det_impact_date,
-  non_data_cols = "senband"
+  lever_extra_inflows_det_impact_date
 )
 }
+\arguments{
+\item{inflows_det}{A table of determinate sentence inflows, as assumed in the
+main prisons model.}
+
+\item{lever_extra_inflows_det}{Extra determinate sentence inflows to be
+added.}
+
+\item{lever_extra_inflows_det_impact_date}{The date when the extra inflows
+are to be added}
+}
+\value{
+A table of determinate sentence inflows by sentence band with extra
+inflows added.
+}
 \description{
+Exported only for use by the Shiny app. Not to be used by a user of the
+package.
+}
+\details{
 \code{add_inflows_det_delta_lever} allows users to specify an additional
 monthly number of determinate sentence offenders who enter prison after being
 sentenced at court. (Note that this lever does not affect the number of
 offenders entering prison after being recalled from licence.) A separate
-additional number is set for each Sentence Band, and can be positive or
+additional number is set for each sentence band, and can be positive or
 negative. The lever affects all months after a user-specified impact date.
 }

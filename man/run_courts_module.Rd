@@ -17,7 +17,41 @@ run_courts_module(
   inflows_det
 )
 }
+\arguments{
+\item{cc_output}{A table of Crown Court disposal statistics provided by the
+Courts Team.}
+
+\item{cc_capacity}{A table of Crown Court sitting days and hours per sitting
+day provided by the Courts Team.}
+
+\item{cc_receipts_delta}{A table of deviations in Crown Court receipt volumes
+under a single police charge scenario, lagged suitably to account for lag
+to disposal.}
+
+\item{mc_disposals_delta}{A table of deviations in magistrates' court
+disposal volumes under a single police charge scenario.}
+
+\item{profiles_remand_in}{The remand population impact profile per individual
+received in the magistrates' court.}
+
+\item{profiles_remand_out}{The remand population impact profile per individual
+disposal in the Crown Court.}
+
+\item{published_remand_pop}{The published remand population for use in error
+checking.}
+
+\item{sentencing_rates}{A table of linear regression co-efficients for
+converting court disposal types to prison inflows by sentence band.}
+
+\item{inflows_det}{The forecast prison inflows taken from the main prisons
+model.}
+}
+\value{
+A list including remand population impacts (\code{pop_remand_delta})
+and forecast prison inflows (\code{inflows_det_adj}), including the
+original volumes supplied by the Prisons Team
+}
 \description{
-Run Crown Court and magistrates' court modelling to generate change in prison
-inflows owing to changes in the number of court disposals.
+Exported only for use by the Shiny app. Not to be used by a user of the
+package.
 }

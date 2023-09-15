@@ -6,6 +6,104 @@
 \usage{
 run_prisonsreadyreckoner(params)
 }
+\arguments{
+\item{params}{A list of parameters specifying all files and variable values
+required to generate output of a \code{prisonsreadyreckoner} scenario run.
+See the list of parameter descriptions provided in the
+parameters vignette for further details.}
+}
+\value{
+A tibble with fields, \code{run}, \code{date}, \code{casetype},
+\code{senband}, \code{sex} and \code{population}, representing a forecast
+of prison population by case type (remand, determinate, indeterminate and
+recall) and, where relevant, sentence band (bands 1 to 4) and sex. Two runs
+are provided, the \code{baseline} and the \code{scenario}.
+}
 \description{
-Run \code{prisonsreadyreckoner} in its entirety.
+Given a set of parameter values conforming with the standards of the
+installed package version, \code{run_prisonsreadyreckoner()} generates a
+forecast of prison population, split by case type, sentence band and sex
+under 'baseline' and 'scenario' conditions. This function estimates the
+impact of deviations of model assumptions from those used in a central
+forecast, as embodied in some of the many input parameters. The difference
+between scenario and baseline volumes represents the additional prison
+population associated with the parameters and may be added to the relevant
+central forecast to demonstrate impact.
+}
+\section{Overview}{
+ The function of \code{run_prisonsreadyreckoner()} is
+complex and a full treatment is provided in our vignettes. Briefly, the
+parameters specify files containing police charge input scenarios. These
+are passed through Crown Court and sentencing modules in the scenario
+condition to generate a prison inflow time series. The inflow time series
+is converted into a prison population on the assumption that volumes in
+different sentence length bands have particular distributions of time in
+custody. Recall is generated from prison outflows using similar assumptions
+as used in the main prisons modelling. Monthly recall volumes are in
+proportion to the current licensee population and a distribution of time on
+recall is assumed. In our case, while time on licence is taken from the
+main modelling, we assume a fixed time on licence, equal to the average
+assumed in the main modelling.
+
+The user may explore the impact of key drivers of prison population by
+setting special parameters we call 'levers' and their impact dates. These
+levers currently relate to
+\enumerate{
+\item the particular police charge scenario selected;
+\item the number of sitting days added;
+\item the number of additional prisoners added to the population (as
+an alternative proxy for levers above);
+\item the degree to which time spent in custody might be shorter or
+longer than currently; and
+\item the rate of recall per licensee.
+}
+
+All of these change abruptly at the impact date by an amount specified and
+some are split by sentence length band.
+}
+
+\section{Sentence length bands}{
+ Sentence length bands are as follows:
+\describe{
+\item{Band 1}{Up to 6 months (less than 182 days).}
+\item{Band 2}{6 to 12 months (182 to 364 days, inclusive).}
+\item{Band 3}{12 months to 4 years (365 to 1,460 days, inclusive).}
+\item{Band 4}{4 years or more (greater than or equal to 1,461 days). To
+be combined with Extended Determinate Sentence prisoners (EDS).}
+}
+}
+
+\section{Assumptions and limitations}{
+ In order to operate quickly (so that it
+may support a Shiny app), we have made various simplifying assumptions. The
+principal simplifications currently are:
+\describe{
+\item{New prisoners only}{We only model impacts on new prisoners
+(entering after the forecast start date).}
+\item{Unlimited Crown backlog}{The app assumes that the Crown Court
+backlog will continue throughout the forecast period. If the user adds
+too many sitting days, this assumption may become invalid.}
+\item{Limited police charge scenarios}{The app offers a limited set of
+upstream scenarios and lacks the dynamic case type prioritisation of the
+formal prison projection.}
+\item{Naive remand and HDC}{The app does not model time the interaction
+of time on remand, HDC or recall on the time served as a sentence
+prisoner or on licence, as appropriate.}
+}
+
+THe first of these assumptions means that the ready reckoner cannot show
+the immediate impact of a change in recall behaviour because; it can only
+show an impact after a delay reflecting the time new determinate sentence
+prisoners serve their sentenced time in custody.
+
+Please note, the contents of baseline and scenario mean different things for
+different population cohorts and the baseline is provided only for
+information. Only the difference, \code{scenario} minus \code{baseline} is a
+meaningful measure, representing the impact of the parameters chosen.
+}
+
+\examples{
+\dontrun{
+run_prisonsreadyreckoner(params)
+}
 }

@@ -3,6 +3,12 @@
 
 #' Format parameters.
 #' 
+#' Exported only for use by the Shiny app. Not to be used by a user of the
+#' package.
+#' 
+#' @param params The parameters passed to \code{run_prisonsreadyreckoner()}.
+#' @return The parameters with additional variables not seen by the user and
+#'   others formatted for onward use.
 #' @export
 format_params <- function(params) {
   
@@ -38,9 +44,16 @@ format_params <- function(params) {
 
 
 #' Add default parameters
+#' 
+#' Exported only for use by the Shiny app. Not to be used by a user of the
+#' package.
 #'
 #' Default parameters may be used in a Shiny environment.
 #'
+#' @param params The parameters passed to \code{run_prisonsreadyreckoner()}.
+#' @param recall_rate_exclPSS Recall rate for those not on post-sentence
+#'   supervision (PSS).
+#' @return A list of default lever values to be used by the Shiny app.
 #' @export
 set_defaults <- function(params, recall_rate_exclPSS) {
   
@@ -51,7 +64,7 @@ set_defaults <- function(params, recall_rate_exclPSS) {
   # Number of extra police charges
   defaults$lever_police_charges_scenario     <- "apr23_central"
   
-  defaults$extra_cc_sitting_days                      <- 0             # [month^-1]
+  defaults$extra_cc_sitting_days                      <- 0 / 12             # [month^-1]
   defaults$extra_cc_sitting_days_impact_date          <- default_impact_date
 
   defaults$extra_inflows_det                          <- c(senband1 = 0, senband2 = 0, senband3 = 0, senband4 = 0)
