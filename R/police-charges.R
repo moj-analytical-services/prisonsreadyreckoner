@@ -32,6 +32,48 @@
 # }
 
 
+load_police_charges_cc_data <- function(police_charges_cc_files, police_charges_central_scenario, police_charges_cc_route_file, ringfenced_lookup, start_date, forecast_start_date, forecast_end_date) {
+  
+  # Load police charge routes
+  police_charges_cc_route <- load_police_charges_cc_route(police_charges_cc_route_file)
+  
+  # Build up a combined tibble from each file
+  extra_police_charges_cc <- tibble::tibble(scenario = character(), date = as.Date(numeric()), receipt_type = character(), n_receipts_delta = numeric())
+  for (police_charges_cc_file in police_charges_cc_files) {
+    
+    extra_police_charges_cc <- import_s3_file(police_charges_cc_file) %>% 
+      trim_dates(start_date, forecast_start_date, forecast_end_date) %>% 
+      rbind(extra_police_charges_cc)
+  }
+  
+  # Convert to court route and add a lag for receipt to disposal lag.
+  extra_police_charges_cc <- calculate_police_charge_routes(extra_police_charges_cc, police_charges_cc_route)
+  extra_police_charges_cc <- add_lag_by_cc_route(extra_police_charges_cc, ringfenced_lookup, forecast_start_date, forecast_end_date)
+  
+  # Some rudimentary checks
+  # tally <- dplyr::group_by(extra_police_charges_cc, .data$scenario) %>%
+  #            dplyr::count()
+  # if (length(unique(tally$n)) != 1)
+  #   stop("incompatible data n CC police charges file.")
+  
+  # Convert the tibble to a list of tibbles named after each scenario.
+  extra_police_charges_cc_list <- list()
+  police_charges_cc_scenarios <- unique(extra_police_charges_cc$scenario)
+  for (police_charges_cc_scenario in police_charges_cc_scenarios) {
+    
+    extra_police_charges_cc_list[[police_charges_cc_scenario]] <- dplyr::filter(extra_police_charges_cc, scenario == police_charges_cc_scenario) %>%
+      dplyr::select(tidyselect::all_of(c("date", "receipt_type_desc", "route", "n_receipts_delta")))
+  }
+  
+  
+  # For the central forecast set to NA to signal this adds no volume and is to
+  # be ignored.
+  extra_police_charges_cc_list[[police_charges_central_scenario]] <- NA
+  
+  return(extra_police_charges_cc_list)
+}
+
+
 load_police_charges_cc_route <- function(police_charges_cc_route_file) {
   
   police_charges_cc_route <- import_s3_file(police_charges_cc_route_file) %>%
@@ -75,7 +117,7 @@ load_police_charges_cc_route <- function(police_charges_cc_route_file) {
 # }
 
 
-calculate_police_charge_routes <- function(police_charges_cc_route, police_charges_cc) {
+calculate_police_charge_routes <- function(police_charges_cc, police_charges_cc_route) {
   
   police_charges_cc_split <- police_charges_cc %>%
     dplyr::left_join(police_charges_cc_route, by = "receipt_type") %>%
@@ -178,50 +220,3 @@ load_police_charges_mc_data <- function(police_charges_mc_files, police_charges_
   
   return(extra_police_charges_mc_list)
 }
-
-
-
-
-
-
-load_police_charges_cc_data <- function(police_charges_cc_files, police_charges_central_scenario, police_charges_cc_route_file, ringfenced_lookup, start_date, forecast_start_date, forecast_end_date) {
-  
-  # Load police charge routes
-  police_charges_cc_route <- load_police_charges_cc_route(police_charges_cc_route_file)
-  
-  # Build up a combined tibble from each file
-  extra_police_charges_cc <- tibble::tibble(scenario = character(), date = as.Date(numeric()), receipt_type = character(), n_receipts_delta = numeric())
-  for (police_charges_cc_file in police_charges_cc_files) {
-    
-    extra_police_charges_cc <- import_s3_file(police_charges_cc_file) %>% 
-      trim_dates(start_date, forecast_start_date, forecast_end_date) %>% 
-      rbind(extra_police_charges_cc)
-  }
-  
-  
-  extra_police_charges_cc <- calculate_police_charge_routes(police_charges_cc_route, extra_police_charges_cc)
-  extra_police_charges_cc <- add_lag_by_cc_route(extra_police_charges_cc, ringfenced_lookup, forecast_start_date, forecast_end_date)
-  
-  # Some rudimentary checks
-  # tally <- dplyr::group_by(extra_police_charges_cc, .data$scenario) %>%
-  #            dplyr::count()
-  # if (length(unique(tally$n)) != 1)
-  #   stop("incompatible data n CC police charges file.")
-  
-  # Convert the tibble to a list of tibbles named after each scenario.
-  extra_police_charges_cc_list <- list()
-  police_charges_cc_scenarios <- unique(extra_police_charges_cc$scenario)
-  for (police_charges_cc_scenario in police_charges_cc_scenarios) {
-      
-    extra_police_charges_cc_list[[police_charges_cc_scenario]] <- dplyr::filter(extra_police_charges_cc, scenario == police_charges_cc_scenario) %>%
-      dplyr::select(tidyselect::all_of(c("date", "receipt_type_desc", "route", "n_receipts_delta")))
-  }
-  
-  
-  # For the central forecast set to NA to signal this adds no volume and is to
-  # be ignored.
-  extra_police_charges_cc_list[[police_charges_central_scenario]] <- NA
-  
-  return(extra_police_charges_cc_list)
-}
-
