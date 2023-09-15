@@ -49,7 +49,7 @@ set_defaults <- function(params, recall_rate_exclPSS) {
   defaults <- list()
   
   # Number of extra police charges
-  defaults$lever_police_charges_scenario     <- "central"
+  defaults$lever_police_charges_scenario     <- "apr23_central"
   
   defaults$extra_cc_sitting_days                      <- 0             # [month^-1]
   defaults$extra_cc_sitting_days_impact_date          <- default_impact_date
