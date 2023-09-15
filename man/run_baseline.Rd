@@ -14,6 +14,25 @@ run_baseline(
   recall_time
 )
 }
+\arguments{
+\item{params}{The parameters passed to \code{run_prisonsreadyreckoner()}.}
+
+\item{inflows_det_loaded}{Baseline prison inflows (as used in the main
+prisons model).}
+
+\item{profiles_det_loaded}{Determinate time-served profiles.}
+
+\item{nomis_out_delius_in_ratio}{Ratios, by sentence length band, for
+converting prison outflows to typical probation inflows.}
+
+\item{profiles_lic}{Licensee time-served profiles.}
+
+\item{recall_rate_exclPSS}{Recall rate for those not on post-sentence
+supervision (PSS).}
+
+\item{recall_time}{Time to be spent on recall by recallees, split by
+sentence length band.}
+}
 \value{
 A tibble providing, for every date and case type (remand,
 determinate, indeterminate and recall), a baseline
@@ -21,5 +40,6 @@ population based on baseline prison inflows. The exception is recall,
 which is zero.
 }
 \description{
-A baseline run without any levers.
+Exported only for use by the Shiny app. Not to be used by a user of the
+package.
 }

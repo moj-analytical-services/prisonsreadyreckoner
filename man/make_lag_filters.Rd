@@ -10,9 +10,13 @@ make_lag_filters(lags)
 \item{lags}{Lags to be modelled}
 }
 \value{
-A data frame of lag filters, one row per sentence band
+A data frame of lag filters, one row per sentence band.
 }
 \description{
+Exported only for use by the Shiny app. Not to be used by a user of the
+package.
+}
+\details{
 Function to generate a linear response function (filter) representing a
 fixed delay, including fractional time step delays.
 }

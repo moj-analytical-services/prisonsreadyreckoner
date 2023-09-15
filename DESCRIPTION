@@ -29,8 +29,10 @@ Imports:
     tidyselect (>= 1.2.0),
     withr (>= 2.5.0),
     rlang
-Suggests: 
+Suggests:
+    graphics,
     knitr,
+    mojflowchart (>= 0.0.0.9000),
     prisonsreadyreckonerupdater (>= 1.1.0),
     rmarkdown,
     testthat (>= 3.0.0)

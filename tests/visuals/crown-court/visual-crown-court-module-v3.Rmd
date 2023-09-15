@@ -275,7 +275,7 @@ plot_disposals_delta <- function(cc_disposals_delta, cc_output_diff, cc_disposal
     y <- cc_disposals_plot
     main <- paste0("Comparison of changes in disposals, ", disposal_type)
   }
-  matplot(x,
+  graphics::matplot(x,
           t(y),
           type = 'l',
           xlab = "Date",
@@ -284,7 +284,7 @@ plot_disposals_delta <- function(cc_disposals_delta, cc_output_diff, cc_disposal
           lty = c(1, 2, 1),
           col = c(colour, colour, 1)
           )
-  legend("topright",
+  graphics::legend("topright",
          inset = 0.02,
          #legend = c(label_mod, label_exp, label_base),
          legend = c(label_mod, label_exp),
@@ -310,7 +310,8 @@ the distribution of all cases in the baseline scenario, whereas the differences
 between the original sensitivity scenarios and the original baseline reflect
 marginal prioritisation effects.
 
-For reference, our ringfenced cases are as follows:
+For reference, our ringfenced cases match the October 2022 assumptions and
+are as follows:
 
 
 `receipt_type_desc`    `route`             `ringfenced`                     
@@ -363,7 +364,7 @@ scenario_data <- load_crown_scenario_data_oct22()
 
 x <- as.Date(scenario_data$cc_capacity_base$date)
 y <- data.frame(base = scenario_data$cc_capacity_base$sitting_days, high = scenario_data$cc_capacity_high$sitting_days, low = scenario_data$cc_capacity_low$sitting_days)
-matplot(x,
+graphics::matplot(x,
         y,
         type = 'l',
         xlab = "Date",
@@ -372,7 +373,7 @@ matplot(x,
         lty = 1,
         col = c(1, 2, 3)
 )
-legend("topright",
+graphics::legend("topright",
        inset = 0.02,
        legend = c("Base", "High", "Low"),
        lty = 1,
@@ -396,7 +397,7 @@ cc_capacity_diff_low[is.na(cc_capacity_diff_low)] <- 0
 
 x <- as.Date(cc_capacity_diff_high$date)
 y <- data.frame(high = cc_capacity_diff_high$sitting_days_delta, low = cc_capacity_diff_low$sitting_days_delta)
-matplot(x,
+graphics::matplot(x,
         y,
         type = 'l',
         xlab = "Date",
@@ -405,7 +406,7 @@ matplot(x,
         lty = 1,
         col = c(2, 3)
 )
-legend("topright",
+graphics::legend("topright",
        inset = 0.02,
        legend = c("High - Base", "Low - Base"),
        lty = 1,

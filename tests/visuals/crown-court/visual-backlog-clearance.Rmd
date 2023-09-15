@@ -22,7 +22,7 @@ set_crown_params <- function() {
   params <- format_params(params)
 
   # Number of extra police charges
-  params$lever_police_charges_scenario           <- "central" #"ramp_48m"
+  params$lever_police_charges_scenario           <- "apr23_central" #"ramp_48m"
   
   # Number of extra court sitting days per month
   params$lever_extra_cc_sitting_days             <- 20000 / 12             # [month^-1]
@@ -136,7 +136,7 @@ plot_backlog <- function(cc_disposals_delta, cc_backlog, disposal_type, colour) 
   x <- as.Date(names(cc_disposals_plot))
   y <- cc_disposals_plot
 
-  matplot(x,
+  graphics::matplot(x,
           t(y),
           type = 'l',
           xlab = "Date",
@@ -145,7 +145,7 @@ plot_backlog <- function(cc_disposals_delta, cc_backlog, disposal_type, colour) 
           lty = c(1, 2),
           col = c(colour, colour)
           )
-  legend("bottomright",
+  graphics::legend("bottomright",
          inset = 0.02,
          legend = c(label_mod, label_backlog),
          lty = c(1, 2),
@@ -164,8 +164,11 @@ params <- set_crown_params()
 ringfenced_lookup    <- load_ringfenced_lookup(params$ringfenced_lookup_file)
   
 # Load data for police charges module
-cc_receipts_delta_loaded_list  <- load_police_charges_cc_data_list(params$police_charges_cc_route_file, params$police_charges_cc_files, ringfenced_lookup, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
-mc_disposals_delta_loaded_list <- load_police_charges_mc_data(params$police_charges_mc_file, params$police_charges_mc_scenarios, params$police_charges_mc_sheet, params$mc_remand_lookup, params$start_date$police_charges_mc, params$forecast_start_date, params$forecast_end_date)
+# cc_receipts_delta_loaded_list  <- load_police_charges_cc_data_list(params$police_charges_cc_route_file, params$police_charges_cc_files, ringfenced_lookup, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
+# mc_disposals_delta_loaded_list <- load_police_charges_mc_data(params$police_charges_mc_file, params$police_charges_mc_scenarios, params$police_charges_mc_sheet, params$mc_remand_lookup, params$start_date$police_charges_mc, params$forecast_start_date, params$forecast_end_date)
+  cc_receipts_delta_loaded_list <- load_police_charges_cc_data(params$police_charges_cc_files, params$police_charges_central_scenario, params$police_charges_cc_route_file, ringfenced_lookup, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
+  mc_disposals_delta_loaded_list <- load_police_charges_mc_data(params$police_charges_mc_files, params$police_charges_central_scenario, params$mc_remand_lookup, params$start_date$police_charges_mc, params$forecast_start_date, params$forecast_end_date)
+
   
 # Load data for Crown Court module
 cc_data <- load_crown_data_test(params$cc_output_file, params$cc_capacity_file, ringfenced_lookup, params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date)
@@ -179,18 +182,22 @@ mc_disposals_delta <- mc_disposals_delta_loaded_list[[params$lever_police_charge
 # LEVER: Add (or subtract) sitting days.
 cc_capacity_levered  <- add_cc_sitting_days(cc_capacity_loaded, params$lever_extra_cc_sitting_days, params$lever_extra_cc_sitting_days_impact_date)
 
-# Add additional Crown Court receipts (and disposals for ring-fenced cases).
 # NA signals the default condition, in which cases there are no extra receipts
 # to add.
-if (!is.na(cc_receipts_delta)) {
+if (is.data.frame(cc_receipts_delta)) {
+  
+  # Add additional Crown Court receipts (and disposals for ring-fenced cases).
   cc_output <- add_cc_receipts_delta(cc_output_loaded, cc_receipts_delta)
+    
+  # Add extra ring-fenced hours to the capacity table.
+  cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity_levered)
+  check_cc_capacity(cc_capacity)
+    
 } else {
   cc_output <- cc_output_loaded
+  cc_capacity <- cc_capacity_levered
 }
 
-# Add extra ring-fenced hours to the capacity table.
-cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity_levered)
-check_cc_capacity(cc_capacity)
 
 # Join the capacity table with the crown output table and calculate disposals
 # delta for non-ring-fenced cases, assuming current non-ring-fenced disposal
@@ -217,17 +224,17 @@ For reference, our ringfenced cases are as follows:
 `ind`                  `effective`         `FALSE`
 `ind`                  `egp`               `TRUE`
 `ind`                  `gp_cracked`        `FALSE`
-`ind`                  `l_other`           `FALSE`
-`ind`                  `lgp`               `FALSE`
-`ind`                  `other_cracked`     `FALSE`
+`ind`                  `l_other`           `TRUE`
+`ind`                  `lgp`               `TRUE`
+`ind`                  `other_cracked`     `TRUE`
 `sent`                 `sent`              `TRUE`
 `tew`                  `e_other`           `TRUE`
 `tew`                  `effective`         `FALSE`
 `tew`                  `egp`               `TRUE`
 `tew`                  `gp_cracked`        `FALSE`
-`tew`                  `l_other`           `FALSE`
-`tew`                  `lgp`               `FALSE`
-`tew`                  `other_cracked`     `FALSE`
+`tew`                  `l_other`           `TRUE`
+`tew`                  `lgp`               `TRUE`
+`tew`                  `other_cracked`     `TRUE`
 ---------------------  ------------------  -------------------------------------
 
 As can be seen, the backlog is breached so a warning message should be added to

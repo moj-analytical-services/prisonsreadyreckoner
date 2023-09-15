@@ -63,7 +63,7 @@ plot_receipts_delta <- function(cc_receipts_delta_actual, cc_receipts_delta_expe
   x <- as.Date(names(cc_receipts_plot))
   y <- cc_receipts_plot
   main <- paste0("Comparison of receipts, ", receipt_type)
-  matplot(x,
+  graphics::matplot(x,
           t(y),
           type = 'l',
           xlab = "Date",
@@ -72,7 +72,7 @@ plot_receipts_delta <- function(cc_receipts_delta_actual, cc_receipts_delta_expe
           lty = c(1, 2),
           col = c(1, 1)
           )
-  legend("topright",
+  graphics::legend("topright",
          inset = 0.02,
          legend = c(label_act, label_exp),
          lty = c(1, 2),
@@ -95,11 +95,9 @@ plot_receipts_delta <- function(cc_receipts_delta_actual, cc_receipts_delta_expe
   params$ringfenced_lookup_file  <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup-2.0.0.csv"
 
   # Example receipts by receipt_type_desc and offence from police charge scenarios.
-  params$police_charges_cc_files <- list(# central = "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-police-demand-scenarios/April23_mid_pandemic_real_for_ready_reckoner.csv", # Records the total number of Crown Court receipts used as a baseline in the April 2023 projections. Includes background values from various sources, and an increase in charge numbers over a 24-month period.
-                                  # ramp_12m = "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-police-demand-scenarios/April23_mid_pandemic_real_12m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 12-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
-                                  # ramp_36m = "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-police-demand-scenarios/April23_mid_pandemic_real_36m_ramp_for_ready_reckoner.csv", # Records how Crown Court receipts would change if police charge numbers were increased over a 36-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
-                                  ramp_48m = "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-police-demand-scenarios/April23_mid_pandemic_real_48m_ramp_for_ready_reckoner.csv" # Records how Crown Court receipts would change if police charge numbers were increased over a 48-month period instead of over a 24-month period. Records differences relative to the values in April23_mid_pandemic_real_for_ready_reckoner.csv.
-  )   # '20230525 - David Verry - RE_ Next steps on the CJS ready reckoner.eml'
+  params$police_charges_central_scenario <- "apr23_central"
+  params$police_charges_cc_files <- c("s3://alpha-app-prisonsreadyreckonerapp/2023-04B/police-charges-cc001-20230825-shiny-v2.0.0-OFFICIAL.csv",
+                                      "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/police-charges-cc002-20230825-shiny-v2.0.0-OFFICIAL.csv")   # Created with prisonsreadyreckonerupdater, v2.0.0. Source: '20230525 - David Verry - RE_ Next steps on the CJS ready reckoner.eml'
 
   # Table from Chun-Yee for converting police charge tables to Court receipts by
   # court_route_desc and route.
@@ -121,8 +119,8 @@ plot_receipts_delta <- function(cc_receipts_delta_actual, cc_receipts_delta_expe
   ringfenced_lookup$lag_months <- 0
   
   # Create model receipts delta using package functions.
-  cc_receipts_delta_loaded_list <- load_police_charges_cc_data_list(params$police_charges_cc_route_file, params$police_charges_cc_files, ringfenced_lookup, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
-    cc_receipts_delta_actual <- cc_receipts_delta_loaded_list$ramp_48m
+  cc_receipts_delta_loaded_list <- load_police_charges_cc_data(params$police_charges_cc_files, params$police_charges_central_scenario, params$police_charges_cc_route_file, ringfenced_lookup, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
+    cc_receipts_delta_actual <- cc_receipts_delta_loaded_list$apr23_central_48m
 
   # Create expected receipts delta from files read in.
   target_central <- import_s3_file(path_target_central) %>%

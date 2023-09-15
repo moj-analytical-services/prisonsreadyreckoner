@@ -123,27 +123,24 @@ start_date                              Expected initial dates in various data
 projection_length_months                The number of months to include in the
                                         forecast period.
                                         
-police_charges_mc_file                  The path to a file holding receipt
-                                        volumes in the magistrates' court for
+ringfenced_lookup_file                  Path to a look-up table identifying
+                                        Crown Court case types that are
+                                        considered to be 'ring-fenced' (and
+                                        serviced immediately upon receipt) and
+                                        the lag from receipt to disposal to
+                                        assume.
+                                        
+police_charges_central_scenario         The name of the 'central' baseline
+                                        police charge scenario.
+                                        
+police_charges_mc_files                 A vector of paths to files holding
+                                        receipt volumes in the magistrates'
+                                        court for various police charge 
+                                        scenarios.
+                                        
+police_charges_cc_files                 A vector of paths to files holding
+                                        receipt volumes in the Crown Court for
                                         various police charge scenarios.
-                                        
-police_charges_mc_sheet                 The name of the sheet in
-                                        `police_charges_mc_file`
-                                        where magistrates' court police charge
-                                        scenario data are to be found.
-                                        
-police_charges_mc_scenarios             A named list of police charge scenarios
-                                        for the magistrates' court. Keys are the
-                                        values acceptable for the
-                                        `lever_police_charges_scenario` lever.
-                                        Values are scenario names as they appear
-                                        in `police_charges_mc_file`.
-                                        
-police_charges_cc_files                 A named list of paths for police charge
-                                        scenarios for the Crown Court. Keys are
-                                        the values acceptable for the
-                                        `lever_police_charges_scenario` lever.
-                                        Values are paths to the relevant files.
                                         
 police_charges_cc_route_file            Path to a file for converting Crown
                                         Court receipts, as read from a path in
@@ -157,11 +154,6 @@ cc_output_file                          Path to a file holding baseline disposal
 cc_capacity_file                        Path to a file holding baseline sitting
                                         days and hours per day for Crown Court
                                         modelling.
-                                        
-ringfenced_lookup_file                  Path to a look-up table identifying
-                                        Crown Court case types that are
-                                        considered to be 'ring-fenced' (and
-                                        serviced immediately upon receipt).
                                         
 published_remand_pop                    The latest remand population. Used for
                                         issuing a warning if remand population
@@ -231,9 +223,18 @@ tot_pop_file                            Path to a file containing actual and
                                         
 capacity_file                           Forecast prison capacity.
 
-recall_rate_hist_file                   Historical recall rates, formulated in
-                                        the same was as `lever_recall_rate`.
-                                        
+prison_population_hist_file             Historical prison population.
+  
+police_charges_hist_file                Historical receipts, compiled for
+                                        consistency with the court receipt
+                                        forecasts under the various police
+                                        charge scenarios.
+                                     
+sitting_days_hist_file                  Historical sitting days.
+
+prison_inflows_hist_file                Historical determinate sentence prison
+                                        inflows by sentence band.
+
 time_served_hist_file                   Estimates of historical average time
                                         served for comparison with the mean
                                         durations of the baseline determinate
@@ -242,18 +243,14 @@ time_served_hist_file                   Estimates of historical average time
                                         biased for much of the initial part of
                                         the record for the longest sentence
                                         length band.
+
+recall_rate_hist_file                   Historical recall rates, formulated in
+                                        the same was as `lever_recall_rate`.
+
+recall_time_served_hist_file            Estimates of historical average time
+                                        served on recall for comparison with the
+                                        durations of the baseline determinate
+                                        recall profiles used in forecasting.
                                         
-sitting_days_hist_file                  Historical sitting days.
-
-prison_population_hist_file             Historical prison population.
-  
-prison_inflows_hist_file                Historical determinate sentence prison
-                                        inflows by sentence band.
-
-police_charges_hist_file                Historical receipts, compiled for
-                                        consistency with the court receipt
-                                        forecasts under the various police
-                                        charge scenarios.
-                                     
 --------------------------------------------------------------------------------
 

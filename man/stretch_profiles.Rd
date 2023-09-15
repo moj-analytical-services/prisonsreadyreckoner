@@ -13,6 +13,27 @@ stretch_profiles(
   non_data_cols = c("senband", "phase")
 )
 }
+\arguments{
+\item{profiles}{The original time served profiles by sentence length band to
+be stretched.}
+
+\item{lever_profiles_det_stretch_factors}{The factors by which to stretch the
+original profiles.}
+
+\item{min_stretch_factor}{A minimum allowed stretch factor.}
+
+\item{max_stretch_factor}{A maximum allowed stretch factor.}
+
+\item{projection_length_months}{The number of months in the forecast period.}
+
+\item{non_data_cols}{The names of columns not containing the profile values
+to be stretched.}
+}
+\value{
+The \code{profiles} with the post-impact profile stretched, as
+requested.
+}
 \description{
-Stretch profiles by a user-defined factor
+Exported only for use by the Shiny app. Not to be used by a user of the
+package.
 }
