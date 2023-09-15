@@ -37,7 +37,7 @@ run_prisonsreadyreckoner <- function(params) {
   profiles_remand_in  <- make_remand_filter_in(params$remand_rates[['receipts']], params$no_bail_rate, params$ctl, params$projection_length_months)
   profiles_remand_out <- make_remand_filter_out(params$remand_rates[['disposals']], params$no_bail_rate, params$ctl, params$projection_length_months)
   
-  # Make filters for recall outflows.
+  # Calculate properties of recall outflows.
   recall_time     <- multiply_two_named_vectors(average_time_on_recall, recall_profile_adjustments, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
   
 
@@ -63,9 +63,9 @@ run_prisonsreadyreckoner <- function(params) {
   
   # # Plotting routines to be used in development to assess model output.
   # dev_plot_population(pop_combined, "remand", "Remand delta")
-  # dev_plot_population(pop_combined, "determinate", "Determinate")
+  dev_plot_population(pop_combined, "determinate", "Determinate")
   # dev_plot_population(pop_combined, "indeterminate", "Indeterminate")
-  # dev_plot_population(pop_combined, "recall", "Recall")
+  dev_plot_population(pop_combined, "recall", "Recall")
   
   return(dplyr::arrange(pop_combined, run, date, casetype, senband, sex))
 }
@@ -118,6 +118,7 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
   # LEVER: Add police charges.
   cc_receipts_delta  <- cc_receipts_delta_loaded_list[[params$lever_police_charges_scenario]]
   mc_disposals_delta <- mc_disposals_delta_loaded_list[[params$lever_police_charges_scenario]]
+  
   
   # LEVER: Add (or subtract) sitting days.
   cc_capacity_levered  <- add_cc_sitting_days(cc_capacity_loaded, params$lever_extra_cc_sitting_days, params$lever_extra_cc_sitting_days_impact_date)
@@ -179,12 +180,13 @@ run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disp
   # NA signals the default condition, in which cases there are no extra receipts
   # to add and no extra ringfenced disposals.
   if (is.data.frame(cc_receipts_delta)) {
-
+    
     # Add additional Crown Court receipts (and disposals for ring-fenced cases).
     cc_output <- add_cc_receipts_delta(cc_output, cc_receipts_delta)
     
     # Add extra ring-fenced hours to the capacity table.
     cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity)
+    
     check_cc_capacity(cc_capacity)
   }
 

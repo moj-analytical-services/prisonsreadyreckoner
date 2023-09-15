@@ -10,7 +10,7 @@ load_datasets <- function(params) {
   ringfenced_lookup    <- load_ringfenced_lookup(params$ringfenced_lookup_file)
   
   # Load data for police charges module
-  cc_receipts_delta_loaded_list  <- load_police_charges_cc_data_list(params$police_charges_cc_route_file, params$police_charges_cc_files, params$police_charges_central_scenario, ringfenced_lookup, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
+  cc_receipts_delta_loaded_list <- load_police_charges_cc_data(params$police_charges_cc_files, params$police_charges_central_scenario, params$police_charges_cc_route_file, ringfenced_lookup, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
   mc_disposals_delta_loaded_list <- load_police_charges_mc_data(params$police_charges_mc_files, params$police_charges_central_scenario, params$mc_remand_lookup, params$start_date$police_charges_mc, params$forecast_start_date, params$forecast_end_date)
 
 
@@ -108,6 +108,8 @@ load_prison_data <- function(prison_inflows_file, profiles_file, licence_profile
 # Trim dates to requested window.
 # Used by load functions to filter time series data as soon as they are loaded.
 trim_dates <- function(tbl, start_date, forecast_start_date, forecast_end_date) {
+  
+  
   
   if (min(tbl$date) != start_date)
     stop("First date in input file was ", min(tbl$date), ". ", start_date, " expected.")
