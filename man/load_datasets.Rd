@@ -6,6 +6,13 @@
 \usage{
 load_datasets(params)
 }
+\arguments{
+\item{params}{The parameters passed to \code{run_prisonsreadyreckoner()}.}
+}
+\value{
+A list containing the contents of all files provided in params.
+}
 \description{
-Load data from S3
+Exported only for use by the Shiny app. Not to be used by a user of the
+package.
 }

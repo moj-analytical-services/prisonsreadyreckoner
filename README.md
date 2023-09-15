@@ -3,6 +3,9 @@
 
 INSTRUCTIONS:
 
+Rendering README
+----------------
+
 Render `README.Rmd` regularly, to keep `README.md` up-to-date:
 
 devtools::build_readme()
@@ -19,6 +22,22 @@ You can also embed plots, for example:
 
 In that case, commit and push the resulting figure files so they display on
 GitHub and CRAN.
+
+
+Using pkgdown to generate web documentation
+-------------------------------------------
+
+Assuming you have installed pkgdown, configure your package (once) to use
+pkgdown:
+    usethis::use_pkgdown()
+
+Add the address of the website to the url field in the _pkgdown.yml file and
+build the site:
+    pkgdown::build_site()
+
+Optionally add a reference section to the _pkgdown.yml file and re-compile the
+index:
+    pkgdown::build_reference_index()
 
 -->
 

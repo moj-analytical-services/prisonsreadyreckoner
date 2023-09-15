@@ -3,6 +3,11 @@
 
 #' Load data from S3
 #' 
+#' Exported only for use by the Shiny app. Not to be used by a user of the
+#' package.
+#' 
+#' @param params The parameters passed to \code{run_prisonsreadyreckoner()}.
+#' @return A list containing the contents of all files provided in params.
 #' @export
 load_datasets <- function(params) {
 

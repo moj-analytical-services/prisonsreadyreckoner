@@ -6,6 +6,14 @@
 \usage{
 format_params(params)
 }
+\arguments{
+\item{params}{The parameters passed to \code{run_prisonsreadyreckoner()}.}
+}
+\value{
+The parameters with additional variables not seen by the user and
+others formatted for onward use.
+}
 \description{
-Format parameters.
+Exported only for use by the Shiny app. Not to be used by a user of the
+package.
 }

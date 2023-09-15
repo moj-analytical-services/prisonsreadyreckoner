@@ -9,6 +9,9 @@
 
 #' Build population impact filters for use in remand modelling. Inflow impacts.
 #' 
+#' Exported only for use by the Shiny app. Not to be used by a user of the
+#' package.
+#' 
 #' Function to generate a linear response function (filter) representing the  
 #' unit population impact of a receipt in the magistrates' court on remand
 #' population. It is assumed that only a fraction of relevant receipts will
@@ -20,6 +23,7 @@
 #' @param no_bail_rate The fraction of those remanded in custody who will be
 #'   kept in prison after their CTL has exceeded.
 #' @param ctl The custody time limit in months.
+#' @param projection_length_months The number of months in the forecast period.
 #' @return A tibble representing, for lags starting from zero, the unit remand
 #'   population impact of a magistrates' court receipt.
 #' @export
@@ -38,6 +42,9 @@ make_remand_filter_in <- function(remand_rate, no_bail_rate, ctl, projection_len
 
 #' Build population impact filters for use in remand modelling. Outflow impacts.
 #' 
+#' Exported only for use by the Shiny app. Not to be used by a user of the
+#' package.
+#' 
 #' Function to generate a linear response function (filter) representing the
 #' unit population impact of a disposal in the Crown court on remand population.
 #' It is assumed that only a fraction of relevant disposals will be associated
@@ -53,6 +60,7 @@ make_remand_filter_in <- function(remand_rate, no_bail_rate, ctl, projection_len
 #' @param no_bail_rate The fraction of those remanded in custody who will be
 #'   kept in prison after their CTL has exceeded.
 #' @param ctl The custody time limit in months.
+#' @param projection_length_months The number of months in the forecast period.
 #' @return A tibble representing, for lags starting from zero, the unit remand
 #'   population impact of a Crown Court disposal.
 #' @export
@@ -179,7 +187,14 @@ load_profiles_det <- function(profiles_file, projection_length_months, lever_pro
 
 
 #' Add phase (pre- or post-impact) to time series
+#' 
+#' Exported only for use by the Shiny app. Not to be used by a user of the
+#' package.
 #'
+#' @param time_series A time series to be split into pre and post phases.
+#' @param impact_date The date on which the time series is to be split.
+#' @return A table of time series split by sentence length band and phase, pre-
+#'   and post- impact.
 #' @export
 add_phases <- function(time_series, impact_date = NULL) {
   
@@ -198,7 +213,7 @@ add_phases <- function(time_series, impact_date = NULL) {
 }
 
 
-#' Add delta inflows to base inflows
+# Add delta inflows to base inflows
 add_inflows_det_delta_courts <- function(inflows, delta) {
   
   inflows_delta <- dplyr::bind_rows(inflows, delta) %>%
@@ -330,12 +345,14 @@ load_recall_params <- function(recall_file, start_date, forecast_start_date, for
 
 #' Build lag filters for use in licence recall modelling
 #' 
+#' Exported only for use by the Shiny app. Not to be used by a user of the
+#' package.
+#' 
 #' Function to generate a linear response function (filter) representing a 
 #' fixed delay, including fractional time step delays.
 #' 
 #' @param lags Lags to be modelled
-#' @return A data frame of lag filters, one row per sentence band
-#' 
+#' @return A data frame of lag filters, one row per sentence band.
 #' @export
 make_lag_filters <- function(lags) {
   
@@ -441,6 +458,16 @@ load_gender_splits <- function(gender_splits_file) {
 }
 
 
+#' Split output populations by gender.
+#' 
+#' Exported only for use by the Shiny app. Not to be used by a user of the
+#' package.
+#' 
+#' @param pop A population table split by case type and sentence length band.
+#' @param gender_splits A table of gender splits for each case type and
+#'   sentence length band.
+#' @return The population table with an additional column for gender, volumes
+#'   being pro-rated by relevant gender splits.
 #' @export
 split_populations_by_gender <- function(pop, gender_splits) {
   

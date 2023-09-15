@@ -1,6 +1,14 @@
 
 #' Increase Crown Court capacity
 #' 
+#' Exported only for use by the Shiny app. Not to be used by a user of the
+#' package.
+#' 
+#' @param cc_capacity A table of Crown Court sitting days and hours per sitting
+#'   day provided by the Courts Team.
+#' @param lever_extra_cc_sitting_days Additional sitting days to add.
+#' @param capacity_impact_date Date on which to add the extra sitting days.
+#' @return The capacity table with adjusted sitting days.
 #' @export
 add_cc_sitting_days <- function(cc_capacity, lever_extra_cc_sitting_days, capacity_impact_date) {
   
@@ -15,16 +23,27 @@ add_cc_sitting_days <- function(cc_capacity, lever_extra_cc_sitting_days, capaci
 
 
 #' Add a constant number of monthly determinate sentence prison receptions
+#' 
+#' Exported only for use by the Shiny app. Not to be used by a user of the
+#' package.
 #'
 #' \code{add_inflows_det_delta_lever} allows users to specify an additional
 #' monthly number of determinate sentence offenders who enter prison after being
 #' sentenced at court. (Note that this lever does not affect the number of
 #' offenders entering prison after being recalled from licence.) A separate
-#' additional number is set for each Sentence Band, and can be positive or
+#' additional number is set for each sentence band, and can be positive or
 #' negative. The lever affects all months after a user-specified impact date.
 #' 
+#' @param inflows_det A table of determinate sentence inflows, as assumed in the
+#'   main prisons model.
+#' @param lever_extra_inflows_det Extra determinate sentence inflows to be
+#'   added.
+#' @param lever_extra_inflows_det_impact_date The date when the extra inflows
+#'   are to be added
+#' @return A table of determinate sentence inflows by sentence band with extra
+#'   inflows added.
 #' @export
-add_inflows_det_delta_lever <- function(inflows_det, lever_extra_inflows_det, lever_extra_inflows_det_impact_date, non_data_cols = "senband") {
+add_inflows_det_delta_lever <- function(inflows_det, lever_extra_inflows_det, lever_extra_inflows_det_impact_date) {
   
   inflows_det <- inflows_det %>%
     dplyr::mutate(dplyr::across(c(all_of(names(dplyr::select(., -tidyselect::all_of(c("senband")))))), ~tidyr::replace_na(.,0)))
@@ -44,6 +63,20 @@ add_inflows_det_delta_lever <- function(inflows_det, lever_extra_inflows_det, le
 
 #' Stretch profiles by a user-defined factor
 #' 
+#' Exported only for use by the Shiny app. Not to be used by a user of the
+#' package.
+#' 
+#' @param profiles The original time served profiles by sentence length band to
+#'   be stretched.
+#' @param lever_profiles_det_stretch_factors The factors by which to stretch the
+#'   original profiles.
+#' @param min_stretch_factor A minimum allowed stretch factor.
+#' @param max_stretch_factor A maximum allowed stretch factor.
+#' @param projection_length_months The number of months in the forecast period.
+#' @param non_data_cols The names of columns not containing the profile values
+#'   to be stretched.
+#' @return The \code{profiles} with the post-impact profile stretched, as
+#'   requested.
 #' @export
 stretch_profiles <- function(profiles, lever_profiles_det_stretch_factors, min_stretch_factor, max_stretch_factor, projection_length_months, non_data_cols = c("senband", "phase")) {
   
@@ -158,6 +191,17 @@ stretch_profiles <- function(profiles, lever_profiles_det_stretch_factors, min_s
 
 #' Stretch time on recall by a user-defined factor
 #' 
+#' Exported only for use by the Shiny app. Not to be used by a user of the
+#' package.
+#' 
+#' @param recall_time The recall times by sentence length band before
+#'   stretching.
+#' @param lever_profiles_recall_stretch_factors The factors by sentence length
+#'   band by which to strech profiles.
+#' @param min_stretch_factor A minimum allowed stretch factor.
+#' @param max_stretch_factor A maximum allowed stretch factor.
+#' @return The new recall profiles with the post-impact profile stretched, as
+#'   requested.
 #' @export
 stretch_recall_time_lever <- function(recall_time, lever_profiles_recall_stretch_factors, min_stretch_factor, max_stretch_factor) {
   

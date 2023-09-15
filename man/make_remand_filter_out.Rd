@@ -19,12 +19,18 @@ applied, having been remanded in custody at disposal.}
 kept in prison after their CTL has exceeded.}
 
 \item{ctl}{The custody time limit in months.}
+
+\item{projection_length_months}{The number of months in the forecast period.}
 }
 \value{
 A tibble representing, for lags starting from zero, the unit remand
 population impact of a Crown Court disposal.
 }
 \description{
+Exported only for use by the Shiny app. Not to be used by a user of the
+package.
+}
+\details{
 Function to generate a linear response function (filter) representing the
 unit population impact of a disposal in the Crown court on remand population.
 It is assumed that only a fraction of relevant disposals will be associated

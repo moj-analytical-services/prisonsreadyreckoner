@@ -6,6 +6,19 @@
 \usage{
 set_defaults(params, recall_rate_exclPSS)
 }
+\arguments{
+\item{params}{The parameters passed to \code{run_prisonsreadyreckoner()}.}
+
+\item{recall_rate_exclPSS}{Recall rate for those not on post-sentence
+supervision (PSS).}
+}
+\value{
+A list of default lever values to be used by the Shiny app.
+}
 \description{
+Exported only for use by the Shiny app. Not to be used by a user of the
+package.
+}
+\details{
 Default parameters may be used in a Shiny environment.
 }

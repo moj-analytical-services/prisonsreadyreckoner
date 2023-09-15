@@ -7,7 +7,10 @@ calling function is active.}
 \usage{
 silence_botor()
 }
+\value{
+Not applicable.
+}
 \description{
-Temporarily turn off debug messages when botor interacts with S3 while the
-calling function is active.
+Exported only for use by the Shiny app. Not to be used by a user of the
+package.
 }

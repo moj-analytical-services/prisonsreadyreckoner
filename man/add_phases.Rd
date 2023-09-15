@@ -6,6 +6,16 @@
 \usage{
 add_phases(time_series, impact_date = NULL)
 }
+\arguments{
+\item{time_series}{A time series to be split into pre and post phases.}
+
+\item{impact_date}{The date on which the time series is to be split.}
+}
+\value{
+A table of time series split by sentence length band and phase, pre-
+and post- impact.
+}
 \description{
-Add phase (pre- or post-impact) to time series
+Exported only for use by the Shiny app. Not to be used by a user of the
+package.
 }
