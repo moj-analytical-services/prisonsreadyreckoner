@@ -24,15 +24,17 @@ model with the main projection better.
 
 * Introduces a lever to allow the user to change the time spent on recall.
 
-This version is also expected to be used with more police charge scenarios,
-although this does not have an impact on the function of the model itself.
+* Expects police charge scenario files in a simplified format to future-proof
+against multiple further scenarios. These simplified files are prepared by
+prisonsreadyreckonerupdater instead.
 
 
 ## Breaking changes
 
 This version is not backwards compatible with version 1.0.0 because additional
 parameters are required to generate the lag in ring-fenced Crown Court disposals
-and to implement time on recall impacts.
+and to implement time on recall impacts and because the scenario files are now
+expected to have a simplified format.
 
 
 
