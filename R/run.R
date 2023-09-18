@@ -220,13 +220,7 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
   # LEVER: Add police charges.
   cc_receipts_delta  <- cc_receipts_delta_loaded_list[[params$lever_police_charges_scenario]]
   mc_disposals_delta <- mc_disposals_delta_loaded_list[[params$lever_police_charges_scenario]]
-  
-  # print("cc_receipts_delta")
-  # print(cc_receipts_delta)
-  # print("mc_disposals_delta")
-  # print(mc_disposals_delta)
-  
-  
+
   # LEVER: Add (or subtract) sitting days.
   cc_capacity_levered  <- add_cc_sitting_days(cc_capacity_loaded, params$lever_extra_cc_sitting_days, params$lever_extra_cc_sitting_days_impact_date)
   
@@ -312,20 +306,12 @@ run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disp
   # NA signals the default condition, in which cases there are no extra receipts
   # to add and no extra ringfenced disposals.
   if (is.data.frame(cc_receipts_delta)) {
-    
-    #View(cc_receipts_delta)
-    
+
     # Add additional Crown Court receipts (and disposals for ring-fenced cases).
     cc_output <- add_cc_receipts_delta(cc_output, cc_receipts_delta)
     
-    #print("cc_output")
-    #View(cc_output)
-    
     # Add extra ring-fenced hours to the capacity table.
     cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity)
-    
-    #print(cc_capacity)
-    
     check_cc_capacity(cc_capacity)
   }
 
