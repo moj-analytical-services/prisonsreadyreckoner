@@ -47,21 +47,25 @@ dev_set_params <- function() {
   # For use by the Shiny app only.
   ################################################################################
   
-  # DEVELOPMENT NOTE: These are not needed for any tests so we refer to the
-  # Shiny app folder to avoid unnecessary duplication.
-  params$capacity_version <- "May-23"
-  
-  params$tot_pop_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/populations_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx"   # 20230511 - Charlotte Wallace - RE_ Updated prison projections .msg
-  params$capacity_file <- paste0("s3://alpha-app-prisonsreadyreckonerapp/2023-04B/", params$capacity_version, " Supply Forecasts_V1.5_Shared.xlsx")
-  
-  # Added by Alex Dickinson - historical data for plotting
-  params$prison_population_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/historical-prison-population-20230825-shiny-v2.0.0-OFFICIAL.csv"
-  params$police_charges_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/historical-police-charges-20230825-shiny-v2.0.0-OFFICIAL.csv"
-  params$sitting_days_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/sitting_days_actuals.csv"
-  params$prison_inflows_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/historical-prison-inflows-20230825-shiny-v2.0.0-OFFICIAL.csv"
-  params$time_served_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/historical-time-served-20230825-shiny-v2.0.0-OFFICIAL.csv"
-  params$recall_rate_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/recall_rate_b.csv"
-  params$recall_time_served_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/historical-recall-time-served-20230825-shiny-v2.0.0-OFFICIAL.csv"
+  # params$capacity_version <- "May-23"
+  # 
+  # params$tot_pop_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/populations_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx"   # 20230511 - Charlotte Wallace - RE_ Updated prison projections .msg
+  # params$capacity_file <- paste0("s3://alpha-app-prisonsreadyreckonerapp/2023-04B/", params$capacity_version, " Supply Forecasts_V1.5_Shared.xlsx")
+  # 
+  # # Added by Alex Dickinson - historical data for plotting
+  # params$prison_population_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/historical-prison-population-20230825-shiny-v2.0.0-OFFICIAL.csv"
+  # params$police_charges_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/historical-police-charges-20230825-shiny-v2.0.0-OFFICIAL.csv"
+  # params$sitting_days_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/sitting_days_actuals.csv"
+  # params$prison_inflows_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/historical-prison-inflows-20230825-shiny-v2.0.0-OFFICIAL.csv"
+  # params$time_served_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/historical-time-served-20230825-shiny-v2.0.0-OFFICIAL.csv"
+  # params$recall_rate_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/recall_rate_b.csv"
+  # params$recall_time_served_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/historical-recall-time-served-20230825-shiny-v2.0.0-OFFICIAL.csv"
+  # 
+  # # Central police charge scenarios for plotting (central scenarios are not used
+  # # in running of app).
+  # params$police_charges_mc_central_plot_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/020623_mags_sensitivity_output.xlsx"
+  # params$police_charges_mc_plot_sheet <- "020623_mags_sensitivity_output-"
+  # params$police_charges_mc_central_plot_scenario <- "apr23_central"
   
   
   ################################################################################
