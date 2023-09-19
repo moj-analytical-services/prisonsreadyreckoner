@@ -67,10 +67,10 @@ Assuming you are using `renv` for package management, install
 `prisonsreadyreckoner` by typing the following in the RStudio console:
 
 ``` r
-renv::install("git@github.com:moj-analytical-services/prisonsreadyreckoner.git@v1.0.0")
+renv::install("git@github.com:moj-analytical-services/prisonsreadyreckoner.git@v2.0.0")
 ```
 
-where `v1.0.0` is the latest release. You may wish to double-check there
+where `v2.0.0` is the latest release. You may wish to double-check there
 is not a more recent release available on Github.
 
 `prisonsreadyreckoner` relies on the `botor` package, which relies on
@@ -128,10 +128,10 @@ remotes::install_git("git@github.com:moj-analytical-services/prisonsreadyreckone
 vignette('mojmodel')
 ```
 
-where `<packageversion>` is the latest package version (e.g. `v1.0.0`).
+where `<packageversion>` is the latest package version (e.g. `v2.0.0`).
 
 Also available at [our
-website](https://model-redevelopment-website.apps.alpha.mojanalytics.xyz/).
+website](https://model-redevelopment-website.apps.live.cloud-platform.service.justice.gov.uk/).
 
 [Source
 code](https://github.com/moj-analytical-services/prisonsreadyreckoner/)
