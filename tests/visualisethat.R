@@ -24,7 +24,7 @@
 #      c) any tips on reinstating the visualisation, should it need to be.
 
 
-silence_botor()
+prisonsreadyreckoner::silence_botor()
 
 
 path_visual <- paste("/home", Sys.getenv("USER"), "prisonsreadyreckoner/tests/visuals", sep="/")

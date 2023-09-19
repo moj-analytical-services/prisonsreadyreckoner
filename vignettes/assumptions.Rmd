@@ -40,7 +40,7 @@ most recent projections, and a *scenario*, representing deviations from the
 assumptions of the central projection. The output of the main package function
 includes both baseline and scenario but it is only their difference that should
 be used, superimposed on the central projection, if desired, to illustrate
-impacts of marginal changes in population drivers. For some casetypes and
+impacts of marginal changes in population drivers. For some case types and
 levers, the baseline is zero under default settings and completely
 uninformative.
 
@@ -48,33 +48,33 @@ uninformative.
 # Police charge scenarios (Lever 1)
 
 Police charge scenarios are represented by files listed in the
-`police_charges_mc_file` and `police_charges_cc_files` parameters. The user
+`police_charges_mc_files` and `police_charges_cc_files` parameters. The user
 selects a scenario by setting the `lever_police_charges_scenario` parameter
 to an appropriate value. See [Parameters][parameters] for a current list. 
 
 
 ## Magistrates' court receipts
 
-The magistrates' court file provides magistrates' court disposals for each
-police charge scenario, including the baseline ('central') scenario.
+The magistrates' court files provide magistrates' court disposals for various
+police charge scenarios, expressed as a deviation from the baseline ('central')
+scenario.
 
-***ASSUMPTION:** We assume that magistrates' court disposals are without material
-delay so that these disposal volumes are synonymous with receipts and entirely
-describe the magistrates' court caseload associated with each scenario.*
+***ASSUMPTION:** We assume that magistrates' court disposals are without
+material delay so that these disposal volumes are synonymous with receipts and
+entirely describe the magistrates' court caseload associated with each
+scenario.*
 
-Non-central scenarios are joined with the central scenario and the monthly
-difference for each with respect to the central scenario is
-calculated for summary motoring, summary non-motoring, triable-either-way and
-indictable-only cases. The result is the additional caseload associated with
-each scenario, which will partially drive prison inflows, depending on which
-scenario is selected (i.e. the value of the police charge scenario lever as
-represented by the `lever_police_charges_scenario` parameter).
+Non-central scenarios include summary motoring, summary non-motoring,
+triable-either-way and indictable-only cases. The additional caseload associated
+with each scenario will partially drive prison inflows, in a way depending on
+which scenario is selected (i.e. the value of the police charge scenario lever
+as represented by the `lever_police_charges_scenario` parameter).
 
 
 ## Crown Court receipts
 
-The Crown Court files provide Crown Court receipts for each police charge
-scenario, including the baseline.
+As for the magistrates' court equivalents, the Crown Court receipt volumes are
+expressed as a deviation from the baseline ('central') scenario.
 
 Rows represent case types that combine receipt type (e.g. appeal, committed for
 sentence, indictable only, triable-either-way) with offence group (e.g. drug
@@ -87,10 +87,10 @@ splits of the case type volumes into Crown Court disposal routes (appeal,
 committed for sentence and various effective trials, guilty pleas and other
 outcomes).*
 
-Crown receipt volumes for non-central scenarios represent the central scenario
-volume minus the volume expected under the respective scenarios. Additional
-caseload associated with each scenario is simply minus the volume provided. No
-further reference to the central scenario required.
+Upon loading, lags are added to certain Crown Court receipt volumes to represent
+the time between receipt and disposal. Lags in months are taken from the file at
+the path provided by the `ringfenced_lookup_file` parameter and read into the
+`ringfenced_lookup` table.
 
 
 # Crown Court disposals and sentencing modelling (Lever 2)
@@ -117,7 +117,8 @@ average hours sat per sitting day assumed in the formal projection.
 
 3. `ringfenced_lookup_file` - A path to a look-up table identifying each
 combination of receipt type and disposal route as either 'ringfenced' or 'non-
-ringfenced'.
+ringfenced' as well as lags for each type from receipt to disposal in the
+Crown Court.
 
 The respective files are read into tables, `cc_output`, `cc_capacity` and
 `ringfenced_lookup`.
@@ -169,7 +170,7 @@ additional hours from sitting days and the additional hours from ringfenced
 cases are distributed among the non-ringfenced cases according to the backlog
 rate.
 
-6. A warning is issed if baseline plus additional ringfenced court time exceeds
+6. A warning is issued if baseline plus additional ringfenced court time exceeds
 baseline capacity plus additional sitting hours.
 
 
@@ -234,10 +235,10 @@ considered (as summary cases are unlikely to involve remand).*
 indefinitely until disposal. The remaining 80% are assumed to be placed in the
 court backlog and released after six months.*
 
-***ASSUMPTION:** 20% of additional remand _outflows_ are assumed to have been held
-on remand since receipt at court. The remaining 80% are assumed to be drawn from
-the wider pool of remand prisoners and would have otherwise left remand, even
-without disposal, at varying lags from one to six months.*
+***ASSUMPTION:** 20% of additional remand _outflows_ are assumed to have been
+held on remand since receipt at court. The remaining 80% are assumed to be drawn
+from the wider pool of remand prisoners and would have otherwise left remand,
+even without disposal, at varying lags from one to six months.*
 
 
 These assumptions mean that most (80%) of any marginal change in receipts or
@@ -259,8 +260,8 @@ receipts and disposals, respectively, and summed in the
 
 Levers for prison receptions refer to determinate sentence prisoners only.
 
-***ASSUMPTION:** We do not currently model changes in indeterminate inflows. These
-are low volume and historically stable.*
+***ASSUMPTION:** We do not currently model changes in indeterminate inflows.
+These are low volume and historically stable.*
 
 ***ASSUMPTION:** Determinate sentence prisoners are aggregated to four
 [sentence length band][sentence-bands]. In the baseline run, inflows are as in
@@ -342,8 +343,7 @@ sentence prisoners sentenced in the forecast period who are on licence after
 the lever impact date.*
 
 
-## Time on recall
-<!-- ## Time on recall (Lever 6) -->
+## Time on recall (Lever 6)
 
 Having generated an inflow time series, we convolve recall inflows with a
 profile representing time on recall to generate a time series of outflows. The
@@ -355,9 +355,9 @@ length of time on recall, which may differ between sentence length bands. The
 time assumed for each sentence band as well as an adjustment, calibrated to
 optimise population predictions, is provided by the Prisons Team.*
 
-<!-- Where the time on recall lever is different from the default, a different -->
-<!-- time on recall is applied for those recalled after the impact date. As with the -->
-<!-- other levers, only individuals sentenced in the forecast period are affected. -->
+Where the time on recall lever is different from the default, a different
+time on recall is applied for those recalled after the impact date. As with the
+other levers, only individuals sentenced in the forecast period are affected.
 
 Owing to all the adjustments and the highly simplified treatment of a system
 that, in reality, can involve multiple return visits to prison, the recall
