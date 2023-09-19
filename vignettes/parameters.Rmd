@@ -109,9 +109,9 @@ start_date                              Expected initial dates in various data
                                         forecast will start from the
                                         last consistent date.
                                         
---police_charges_cc                     Date for `police_charges_cc_files`
+--police_charges_mc                     Date for `police_charges_mc_files`
   
---police_charges_mc                     Date for `police_charges_mc_file`
+--police_charges_cc                     Date for `police_charges_cc_files`
   
 --inflows_det                           Date for `prison_inflows_file`
   

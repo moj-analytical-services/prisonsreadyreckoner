@@ -107,13 +107,13 @@ renv::install("git@github.com:moj-analytical-services/mojmodel.git@v0.5.0")
 # https://github.com/moj-analytical-services/prisonsreadyreckonerupdater
 renv::install("moj-analytical-services/Rdbtools")
 renv::install("git@github.com:moj-analytical-services/fullsample.git")
-renv::install("git@github.com:moj-analytical-services/prisonsreadyreckonerupdater.git@v1.0.0")
+renv::install("git@github.com:moj-analytical-services/prisonsreadyreckonerupdater.git@v2.0.0")
 
 # Install prisonsreadyreckoner. At the time of writing, the current version of
-# prisonsreadyreckoner is v1.0.0 but you should check that a higher version is
+# prisonsreadyreckoner is v2.0.0 but you should check that a higher version is
 # available and substitute in the following. See
 # https://github.com/moj-analytical-services/prisonsreadyreckoner
-renv::install("git@github.com:moj-analytical-services/prisonsreadyreckoner.git@v1.0.0")
+renv::install("git@github.com:moj-analytical-services/prisonsreadyreckoner.git@v2.0.0")
 ```
 
 If any package dependencies fail to install in this process, you may need to
@@ -251,9 +251,9 @@ may be introduced.
 
 ```yaml
 s3Url: "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisons-ready-reckoner-commissions"
-scenariosFile: "scenarios-20230712-OFFICIAL.yaml"
+scenariosFile: "scenarios-20230919-OFFICIAL.yaml"
 runLog: "log-run-OFFICIAL.yaml"
-modelVersion: v1.0.0
+modelVersion: v2.0.0
 
 localDirs:
   capture: "capture"
@@ -297,14 +297,14 @@ the `id` by 1.
 # in the console.
 
 
-shiny_1_0_0:
+shiny_2_0_0:
   id: 1
   description: >-
-    Basic, initial scenario accompanying the Shiny app release v1.0.0.
-  modelVersion: v1.0.0  # Version of the commissions repository
+    Basic, initial scenario accompanying the Shiny app release v2.0.0.
+  modelVersion: v2.0.0  # Version of the commissions repository
   assumptions: NA
-  params: params-20230712-shiny_1_0_0-OFFICIAL.yaml
-  files: files-20230712-shiny_1_0_0-OFFICIAL.yaml
+  params: params-20230919-shiny_2_0_0-OFFICIAL.yaml
+  files: files-20230919-shiny_2_0_0-OFFICIAL.yaml
   startup: NA
   commissioner: DG Performance, Strategy and Analysis
   dateCommission: 2023-06-15
@@ -317,7 +317,7 @@ shiny_1_0_0:
     input files.
   comments: >-
     Based on the same parameters used for the first release of the
-    prisons-ready-reckoner-app, v1.0.0.
+    prisons-ready-reckoner-app, v2.0.0.
   refresh: TRUE
   dateRun: NA
   user: NA
@@ -331,14 +331,14 @@ shiny_1_0_0:
 ### Example params file
 
 ```yaml
-# Parameters used for the first formal release of the Shiny app, August 2023,
-# prisons-ready-reckoner-app v1.0.0.
+# Parameters used for the first formal release of the Shiny app, September 2023,
+# prisons-ready-reckoner-app v2.0.0.
 # To create a new version, copy into the tmp folder, edit and use
 # mojmodel::upload_params(<name of new file>). You can download an existing file
 # with mojmodel::download_params(<name of file you want to copy>).
 
 version:
-  prisonsreadyreckoner: v1.0.0
+  prisonsreadyreckoner: v2.0.0
 
 
 ################################################################################
@@ -347,7 +347,7 @@ version:
 ################################################################################
 
 # Number of extra police charges
-lever_police_charges_scenario: "central"
+lever_police_charges_scenario: "apr23_central"
   
 # Number of extra court sitting days per month
 lever_extra_cc_sitting_days: !expr '0 / 12'             # [month^-1]
@@ -364,6 +364,10 @@ lever_profiles_det_stretch_impact_date: "2024-01-01"
 # Recall
 lever_recall_rate: !expr 'signif(c(senband1 = 0.234774346793349, senband2 = 0.1003465003465, senband3 = 0.048357569686712, senband4 = 0.0213297380452349), 3)'   # 20230505 - Charlotte Wallace - Updated prison projections .msg
 lever_recall_rate_impact_date: "2024-01-01"
+
+# Factors for stretching profiles of time in recall, split by sentence band
+lever_profiles_recall_stretch_factors: !expr 'c(senband1 = 1, senband2 = 1, senband3 = 1, senband4 = 1)'
+lever_profiles_recall_stretch_impact_date: "2024-01-01"
   
   
   
@@ -387,22 +391,16 @@ projection_length_months: 49         # To March 2027. '20230525 - To Ceri Cooper
   
   
 # Police charge parameters
-# Magistrates' courts
-police_charges_mc_scenarios:
-  central: "apr23_central"
-  ramp_12m: "apr23_central_12m"
-  ramp_36m: "apr23_central_36m"
-  ramp_48m: "apr23_central_48m"
-police_charges_mc_sheet: "020623_mags_sensitivity_output-"
+police_charges_central_scenario: "apr23_central"
 
 
 # Sentencing parameters
 # Remand rates.
 published_remand_pop: 13176                     # OMSQ Oct-Dec 2022, Table 1.1, Adults, 31 March 2023. For QA purposes only.
-remand_rates: !expr 'c(receipts = 0.187429985453694, disposals = 0.475353729743915)'   # '20230712 - To Jordan Carroll - RE_ Remand model comparison.msg'
-no_bail_rate: 0.2                               # '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
-ctl: 6                                          # [months] '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
-mc_remand_lookup: !expr 'tibble::tribble(~disposal_type, ~remanded, "mc_ind", TRUE, "mc_tew", TRUE, "mc_sm", FALSE, "mc_snm", FALSE)'   # '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
+remand_rates: !expr 'c(receipts = 0.187429985453694, disposals = 0.475353729743915)'   # '20230712 - To XXX - RE_ Remand model comparison.msg'
+no_bail_rate: 0.2                               # '20230705 - XXX - RE_ Sitting Day Remand Impact Method.msg'
+ctl: 6                                          # [months] '20230705 - XXX - RE_ Sitting Day Remand Impact Method.msg'
+mc_remand_lookup: !expr 'tibble::tribble(~disposal_type, ~remanded, "mc_ind", TRUE, "mc_tew", TRUE, "mc_sm", FALSE, "mc_snm", FALSE)'   # '20230705 - XXX - RE_ Sitting Day Remand Impact Method.msg'
   
 
 # Mean monthly inflow of indeterminate prisoners, taken from OMSQ. We assume
@@ -428,64 +426,57 @@ inflows_indet_mean: !expr '299 / 12'   # OMSQ Oct-Dec 2022, Table 2.5a, last fou
 # the prisonsreadyreckoner package (v1.0.0).
 
 
-police_charges_mc_file:
+ringfenced_lookup_file:
   description: >-
-    "Magistrates' court receipts for various police charge scenarios""
+    A look-up table for which Crown Court disposals are ring-fenced and what
+    disposal lags to apply.
   origin: shiny
-  dataFile: "'2023-04/[020623_mags_sensitivity_output.xlsx]Sheet1'"
+  dataFile: "2023-04B/ringfenced-lookup-20230825-shiny-v2.0.0-OFFICIAL.csv"
   dataRegister: NA
-  comments: "202306026 - XXX - RE_ mags outputs template.eml"
+  comments: Generated with the prisonsreadyreckonerupdater package.
 
-police_charges_cc_files__central:
+police_charges_mc_files_.mc001:
   description: >-
-    Records the total number of Crown Court receipts used as a baseline in the
-    April 2023 projections. Includes background values from various sources, and
-    an increase in charge numbers over a 24-month period. It has non-zero values
-    throughout.
+    Magistrates' court receipts for various police charge scenarios. Alternate
+    ramp rates.
   origin: shiny
-  dataFile: "2023-04/April23_mid_pandemic_real_for_ready_reckoner.csv"
+  dataFile: "2023-04B/police-charges-mc001-20230825-shiny-v2.0.0-OFFICIAL.csv"
   dataRegister: NA
-  comments: "20230525 - XXX - RE_ Next steps on the CJS ready reckoner.eml"
+  comments: Generated with the prisonsreadyreckonerupdater package.
 
-police_charges_cc_files__ramp_12m:
+police_charges_mc_files_.mc002:
   description: >-
-    Records how Crown Court receipts would change if police charge numbers were
-    increased over a 12-month period instead of over a 24-month period. Records
-    differences relative to the values in
-    April23_mid_pandemic_real_for_ready_reckoner.csv.
+    Magistrates' court receipts for various police charge scenarios. Alternate
+    plateaux.
   origin: shiny
-  dataFile: "2023-04/April23_mid_pandemic_real_12m_ramp_for_ready_reckoner.csv"
+  dataFile: "2023-04B/police-charges-mc001-20230825-shiny-v2.0.0-OFFICIAL.csv"
   dataRegister: NA
-  comments: "20230525 - XXX - RE_ Next steps on the CJS ready reckoner.eml"
+  comments: Generated with the prisonsreadyreckonerupdater package.
 
-police_charges_cc_files__ramp_36m:
+police_charges_cc_files_.cc001:
   description: >-
-    Records how Crown Court receipts would change if police charge numbers were
-    increased over a 36-month period instead of over a 24-month period. Record
-    differences relative to the values in
-    April23_mid_pandemic_real_for_ready_reckoner.csv.
+    Crown Court receipts for various police charge scenarios. Alternate ramp
+    rates.
   origin: shiny
-  dataFile: "2023-04/April23_mid_pandemic_real_36m_ramp_for_ready_reckoner.csv"
+  dataFile: "2023-04B/police-charges-cc001-20230825-shiny-v2.0.0-OFFICIAL.csv"
   dataRegister: NA
-  comments: "20230525 - XXX - RE_ Next steps on the CJS ready reckoner.eml"
+  comments: Generated with the prisonsreadyreckonerupdater package.
 
-police_charges_cc_files__ramp_48m:
+police_charges_cc_files_.cc002:
   description: >-
-    Records how Crown Court receipts would change if police charge numbers were
-    increased over a 48-month period instead of over a 24-month period. Records
-    differences relative to the values in
-    April23_mid_pandemic_real_for_ready_reckoner.csv.
+    Crown Court receipts for various police charge scenarios. Alternate
+    plateaux.
   origin: shiny
-  dataFile: "2023-04/April23_mid_pandemic_real_48m_ramp_for_ready_reckoner.csv"
+  dataFile: "2023-04B/police-charges-cc002-20230825-shiny-v2.0.0-OFFICIAL.csv"
   dataRegister: NA
-  comments: "20230525 - XXX - RE_ Next steps on the CJS ready reckoner.eml"
+  comments: Generated with the prisonsreadyreckonerupdater package.
 
 police_charges_cc_route_file:
   description: >-
     Table for converting Crown Court police charge tables to Crown output
     tables.
   origin: shiny
-  dataFile: "2023-04/routes.csv"
+  dataFile: "2023-04B/routes.csv"
   dataRegister: NA
   comments: "20230518 - XXX - cjst pre-covid route distribution.msg"
 
@@ -494,7 +485,7 @@ cc_output_file:
     Monthly forecast disposals and durations in the Crown Court under the
     central scenario.
   origin: shiny
-  dataFile: "2023-04/crown-output-apr23_s4.csv"
+  dataFile: "2023-04B/crown-output-apr23_s4.csv"
   dataRegister: NA
   comments: "20230502 - XXX - RE_ Testing our assumptions with a second Crown Court scenario_.msg"
 
@@ -503,24 +494,16 @@ cc_capacity_file:
     Monthly sitting days and hours per in the Crown Court under the central
     scenario.
   origin: shiny
-  dataFile: "2023-04/sd_htpsd_adjusted_apr23_s4.csv"
+  dataFile: "2023-04B/sd_htpsd_adjusted_apr23_s4.csv"
   dataRegister: NA
   comments: "20230502 - XXX - RE_ Testing our assumptions with a second Crown Court scenario_.msg"
-
-ringfenced_lookup_file:
-  description: >-
-    A look-up table for which Crown Court 
-  origin: shiny
-  dataFile: "2023-04/ringfenced-lookup-20230502-shiny-v0.0.0-OFFICIAL.csv"
-  dataRegister: NA
-  comments: Generated with the prisonsreadyreckonerupdater package.
 
 sentencing_rates_file:
   description: >-
     Coefficients for a linear regression relating court disposals to prison
     receptions.
   origin: shiny
-  dataFile: "2023-04/reception-rates-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  dataFile: "2023-04B/reception-rates-20230825-shiny-v2.0.0-OFFICIAL.csv"
   dataRegister: NA
   comments: Generated with the prisonsreadyreckonerupdater package.
 
@@ -528,7 +511,7 @@ prison_inflows_file:
   description: >-
     Baseline forecast prison inflows from the offiial projection.
   origin: shiny
-  dataFile: "'2023-04/[detailed_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx]Sheet1'"
+  dataFile: "'2023-04B/[detailed_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx]Sheet1'"
   dataRegister: NA
   comments: "20230505 - XXX - Updated prison projections .msg"
 
@@ -536,7 +519,7 @@ profiles_file:
   description: >-
     Time served profiles by sentence band.
   origin: shiny
-  dataFile: "2023-04/profiles-det-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  dataFile: "2023-04B/profiles-det-20230825-shiny-v2.0.0-OFFICIAL.csv"
   dataRegister: NA
   comments: Generated with the prisonsreadyreckonerupdater package.
 
@@ -544,7 +527,7 @@ recall_file:
   description: >-
     Miscellaneous recall parameters from the Prisons Team.
   origin: shiny
-  dataFile: "'2023-04/[recall_excl_PSS_output_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx]Sheet1'"
+  dataFile: "'2023-04B/[recall_excl_PSS_output_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx]Sheet1'"
   dataRegister: NA
   comments: "20230505 - XXX - Updated prison projections .msg"
 
@@ -552,7 +535,7 @@ licence_profiles_file:
   description: >-
     Time on licence profiles from the Prisons Team.
   origin: shiny
-  dataFile: "2023-04/adjusted_license_profile.csv"
+  dataFile: "2023-04B/adjusted_license_profile.csv"
   dataRegister: NA
   comments: "20230601 - XXX - RE_ Your licence profiles_.msg"
 
@@ -560,7 +543,7 @@ gender_splits_file:
   description: >-
     A table of gender splits by case type and sentence band.
   origin: shiny
-  dataFile: "2023-04/gender-splits-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  dataFile: "2023-04B/gender-splits-20230825-shiny-v2.0.0-OFFICIAL.csv"
   dataRegister: NA
   comments: Generated with the prisonsreadyreckonerupdater package.
 
@@ -576,7 +559,7 @@ tot_pop_file:
   description: >-
     Latest actual and forecast prison population.
   origin: shiny
-  dataFile: "2023-04/populations_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx"
+  dataFile: "2023-04B/populations_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx"
   dataRegister: NA
   comments: "20230511 - XXX - RE_ Updated prison projections .msg""
 
@@ -584,7 +567,7 @@ capacity_file:
   description: >-
     Latest prison capacity forecasts.
   origin: shiny
-  dataFile: "2023-04/May-23 Supply Forecasts_V1.5_Shared.xlsx"
+  dataFile: "2023-04B/May-23 Supply Forecasts_V1.5_Shared.xlsx"
   dataRegister: NA
   comments: "20230516 - XXX - RE_ April-23 Provisional Adult Male Projections and Cap Gaps.msg"
 
@@ -592,7 +575,7 @@ recall_rate_hist_file:
   description: >-
     Historical percentage of licensees recalled to prison per month.
   origin: shiny
-  dataFile: "2023-04/recall_rate_b.csv"
+  dataFile: "2023-04B/recall_rate_b.csv"
   dataRegister: NA
   comments: "20230623 - XXX - RE_ Historical time series for ready reckoner.msg"
 
@@ -600,7 +583,7 @@ time_served_hist_file:
   description: >-
     Historical average time served by sentence band estimated with fullsample.
   origin: shiny
-  dataFile: "2023-04/historical-time-served-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  dataFile: "2023-04B/historical-time-served-20230825-shiny-v2.0.0-OFFICIAL.csv"
   dataRegister: NA
   comments: Generated with the prisonsreadyreckonerupdater package.
 
@@ -608,7 +591,7 @@ sitting_days_hist_file:
   description: >-
     Historical number of Crown Court sitting days per year.
   origin: shiny
-  dataFile: "2023-04/sitting_days_actuals.csv"
+  dataFile: "2023-04B/sitting_days_actuals.csv"
   dataRegister: NA
   comments: "20230629 - XXX - RE_ Historical sitting day data for ready reckoner.eml"
 
@@ -616,7 +599,7 @@ prison_population_hist_file:
   description: >-
     Historical prison population estimated with fullsample.
   origin: shiny
-  dataFile: "2023-04/historical-prison-population-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  dataFile: "2023-04B/historical-prison-population-20230825-shiny-v2.0.0-OFFICIAL.csv"
   dataRegister: NA
   comments: Generated with the prisonsreadyreckonerupdater package.
 
@@ -624,7 +607,7 @@ prison_inflows_hist_file:
   description: >-
     Historical prison inflows by sentence band estimated with fullsample.
   origin: shiny
-  dataFile: "2023-04/historical-prison-inflows-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  dataFile: "2023-04B/historical-prison-inflows-20230825-shiny-v2.0.0-OFFICIAL.csv"
   dataRegister: NA
   comments: Generated with the prisonsreadyreckonerupdater package.
 
@@ -632,7 +615,7 @@ police_charges_hist_file:
   description: >-
     Magistrates' court receipts/disposals under certain police charge scenarios.
   origin: shiny
-  dataFile: "2023-04/historical-police-charges-20230502-shiny-v0.0.0-OFFICIAL.csv"
+  dataFile: "2023-04B/historical-police-charges-20230825-shiny-v2.0.0-OFFICIAL.csv"
   dataRegister: NA
   comments: >-
     Generated with the prisonsreadyreckonerupdater package.
@@ -714,6 +697,15 @@ extend_params <- function(params, files) {
         file_params[[file_list]] <- list()
       
       file_params[[file_list]][[file_list_item]] <- data_file
+
+    } else if (grepl('_.', file_param_names[i])) {
+      
+      file_list      <- sub("_.\\w+$", "", file_param_names[i], perl = TRUE)
+
+      if (!file_list %in% names(file_params))
+        file_params[[file_list]] <- c()
+      
+      file_params[[file_list]] <- c(file_params[[file_list]], data_file)
 
     } else
       file_params[[ file_param_names[i] ]] <- data_file

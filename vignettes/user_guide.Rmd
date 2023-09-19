@@ -105,13 +105,18 @@ See function `stretch_profiles()`.
 
 The user can change the percentage of determinate sentence offenders who are
 released on licence and subsequently recalled to prison (per month). Different
-percentages can be specified for each [Sentence band][sentence-bands], and changes will come into
-effect on a specified **Impact date**. Note that this lever affects only offenders
-who enter prison in the forecast period and who are subsequently released on licence.
+percentages can be specified for each [Sentence band][sentence-bands], and changes
+will come into effect on a specified **Impact date**. Note that this lever affects
+only offenders who enter prison in the forecast period and who are subsequently
+released on licence.
 
 ### Lever 6: Scale time served on recall
 
-The user can vary the time served in prison by determinate sentence recalled prisoners relative to an average value of recall time served calculated from historical data. Different changes can be specified for each [Sentence band][sentence-bands], and will affect offenders who entered prison in the forecast period and who were recalled to prison after a specified **Impact date**.
+The user can vary the time served in prison by determinate sentence recalled
+prisoners relative to an average value of recall time served calculated from
+historical data. Different changes can be specified for each
+[Sentence band][sentence-bands], and will affect offenders who entered prison in the
+forecast period and who were recalled to prison after a specified **Impact date**.
 
 See function `stretch_recall_time_lever()`.
 

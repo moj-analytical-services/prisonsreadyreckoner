@@ -77,8 +77,8 @@ dev_set_params <- function() {
   
   # Expected initial dates in various data files. The forecast will start from the
   # last consistent date.
-  params$start_date$police_charges_cc  <- "2022-11-01"    # First month of the forecast. Used for verifying inputs.
-  params$start_date$police_charges_mc  <- "2022-12-01"
+  params$start_date$police_charges_mc  <- "2022-12-01"    # First month of the forecast. Used for verifying inputs.
+  params$start_date$police_charges_cc  <- "2022-11-01"
   params$start_date$inflows_det        <- "2023-03-31"
   params$start_date$recall_rate        <- "2023-03-01"
   params$start_date$cc_files           <- "2022-11-01"
