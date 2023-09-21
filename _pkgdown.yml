@@ -1,11 +1,11 @@
-url: https://model-redevelopment-website.apps.alpha.mojanalytics.xyz/packages/r/prisonsreadyreckoner
+url: https://model-redevelopment-website.apps.live.cloud-platform.service.justice.gov.uk/packages/r/prisonsreadyreckoner
 template:
   bootstrap: 5
 
 home:
   links:
   - text: Our website
-    href: https://model-redevelopment-website.apps.alpha.mojanalytics.xyz
+    href: https://model-redevelopment-website.apps.live.cloud-platform.service.justice.gov.uk
 
 
 # Remove the reference section to allow pkgdown::build_site() to make its own
