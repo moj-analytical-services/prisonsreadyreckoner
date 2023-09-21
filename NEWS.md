@@ -14,7 +14,7 @@ e.g. (#2, @bgburton)
 -->
 
 
-# prisonsreadyreckoner 2.0.0.9000
+# prisonsreadyreckoner 2.0.0
 
 Prepared to introduce more sophisticated treatment of time on recall and police
 charge scenarios, as requested on 15 June 2023.
