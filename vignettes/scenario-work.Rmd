@@ -331,8 +331,8 @@ shiny_2_0_0:
 ### Example params file
 
 ```yaml
-# Parameters used for the first formal release of the Shiny app, September 2023,
-# prisons-ready-reckoner-app v2.0.0.
+# Parameters used for the formal release of the prisonsreadyreckoner package,
+# v2.0.0.
 # To create a new version, copy into the tmp folder, edit and use
 # mojmodel::upload_params(<name of new file>). You can download an existing file
 # with mojmodel::download_params(<name of file you want to copy>).
@@ -362,7 +362,7 @@ lever_profiles_det_stretch_factors: !expr 'c(senband1 = 1, senband2 = 1, senband
 lever_profiles_det_stretch_impact_date: "2024-01-01"
   
 # Recall
-lever_recall_rate: !expr 'signif(c(senband1 = 0.234774346793349, senband2 = 0.1003465003465, senband3 = 0.048357569686712, senband4 = 0.0213297380452349), 3)'   # 20230505 - Charlotte Wallace - Updated prison projections .msg
+lever_recall_rate: !expr 'signif(c(senband1 = 0.234774346793349, senband2 = 0.1003465003465, senband3 = 0.048357569686712, senband4 = 0.0213297380452349), 3)'   # 20230505 - XXX - Updated prison projections .msg
 lever_recall_rate_impact_date: "2024-01-01"
 
 # Factors for stretching profiles of time in recall, split by sentence band
@@ -381,13 +381,13 @@ lever_profiles_recall_stretch_impact_date: "2024-01-01"
 # Expected initial dates in various data files. The forecast will start from the
 # last consistent date.
 start_date:
-  police_charges_cc: "2022-11-01"    # First month of the forecast. Used for verifying inputs.
-  police_charges_mc: "2022-12-01"
+  police_charges_mc: "2022-12-01"    # First month of the forecast. Used for verifying inputs.
+  police_charges_cc: "2022-11-01"
   inflows_det: "2023-03-31"
   recall_rate: "2023-03-01"
   cc_files: "2022-11-01"
 
-projection_length_months: 49         # To March 2027. '20230525 - To Ceri Cooper - Actions from our ready reckoner meeting just now_.msg'
+projection_length_months: 49         # To March 2027. '20230525 - To XXX - Actions from our ready reckoner meeting just now_.msg'
   
   
 # Police charge parameters
@@ -416,14 +416,15 @@ inflows_indet_mean: !expr '299 / 12'   # OMSQ Oct-Dec 2022, Table 2.5a, last fou
 ### Example files file
 
 ```yaml
-# Files used for the first formal release of the Shiny app, August 2023.
+# Files used for the formal release of the prisonsreadyreckoner package,
+# v2.0.0.
 # To create a new version, copy into the tmp folder, edit and use
 # mojmodel::upload_files(<name of new file>). You can download an existing file
 # with mojmodel::download_files(<name of file you want to copy>).
 #
 # NB, please ignore any references to 'Sheet1' in any dataFile field. This is
 # to avoid triggering a parsing error. Sheet names are currently dealt with by
-# the prisonsreadyreckoner package (v1.0.0).
+# the prisonsreadyreckoner package (v2.0.0).
 
 
 ringfenced_lookup_file:
@@ -449,7 +450,7 @@ police_charges_mc_files_.mc002:
     Magistrates' court receipts for various police charge scenarios. Alternate
     plateaux.
   origin: shiny
-  dataFile: "2023-04B/police-charges-mc001-20230825-shiny-v2.0.0-OFFICIAL.csv"
+  dataFile: "2023-04B/police-charges-mc002-20230825-shiny-v2.0.0-OFFICIAL.csv"
   dataRegister: NA
   comments: Generated with the prisonsreadyreckonerupdater package.
 
@@ -548,80 +549,6 @@ gender_splits_file:
   comments: Generated with the prisonsreadyreckonerupdater package.
 
 
-
-
-################################################################################
-# The following are historical data used by the Shiny app and not used by the
-# prisonsreadyreckoner package (v1.0.0). This may change in later releases.
-################################################################################
-
-tot_pop_file:
-  description: >-
-    Latest actual and forecast prison population.
-  origin: shiny
-  dataFile: "2023-04B/populations_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx"
-  dataRegister: NA
-  comments: "20230511 - XXX - RE_ Updated prison projections .msg""
-
-capacity_file:
-  description: >-
-    Latest prison capacity forecasts.
-  origin: shiny
-  dataFile: "2023-04B/May-23 Supply Forecasts_V1.5_Shared.xlsx"
-  dataRegister: NA
-  comments: "20230516 - XXX - RE_ April-23 Provisional Adult Male Projections and Cap Gaps.msg"
-
-recall_rate_hist_file:
-  description: >-
-    Historical percentage of licensees recalled to prison per month.
-  origin: shiny
-  dataFile: "2023-04B/recall_rate_b.csv"
-  dataRegister: NA
-  comments: "20230623 - XXX - RE_ Historical time series for ready reckoner.msg"
-
-time_served_hist_file:
-  description: >-
-    Historical average time served by sentence band estimated with fullsample.
-  origin: shiny
-  dataFile: "2023-04B/historical-time-served-20230825-shiny-v2.0.0-OFFICIAL.csv"
-  dataRegister: NA
-  comments: Generated with the prisonsreadyreckonerupdater package.
-
-sitting_days_hist_file:
-  description: >-
-    Historical number of Crown Court sitting days per year.
-  origin: shiny
-  dataFile: "2023-04B/sitting_days_actuals.csv"
-  dataRegister: NA
-  comments: "20230629 - XXX - RE_ Historical sitting day data for ready reckoner.eml"
-
-prison_population_hist_file:
-  description: >-
-    Historical prison population estimated with fullsample.
-  origin: shiny
-  dataFile: "2023-04B/historical-prison-population-20230825-shiny-v2.0.0-OFFICIAL.csv"
-  dataRegister: NA
-  comments: Generated with the prisonsreadyreckonerupdater package.
-
-prison_inflows_hist_file:
-  description: >-
-    Historical prison inflows by sentence band estimated with fullsample.
-  origin: shiny
-  dataFile: "2023-04B/historical-prison-inflows-20230825-shiny-v2.0.0-OFFICIAL.csv"
-  dataRegister: NA
-  comments: Generated with the prisonsreadyreckonerupdater package.
-
-police_charges_hist_file:
-  description: >-
-    Magistrates' court receipts/disposals under certain police charge scenarios.
-  origin: shiny
-  dataFile: "2023-04B/historical-police-charges-20230825-shiny-v2.0.0-OFFICIAL.csv"
-  dataRegister: NA
-  comments: >-
-    Generated with the prisonsreadyreckonerupdater package.
-    "20230710 - XXX - RE_ mags outputs template.msg""
-
-
 # IMPORTANT: A yaml should end with an empty line like the following:
 
 ```
@@ -640,8 +567,6 @@ library("prisonsreadyreckonerupdater")
 library("prisonsreadyreckoner")
 
 
-
-
 # The main function is the function from which model execution starts. Every
 # model must have a main function.
 # The arguments, params and files, are, respectively, the model parameters and
@@ -654,6 +579,22 @@ main <- function(model_version, scenario_name, scenario_id, params, files, ...) 
   # Combine parameters and file details into a parameter list suitable for use
   # with prisonsreadyreckoner.
   params <- extend_params(params, files)
+
+  # Test requested version of the package. Unfortunately, R will not currently
+  # allow the same package to be unloaded and loaded in the same session.
+  params$version$prisonsreadyreckoner <- sub("^[vV]", "", params$version$prisonsreadyreckoner)
+  if (params$version$prisonsreadyreckoner != packageVersion("prisonsreadyreckoner")) {
+    stop(
+      "Requested prisonsreadyreckoner package version, ",
+      params$version$prisonsreadyreckoner,
+      ", in scenario, ",
+      scenario_name,
+      ", is not the same as the loaded package version, ",
+      packageVersion("prisonsreadyreckoner"),
+      ". ",
+      "Start a new session and load the appropriate version."
+    )
+  }
   
   raw <- prisonsreadyreckoner::run_prisonsreadyreckoner(params)
 
@@ -684,10 +625,12 @@ extend_params <- function(params, files) {
     else
       data_file <- files[[i]][['dataFile']]
     
-    data_file <- paste(origins[[ files[[i]][['origin']] ]], data_file, sep = "/")
-    
+    data_file <- paste(origins[[files[[i]][['origin']] ]], data_file, sep = "/")
     
     # Create sub-lists, as necessary.
+    # Type 1: Identified with '__', will be represented as a named list.
+    # Type 2: Identified with '_.', will be represented as a string vector.
+    # Type 3: Identified with none of the above, will be represented as a string.
     if (grepl('__', file_param_names[i])) {
       
       file_list      <- sub("__\\w+$", "", file_param_names[i], perl = TRUE)
@@ -698,10 +641,10 @@ extend_params <- function(params, files) {
       
       file_params[[file_list]][[file_list_item]] <- data_file
 
-    } else if (grepl('_.', file_param_names[i])) {
+    } else if (grepl('_[.]', file_param_names[i])) {
       
       file_list      <- sub("_.\\w+$", "", file_param_names[i], perl = TRUE)
-
+      
       if (!file_list %in% names(file_params))
         file_params[[file_list]] <- c()
       
@@ -745,6 +688,5 @@ get_excel_parts <- function(ref) {
   
   return(list(path = ref_path, sheet = ref_sheet, range = ref_range))
 }
-
 
 ```

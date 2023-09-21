@@ -1,7 +1,7 @@
 Package: prisonsreadyreckoner
 Type: Package
 Title: Prison Forecasting Flows Model
-Version: 2.0.0.9000
+Version: 2.0.0
 Authors@R: c(
     person(given = "Alex", family = "Dickinson", role = c("aut", "cre"), email = "Alex.Dickinson@justice.gov.uk"),
     person(given = "Brian", family = "Burton", role = c("aut"), email = "Brian.Burton@justice.gov.uk"),
