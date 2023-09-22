@@ -54,14 +54,14 @@ criminal justice system we strongly recommend that you pull either **Lever 1**
 and **Lever 2** or **Lever 3**.
 
 
-### **Lever 1**: Vary number of court cases
+### **Lever 1**: Vary number of court cases {#lever-vary-number-of-court-cases}
 
 The user can load scenarios that capture changes to the number of cases received
 by the magistrates' courts and the Crown Courts. The user is free to define
 these scenarios. Scenarios could reflect, for instance, increases in received
 cases due to increases in the number of charges brought by police.
 
-See functions `load_police_charges_cc_data_list()` and
+See functions `load_police_charges_cc_data)` and
 `load_police_charges_mc_data()`.
 
 
@@ -110,7 +110,7 @@ will come into effect on a specified **Impact date**. Note that this lever affec
 only offenders who enter prison in the forecast period and who are subsequently
 released on licence.
 
-### Lever 6: Scale time served on recall
+### Lever 6: Vary time served on recall by determinate sentence offenders {#lever-vary-time-served-on-recall-by-determinate-sentence-offenders}
 
 The user can vary the time served in prison by determinate sentence recalled
 prisoners relative to an average value of recall time served calculated from
