@@ -123,7 +123,7 @@ make_test_receptions_model_data <- function(mode = 'save') {
 # receptions by sentence band. Used for developing code only.
 # This function uses data exactly as used in the April 2023 prison projections,
 # combined with the OLD FULLSAMPLE.
-make_test_reception_rates <- function(mode = 'save') {
+make_test_sentencing_rates <- function(mode = 'save') {
   
   #library(fullsample)
   
@@ -133,21 +133,21 @@ make_test_reception_rates <- function(mode = 'save') {
   period_start      <- "2019-03-01"
   period_end        <- "2022-05-01"
 
-  path_reception_rates <- paste0("s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-reception-rates-", period_start, "-to-", period_end, ".csv")
+  path_sentencing_rates <- paste0("s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-sentencing-rates-", period_start, "-to-", period_end, ".csv")
   
   switch(
     mode,
     'save' = {
       # Uses prisonsreadyreckonerupdater, v2.0.0.
-      #reception_rates <- prisonsreadyreckonerupdater::update_reception_rates(path_rdo_data, path_cc_disposals, period_start, period_end)
-      reception_rates <- prisonsreadyreckonerupdater::update_reception_rates_old(path_rdo_data, path_cc_disposals, period_start, period_end, path_fullsample, visualise = FALSE)
-      botor::s3_write(reception_rates$data, readr::write_csv, path_reception_rates)
+      #sentencing_rates <- prisonsreadyreckonerupdater::update_sentencing_rates(path_rdo_data, path_cc_disposals, period_start, period_end)
+      sentencing_rates <- prisonsreadyreckonerupdater::update_sentencing_rates_old(path_rdo_data, path_cc_disposals, period_start, period_end, path_fullsample, visualise = FALSE)
+      botor::s3_write(sentencing_rates, readr::write_csv, path_sentencing_rates)
     },
     'report' = {},
     stop("Unrecognised mode, '", mode, "'.")
   )
   
-  return(list(path_reception_rates = path_reception_rates, path_rdo_data = path_rdo_data,
+  return(list(path_sentencing_rates = path_sentencing_rates, path_rdo_data = path_rdo_data,
               path_cc_disposals = path_cc_disposals, period_start = period_start,
               period_end = period_end))
 }

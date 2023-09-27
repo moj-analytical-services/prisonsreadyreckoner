@@ -114,8 +114,6 @@ load_prison_data <- function(prison_inflows_file, profiles_file, licence_profile
 # Used by load functions to filter time series data as soon as they are loaded.
 trim_dates <- function(tbl, start_date, forecast_start_date, forecast_end_date) {
   
-  
-  
   if (min(tbl$date) != start_date)
     stop("First date in input file was ", min(tbl$date), ". ", start_date, " expected.")
   
