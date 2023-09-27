@@ -5,6 +5,12 @@
 # behind this is that if individual functions need to be run or run_model needs
 # to be run step by step using individual functions (e.g. for debugging), these
 # variables can quickly be loaded
+#
+# Advice on updating: During development, it is useful to create files just for
+# the S3 test folder for this package. Once incoporated into the Shiny app, it
+# may become better to refer to Shiny app files to avoid duplication and
+# confusion.
+
 
 dev_set_params <- function() {
   
@@ -123,7 +129,7 @@ dev_set_params <- function() {
     "mc_sm",        FALSE,
     "mc_snm",       FALSE)   # '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
   
-  params$sentencing_rates_file  <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-reception-rates-2019-03-01-to-2022-05-01.csv"
+  params$sentencing_rates_file  <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-sentencing-rates-2019-03-01-to-2022-05-01.csv"
   
   
   # Prison and licence parameters
