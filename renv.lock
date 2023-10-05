@@ -599,10 +599,10 @@
     },
     "htmltools": {
       "Package": "htmltools",
-      "Version": "0.5.2",
+      "Version": "0.5.3",
       "Source": "Repository",
       "Repository": "RSPM",
-      "Hash": "526c484233f42522278ab06fb185cb26",
+      "Hash": "6496090a9e00f8354b811d1a2d47b566",
       "Requirements": [
         "base64enc",
         "digest",
@@ -798,8 +798,8 @@
       "Source": "git",
       "RemoteType": "git",
       "RemoteUrl": "git@github.com:moj-analytical-services/mojmetr.git",
-      "RemoteRef": "",
-      "Hash": "e4e0b2f293223f3bef5315f814b61723",
+      "RemoteRef": "v0.2.1",
+      "Hash": "7c8f55decba302be2a47d0262fa5e9fd",
       "Requirements": [
         "botor",
         "hms",
@@ -1136,18 +1136,19 @@
     },
     "prisonsreadyreckonerupdater": {
       "Package": "prisonsreadyreckonerupdater",
-      "Version": "2.0.0.9000",
+      "Version": "2.0.0",
       "Source": "git",
       "RemoteType": "git",
       "RemoteUrl": "git@github.com:moj-analytical-services/prisonsreadyreckonerupdater.git",
-      "RemoteRef": "v2.0.0.9000",
+      "RemoteRef": "v2.0.0",
       "Remotes": "git::git@github.com:moj-analytical-services/fullsample.git,\n    git::git@github.com:moj-analytical-services/mojmetr.git,\n    git::git@github.com:moj-analytical-services/Rdbtools.git",
-      "Hash": "68b5671a4602c14df4b3e1146305123f",
+      "Hash": "791d03b8aa9c7b882a47fd791405b7d6",
       "Requirements": [
         "Rdbtools",
         "dplyr",
         "fullsample",
         "knitr",
+        "logger",
         "lubridate",
         "magrittr",
         "mojmetr",
@@ -1159,6 +1160,7 @@
         "tibble",
         "tidyr",
         "tidyselect",
+        "withr",
         "yaml",
         "zoo"
       ]
