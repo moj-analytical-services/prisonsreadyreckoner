@@ -43,56 +43,65 @@ used by the Shiny app to provide context for the package's forecasts.
 
 ## Levers
 
---------------------------------------------------------------------------------
-Parameter                               Description                      
---------------------------------------- ----------------------------------------
-lever_police_charges_scenario           The name of the police charge scenario
-                                        defining court receipt volumes.
-                                        Available values include:<br /><br />
-                                        **central** - The current central
-                                        forecast which ramps to a plateau over
-                                        24 months.<br />
-                                        **ramp_12m** - As in the central but
-                                        ramping over 12 months.<br />
-                                        **ramp_36m** - Ramping over 36
-                                        months.<br />
-                                        **ramp_48m** - 48 months.
+----------------------------------------------------------------------------------
+Parameter                                 Description                      
+----------------------------------------- ----------------------------------------
+lever_police_charges_scenario             The name of the police charge scenario
+                                          defining court receipt volumes.
+                                          Available values include:<br /><br />
+                                          **central** - The current central
+                                          forecast which ramps to a plateau over
+                                          24 months.<br />
+                                          **ramp_12m** - As in the central but
+                                          ramping over 12 months.<br />
+                                          **ramp_36m** - Ramping over 36
+                                          months.<br />
+                                          **ramp_48m** - 48 months.
                                         
-lever_extra_cc_sitting_days             The number of Crown Court sitting days
-                                        to be added *per month* after the
-                                        lever impact date. (The equivalent in
-                                        the Shiny app is expressed on a per year 
-                                        basis and divided by 12 on capture).
+lever_extra_cc_sitting_days               The number of Crown Court sitting days
+                                          to be added *per month* after the
+                                          lever impact date. (The equivalent in
+                                          the Shiny app is expressed on a per
+                                          year basis and divided by 12 on
+                                          capture).
   
-lever_extra_cc_sitting_days_impact_date The impact date for the sitting day
-                                        lever, e.g. `"2023-06-01"`.
+lever_extra_cc_sitting_days_impact_date   The impact date for the sitting day
+                                          lever, e.g. `"2023-06-01"`.
                                         
-lever_extra_inflows_det                 A named vector of additional inflows to
-                                        the determinate sentence prison
-                                        population per month by sentence band,
-                                        e.g.
-                                        `c(senband1 = 0, senband2 = 0, senband3 = 0, senband4 = 0)`
+lever_extra_inflows_det                   A named vector of additional inflows
+                                          to the determinate sentence prison
+                                          population per month by sentence band,
+                                          e.g.
+                                          `c(senband1 = 0, senband2 = 0, senband3 = 0, senband4 = 0)`
   
-lever_extra_inflows_det_impact_date     The impact date for the determinate
-                                        sentence inflow lever.
+lever_extra_inflows_det_impact_date       The impact date for the determinate
+                                          sentence inflow lever.
   
-lever_profiles_det_stretch_factors      A named vector of stretch factors to
-                                        apply to profiles (distributions) of
-                                        time served among the determinate
-                                        sentence prison population by sentence
-                                        band, e.g.
-                                        `c(senband1 = 1, senband2 = 1, senband3 = 1, senband4 = 1)`
+lever_profiles_det_stretch_factors        A named vector of stretch factors to
+                                          apply to profiles (distributions) of
+                                          time served among the determinate
+                                          sentence prison population by sentence
+                                          band, e.g.
+                                          `c(senband1 = 1, senband2 = 1, senband3 = 1, senband4 = 1)`
 
-lever_profiles_det_stretch_impact_date  The impact date for the determinate
-                                        sentence profile lever.
+lever_profiles_det_stretch_impact_date    The impact date for the determinate
+                                          sentence profile lever.
   
-lever_recall_rate                       A named vector of recall rates,
-                                        expressing monthly recall volumes as a
-                                        fraction of licensee population, e.g.
-                                        `c(senband1 = 0.235, senband2 = 0.100, senband3 = 0.048, senband4 = 0.021)`
+lever_recall_rate                         A named vector of recall rates,
+                                          expressing monthly recall volumes as a
+                                          fraction of licensee population, e.g.
+                                          `c(senband1 = 0.235, senband2 = 0.100, senband3 = 0.048, senband4 = 0.021)`
                                         
-lever_recall_rate_impact_date           The impact date for the recall rate
-                                        lever.
+lever_recall_rate_impact_date             The impact date for the recall rate
+                                          lever.
+                                        
+lever_profiles_recall_stretch_factors     As lever_profiles_det_stretch_factors
+                                          but with respect to profiles of time
+                                          served by determinate sentence
+                                          offenders while on recall.
+                                        
+lever_profiles_recall_stretch_impact_date The impact date for the determinate
+                                          sentence recall profile lever.
 
 --------------------------------------------------------------------------------
 
@@ -245,7 +254,7 @@ time_served_hist_file                   Estimates of historical average time
                                         length band.
 
 recall_rate_hist_file                   Historical recall rates, formulated in
-                                        the same was as `lever_recall_rate`.
+                                        the same way as `lever_recall_rate`.
 
 recall_time_served_hist_file            Estimates of historical average time
                                         served on recall for comparison with the
