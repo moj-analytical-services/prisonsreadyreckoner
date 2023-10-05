@@ -22,6 +22,7 @@ reference:
 - title: "Shiny app functions"
   desc: >
     The following functions are exported only so that they may be used by a
-    Shiny app. These are not intended for users of package?prisonsreadyreckoner.
+    Shiny app. These are not intended for users of the prisonsreadyreckoner
+    package.
   contents:
   - -matches("^mojstockr_|^run_prisonsreadyreckoner")

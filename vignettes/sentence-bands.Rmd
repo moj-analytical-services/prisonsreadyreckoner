@@ -26,12 +26,20 @@ knitr::opts_chunk$set(
 # Definitions{#sentence-bands}
 
 Modelling of determinate sentence prisoners is on the basis of four sentence
-length bands. Relevant levers are defined in these terms. Bands are:
+length bands. Relevant levers are defined in these terms.
+
+At the time of writing this version (`prisonsreadyreckoner` v2.0.0), band
+definitions are changing. These are not explicitly defined in
+`prisonsreadyreckoner` itself. Nevertheless, inputs prepared for v2.0.0 of the
+Prisons Ready Reckoner Shiny app used one definition for sentenced prisoners and
+another, slightly different one for recallees.
+
+Bands for determinate sentence prisoners were prepared as follows:
 
 1. Sentence band 1: Prisoners serving a sentence shorter than six months.
 
-2. Sentence band 2: Prisoners serving a sentence of length of at least six months
-and shorter than twelve months.
+2. Sentence band 2: Prisoners serving a sentence of length of at least six
+months and shorter than twelve months.
 
 3. Sentence band 3: Prisoners serving a sentence of length of at least twelve
 months and shorter than four years.
@@ -39,3 +47,26 @@ months and shorter than four years.
 4. Sentence band 4: Prisoners serving a sentence of length of at least four
 years. Extended Determinate Sentence (EDS) prisoners are included within this
 band.
+
+
+Bands for determinate recalls were prepared as follows:
+
+1. Sentence band 1: Prisoners serving a sentence up to and *including* six
+months.
+
+2. Sentence band 2: Prisoners serving a sentence of length of *more than six
+months* and shorter than twelve months.
+
+3. Unchanged.
+
+4. Unchanged.
+
+
+**N.B. The recall sentence band definitions, above, may differ from those used
+to derive the recall input data (`recall_file` parameter) used in scenarios
+prepared for the v2.0.0 release of `prisonsreadyreckoner`. However, this release
+exists only for development purposes.**
+
+Band definitions will be aligned in data prepared for later releases.
+
+
