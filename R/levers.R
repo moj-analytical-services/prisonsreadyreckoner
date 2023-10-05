@@ -46,7 +46,7 @@ add_cc_sitting_days <- function(cc_capacity, lever_extra_cc_sitting_days, capaci
 add_inflows_det_delta_lever <- function(inflows_det, lever_extra_inflows_det, lever_extra_inflows_det_impact_date) {
   
   inflows_det <- inflows_det %>%
-    dplyr::mutate(dplyr::across(c(all_of(names(dplyr::select(., -tidyselect::all_of(c("senband")))))), ~tidyr::replace_na(.,0)))
+    dplyr::mutate(dplyr::across(c(tidyselect::all_of(names(dplyr::select(., -tidyselect::all_of(c("senband")))))), ~tidyr::replace_na(.,0)))
   
   coldates_post <- c(FALSE, as.Date(names(inflows_det[-c(1)])) >= as.Date(lever_extra_inflows_det_impact_date))
   
@@ -57,7 +57,6 @@ add_inflows_det_delta_lever <- function(inflows_det, lever_extra_inflows_det, le
   }
   
   return(inflows_det)
-  
 }
 
 
@@ -188,7 +187,6 @@ stretch_profiles <- function(profiles, lever_profiles_det_stretch_factors, min_s
 }
 
 
-
 #' Stretch time on recall by a user-defined factor
 #' 
 #' Exported only for use by the Shiny app. Not to be used by a user of the
@@ -225,6 +223,6 @@ stretch_recall_time_lever <- function(recall_time, lever_profiles_recall_stretch
   profiles_recall_levered_pre  <- dplyr::mutate(profiles_recall, phase = "pre_impact", .after = 1)
   
   profiles_recall_levered <- dplyr::bind_rows(profiles_recall_levered_post, profiles_recall_levered_pre) %>%
-    dplyr::mutate(dplyr::across(c(all_of(names(dplyr::select(., -c("senband", "phase"))))), ~tidyr::replace_na(.,0))) 
+    dplyr::mutate(dplyr::across(c(tidyselect::all_of(names(dplyr::select(., -c("senband", "phase"))))), ~tidyr::replace_na(.,0))) 
   
 }
