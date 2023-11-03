@@ -1,37 +1,6 @@
 # Functions for loading additional Crown Court receipt and magistrates' court
 # disposals, based on various police charge scenarios.
 
-# load_police_charges_cc_data_list <- function(police_charges_cc_route_file, police_charges_cc_files, police_charges_central_scenario, ringfenced_lookup, start_date, forecast_start_date, forecast_end_date) {
-#   
-#   # Load file of ratios from Chun-Yee
-#   police_charges_cc_route <- load_police_charges_cc_route(police_charges_cc_route_file)
-#   
-#   extra_police_charges_cc_list <- list()
-#   
-#   for (police_charges_cc_scenario in names(police_charges_cc_files)) {
-#     
-#     # Unlike the other scenarios, which are differences from the Central, the
-#     # forecast in the Central file is the actual Central forecast. Set to NA to
-#     # signal that it is to be ignored.
-#     if (police_charges_cc_scenario == police_charges_central_scenario) {
-#       
-#       extra_police_charges_cc_list[[police_charges_cc_scenario]] <- NA
-#       
-#     } else {
-#       
-#       police_charges_cc_file <- police_charges_cc_files[[police_charges_cc_scenario]]
-#       extra_police_charges_cc <- load_police_charges_cc_file(police_charges_cc_file, start_date, forecast_start_date, forecast_end_date)
-#       extra_police_charges_cc <- calculate_police_charge_routes(police_charges_cc_route, extra_police_charges_cc)
-#       extra_police_charges_cc_list[[police_charges_cc_scenario]] <- add_lag_by_cc_route(extra_police_charges_cc, ringfenced_lookup, forecast_start_date, forecast_end_date)
-#       
-#     }
-#     
-#   }
-#   
-#   return(extra_police_charges_cc_list)
-# }
-
-
 load_police_charges_cc_data <- function(police_charges_cc_files, police_charges_central_scenario, police_charges_cc_route_file, ringfenced_lookup, start_date, forecast_start_date, forecast_end_date) {
   
   # Load police charge routes
@@ -45,17 +14,17 @@ load_police_charges_cc_data <- function(police_charges_cc_files, police_charges_
       trim_dates(start_date, forecast_start_date, forecast_end_date) %>% 
       rbind(extra_police_charges_cc)
   }
-  
+
   # Convert to court route and add a lag for receipt to disposal lag.
   extra_police_charges_cc <- calculate_police_charge_routes(extra_police_charges_cc, police_charges_cc_route)
   extra_police_charges_cc <- add_lag_by_cc_route(extra_police_charges_cc, ringfenced_lookup, forecast_start_date, forecast_end_date)
-  
+
   # Some rudimentary checks
   # tally <- dplyr::group_by(extra_police_charges_cc, .data$scenario) %>%
   #            dplyr::count()
   # if (length(unique(tally$n)) != 1)
   #   stop("incompatible data n CC police charges file.")
-  
+
   # Convert the tibble to a list of tibbles named after each scenario.
   extra_police_charges_cc_list <- list()
   police_charges_cc_scenarios <- unique(extra_police_charges_cc$scenario)
@@ -74,6 +43,9 @@ load_police_charges_cc_data <- function(police_charges_cc_files, police_charges_
 }
 
 
+# DEVELOPMENT NOTE: The transformations using the police_charges_cc_route table
+# could be done in the prisonsreadyreckonerupdater package. Consider moving this
+# functionality to prisonsreadyreckonerupdater.
 load_police_charges_cc_route <- function(police_charges_cc_route_file) {
   
   police_charges_cc_route <- import_s3_file(police_charges_cc_route_file) %>%
@@ -82,41 +54,10 @@ load_police_charges_cc_route <- function(police_charges_cc_route_file) {
   
 }
 
-# 
-# load_police_charges_cc_file <- function(police_charges_cc_file, start_date, forecast_start_date, forecast_end_date) {
-#   
-#   # I am using col_select to avoid having to specify the type of a column with
-#   # an empty header.
-#   col_select <- c("month_year", "type", "n_receipts_delta")
-#   col_types <-
-#     readr::cols(
-#       #`` = readr::col_integer(),
-#       month_year = readr::col_date(format = '%Y-%m-%d'),
-#       #scenario = readr::col_character(),
-#       #forecast_id = readr::col_character(),
-#       #forecast_round = readr::col_character(),
-#       type = readr::col_character(),
-#       n_receipts_delta = readr::col_double()
-#     )
-#   
-#   # Suppress message about adding a new column name.
-#   extra_police_charges_cc <- suppressMessages(import_s3_file(police_charges_cc_file, col_select = tidyselect::all_of(col_select), col_types = col_types))
-#   
-#   extra_police_charges_cc <- dplyr::rename(extra_police_charges_cc, date = month_year) %>%
-#     trim_dates(start_date, forecast_start_date, forecast_end_date) %>%
-#     #dplyr::select(-c("...1", "scenario", "forecast_id", "forecast_round")) %>%
-#     dplyr::mutate(type = dplyr::if_else(type == "app_All", "app_app", type),
-#                   type = dplyr::if_else(type == "sent_bb_All", "sent_sent", type),
-#                   type = dplyr::if_else(type == "sent_cs_All", "sent_sent", type))
-#   
-#   # Change the sign because the files are supplied as central - scenario, not
-#   # scenario - central.
-#   extra_police_charges_cc['n_receipts_delta'] = - extra_police_charges_cc['n_receipts_delta']
-#   
-#   return(extra_police_charges_cc)
-# }
 
-
+# DEVELOPMENT NOTE: The transformations using the police_charges_cc_route table
+# could be done in the prisonsreadyreckonerupdater package. Consider moving this
+# functionality to prisonsreadyreckonerupdater.
 calculate_police_charge_routes <- function(police_charges_cc, police_charges_cc_route) {
   
   police_charges_cc_split <- police_charges_cc %>%
@@ -175,8 +116,6 @@ add_lag_by_cc_route <- function(extra_police_charges_cc, ringfenced_lookup, fore
 }
 
 
-
-### NEW MAGISTRATES' COURT FUNCTIONS USING DATA FROM KATIE MAHON ###
 
 load_police_charges_mc_data <- function(police_charges_mc_files, police_charges_central_scenario, mc_remand_lookup, start_date, forecast_start_date, forecast_end_date) {
   

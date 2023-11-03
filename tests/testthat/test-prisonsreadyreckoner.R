@@ -10,10 +10,10 @@ set_test_params <- function() {
   
   params <- dev_set_params()
   params <- format_params(params)
-
+  
   # Reset recall to whatever is in the source file.
-  recall_params <- load_recall_params(params$recall_file, params$start_date$recall_rate, params$forecast_start_date, params$forecast_end_date)
-  params$lever_recall_rate <- signif(recall_params$recall_rate_exclPSS, 3)
+  recall_rate_exclPSS <- load_recall_rate_exclPSS(params$recall_file, params$start_date$recall_rate, params$forecast_start_date, params$forecast_end_date)
+  params$lever_recall_rate <- signif(recall_rate_exclPSS, 3)
 
   return(params)
 }

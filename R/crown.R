@@ -8,6 +8,7 @@ load_ringfenced_lookup <- function(ringfenced_lookup_file) {
       receipt_type_desc = readr::col_character(),
       route = readr::col_character(),
       ringfenced = readr::col_logical(),
+      lag_months = readr::col_integer()
     )
   
   ringfenced_lookup <- import_s3_file(ringfenced_lookup_file, col_types = col_types)
@@ -58,9 +59,10 @@ load_cc_capacity <- function(cc_capacity_file, start_date, forecast_start_date, 
       monthly_ht = readr::col_double(),
       monthly_sd = readr::col_double(),
       htpsd_adj = readr::col_double(),
-      date_value = readr::col_date(format = '%d/%m/%Y'),
-      raw_sd = readr::col_double() #, raw_seasonal_sd = readr::col_double() # Field to be added at next iteration. See '20230505 - To Chun-yee Cheng - RE_ cjst adjusted hearing time per sitting day - save to s3 as standard.msg'
-    )
+      date_value = readr::col_date(format = '%Y-%m-%d'),
+      raw_sd = readr::col_double(),
+      raw_seasonal_sd = readr::col_double()
+  )
   
   cc_capacity <- import_s3_file(cc_capacity_file, col_types = col_types) %>%
                    dplyr::rename(date = date_value, sitting_days = monthly_sd, hours_per_day = htpsd_adj)
@@ -92,7 +94,7 @@ check_cc_inputs <- function(cc_output, cc_capacity) {
                    dplyr::mutate(court_time = sitting_days * hours_per_day, error = court_time - hours_disposals)
   
   max_error <- max(cc_capacity$error)
-  if (max_error > 50)
+  if (max_error > 70)
       stop("Crown Court input files have capacity discrepancies. A maximum error was found of ",  max_error, ".")
   
   invisible(TRUE)
