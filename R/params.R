@@ -33,7 +33,7 @@ format_params <- function(params) {
   
   # Add forecast start and end dates based on file start dates and number of
   # months requested.
-  start_dates <- c(params$start_date$police_charges_cc, params$start_date$police_charges_mc, params$start_date$inflows_det, params$start_date$recall_rate, params$start_date$cc_files)
+  start_dates <- as.Date(c(params$start_date$police_charges_cc, params$start_date$police_charges_mc, params$start_date$inflows_det, params$start_date$recall_rate, params$start_date$cc_files))
   params$forecast_start_date     <- lubridate::floor_date(max(start_dates[!is.na(start_dates)]), "month")
   params$forecast_end_date       <- lubridate::add_with_rollback(params$forecast_start_date, months(params$projection_length_months - 1), roll_to_first = TRUE) 
   
