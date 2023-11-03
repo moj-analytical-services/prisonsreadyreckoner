@@ -70,6 +70,9 @@ dev_set_params <- function() {
   # releases of the Shiny app.
   ################################################################################
   
+  # Instructions:
+  # 1. Copy and paste from prisonsreadyreckoner sandbox output.
+  
   params$ringfenced_lookup_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/ringfenced-lookup-20231016-shiny-v3.0.0-OFFICIAL.csv"
   params$police_charges_mc_files <- c("s3://alpha-app-prisonsreadyreckonerapp/2023-09/police-charges-mc001-20231016-shiny-v3.0.0-OFFICIAL.csv")
   params$police_charges_cc_files <- c("s3://alpha-app-prisonsreadyreckonerapp/2023-09/police-charges-cc001-20231016-shiny-v3.0.0-OFFICIAL.csv")
