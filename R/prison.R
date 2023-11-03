@@ -94,7 +94,7 @@ calculate_pop_remand_delta <- function(mc_disposals, cc_disposals, profiles_rema
   
   # Convert Crown Court disposals to population impact.
   pop_remand_delta_out <- mojstockr_mconv(disposals_remand_delta, profiles_remand_out, c("casetype"))
-
+  
   
   # NA signals the default condition, in which cases there are no extra receipts
   # to add and no extra magistrates' court disposals.
@@ -111,7 +111,7 @@ calculate_pop_remand_delta <- function(mc_disposals, cc_disposals, profiles_rema
                          values_fill = 0,
                          names_sort = TRUE) %>%
       dplyr::mutate(casetype = "remand", .before = 1)
-  
+    
     # Convert change in receipts to population impact.
     pop_remand_delta_in <- mojstockr_mconv(receipts_remand_delta, profiles_remand_in, c("casetype"))
     
@@ -156,7 +156,7 @@ load_inflows_det <- function(prison_inflows_file, start_date, forecast_start_dat
   inflows_det <- dplyr::mutate(inflows_det, senband = stringr::str_replace_all(senband, c(Band = "senband", EDS = "senband4"))) %>%
     dplyr::group_by(date, senband) %>%
     dplyr::summarise(inflows = sum(inflows), .groups = "drop") %>%
-    tidyr::pivot_wider(names_from = date, values_from = inflows, values_fill = 0)
+    tidyr::pivot_wider(names_from = "date", values_from = "inflows", values_fill = 0)
   
 }
 
@@ -248,7 +248,7 @@ calculate_outflows_indet <- function(month_names)
 calculate_flows_indet <- function(flow, month_names) {
   
   flows <- tibble::tibble(x = month_names, y = rep(flow, length(month_names))) %>%
-    tidyr::pivot_wider(names_from = x, values_from = y) %>%
+    tidyr::pivot_wider(names_from = "x", values_from = "y") %>%
     dplyr::mutate(casetype = "indeterminate", .before = everything())
 }
 
@@ -258,11 +258,22 @@ calculate_flows_indet <- function(flow, month_names) {
 # Licence and recall
 ################################################################################
 
-# Load determinate sentence profiles.
-load_profiles_lic <- function(profiles_file, projection_length_months) {
+load_nomis_out_delius_in_ratio <- function(recall_file) {
   
-  profiles <- suppressMessages(import_s3_file(profiles_file)) %>%
-    dplyr::rename(senband = SenBand)
+  nomis_out_delius_in_ratio <- import_s3_file(recall_file, sheet = "NOMIS_out_delius_in_ratio") %>%
+    dplyr::rename(senband = "SenBand") %>%
+    dplyr::mutate(senband = paste0("senband", .data$senband)) %>%
+    dplyr::arrange(.data$senband) %>%
+    tibble::deframe()
+  
+}
+
+
+# Load determinate sentence profiles.
+load_profiles_lic <- function(recall_file, projection_length_months) {
+  
+  profiles <- import_s3_file(recall_file, sheet = "licence_profile_adjusted_exclPS") %>%
+    dplyr::rename(senband = "SenBand")
   
   # We use all.equal() rather than a simple x!=y test because some profiles may
   # not add up to 1 exactly owing to rounding error.
@@ -270,75 +281,67 @@ load_profiles_lic <- function(profiles_file, projection_length_months) {
   if (!isTRUE(all.equal(sum(profiles$p), length(unique(profiles$senband)))))
     warning("At least one input profile, does not sum to one. Are you sure it is a probability distribution?")
   
-  profiles <- dplyr::filter(profiles, time_months < projection_length_months) %>%
-    dplyr::select(time_months, senband, p)
+  profiles <- dplyr::filter(profiles, .data$time_months < projection_length_months) %>%
+    dplyr::select(c("time_months", "senband", "p"))
   
   profiles <-
-    dplyr::arrange(profiles, senband) %>%
+    dplyr::arrange(profiles, .data$senband) %>%
     tidyr::pivot_wider(
-      names_from = time_months,
-      values_from = p,
+      names_from = "time_months",
+      values_from = "p",
       values_fill = 0,
       names_prefix = "lag",
       names_sort = TRUE
     ) %>%
-    dplyr::mutate(senband = paste0("senband", senband))
+    dplyr::mutate(senband = paste0("senband", .data$senband))
   
-  
-  return(profiles)
 }
 
 
-# Load licence and recall parameters from Jordan Carroll
-load_recall_params <- function(recall_file, start_date, forecast_start_date, forecast_end_date) {
+# Recall rate. Currently, a time series is provided. We will assume the steady
+# state values.
+load_recall_rate_exclPSS <- function(recall_file, start_date, forecast_start_date, forecast_end_date) {
   
-  nomis_out_delius_in_ratio <- import_s3_file(recall_file, sheet = "NOMIS_out_delius_in_ratio") %>%
-    dplyr::rename(senband = SenBand) %>%
-    dplyr::mutate(senband = paste0("senband", senband)) %>%
-    dplyr::arrange(senband) %>%
-    tibble::deframe()
-  
-  
-  # Recall rate. Currently, a time series is provided. We will assume the steady
-  # state values.
   recall_rate_exclPSS <- import_s3_file(recall_file, sheet = "recall_rate_exclPSS") %>%
-    dplyr::rename(senband = SenBand) %>%
-    dplyr::mutate(date = as.Date(date))
+    dplyr::rename(senband = "SenBand") %>%
+    dplyr::mutate(senband = paste0("senband", .data$senband))
   
-  recall_rate_exclPSS <- trim_dates(recall_rate_exclPSS, start_date, forecast_start_date, forecast_end_date) %>%
-    dplyr::mutate(senband = paste0("senband", senband))
+  if (!is.na(start_date)) {
+    
+    recall_rate_exclPSS <- dplyr::mutate(recall_rate_exclPSS, date = as.Date(.data$date)) %>%
+      trim_dates(start_date, forecast_start_date, forecast_end_date) %>%
+      dplyr::filter(.data$date == forecast_end_date) %>%
+      dplyr::select(c("senband", "recall_rate"))
+  }
   
-  recall_rate_exclPSS <- dplyr::filter(recall_rate_exclPSS, date == forecast_end_date) %>%
-    dplyr::select(senband, recall_rate) %>%
-    dplyr::arrange(senband) %>%
+  recall_rate_exclPSS <- dplyr::arrange(recall_rate_exclPSS, .data$senband) %>%
     tibble::deframe() %>%
     signif(3)
   
+}
+
+
+# Convert from days to months and remove 0 and NA lines
+load_average_time_on_recall <- function(recall_file) {
   
-  # Convert from days to months and remove 0 and NA lines
   average_time_on_recall <- import_s3_file(recall_file, sheet = "average_time_on_recall") %>%
-    dplyr::rename(senband = SenBand) %>%
-    dplyr::filter(senband > 0) %>%
-    dplyr::mutate(average = average * 12 / 365.25,
-                  senband = paste0("senband", senband)) %>%
-    dplyr::arrange(senband) %>%
+    dplyr::rename(senband = "SenBand") %>%
+    dplyr::filter(.data$senband > 0) %>%
+    dplyr::mutate(average = .data$average * 12 / 365.25,
+                  senband = paste0("senband", .data$senband)) %>%
+    dplyr::arrange(.data$senband) %>%
     tibble::deframe()
+  
+}
+
+
+load_recall_profile_adjustments <- function(recall_file) {
   
   recall_profile_adjustments <- import_s3_file(recall_file, sheet = "recall_profile_adjustments") %>%
-    dplyr::rename(senband = SenBand) %>%
-    dplyr::mutate(senband = paste0("senband", senband)) %>%
-    dplyr::arrange(senband) %>%
+    dplyr::rename(senband = "SenBand") %>%
+    dplyr::mutate(senband = paste0("senband", .data$senband)) %>%
+    dplyr::arrange(.data$senband) %>%
     tibble::deframe()
-  
-  return(
-    list(
-      nomis_out_delius_in_ratio       = nomis_out_delius_in_ratio,
-      #licence_profile_adjustments_exc = licence_profile_adjustments_exc,
-      recall_rate_exclPSS             = recall_rate_exclPSS,
-      average_time_on_recall          = average_time_on_recall,
-      recall_profile_adjustments      = recall_profile_adjustments
-    )
-  )
   
 }
 
