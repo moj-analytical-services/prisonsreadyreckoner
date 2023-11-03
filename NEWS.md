@@ -14,13 +14,16 @@ e.g. (#2, @bgburton)
 -->
 
 
-# prisonsreadyreckoner x.x.x.9000
+# prisonsreadyreckoner 3.0.0.9000
 
-PENDING
+Minor changes to accommodate new inputs in which licence profiles are supplied
+as part of the 'recall file'.
 
 ## Breaking changes
 
-PENDING
+This version is not backwards compatible because the licence profiles are now
+expected to be in the Excel recall file, rather than a separate .csv file.
+
 
 
 # prisonsreadyreckoner 2.0.0

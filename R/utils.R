@@ -103,6 +103,9 @@ write_table <- function(table, path_output, ...) {
 }
 
 
+# DEVELOPMENT NOTE: FYI, the following can be replaced with a simple product in
+# the code. Consider Removing multiply_two_named_vectors().
+
 #' Multiply the values of two vectors based on name
 #' 
 #' Match the arguments of two vectors together based on name, and then multiply

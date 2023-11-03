@@ -54,7 +54,6 @@ load_datasets <- function(params) {
 }
 
 
-#load_crown_data <- function(cc_output_file, cc_capacity_file, ringfenced_lookup_file, start_date, forecast_start_date, forecast_end_date, remand_rates) {
 load_crown_data <- function(cc_output_file, cc_capacity_file, ringfenced_lookup, start_date, forecast_start_date, forecast_end_date) {
     
   # Read baseline inputs, which are disposals for ring-fenced cases and time
@@ -73,22 +72,27 @@ load_crown_data <- function(cc_output_file, cc_capacity_file, ringfenced_lookup,
 }
 
 
+# DEVELOPMENT NOTE: Is there any need for this function? Consider placing
+# contents in load_datasets().
 load_sentencing_rates <- function(sentencing_rates_file)
   sentencing_rates <- import_s3_file(sentencing_rates_file)
 
 
+# DEVELOPMENT NOTE: Is there any need for this function? Consider placing
+# contents in load_datasets().
 load_prison_data <- function(prison_inflows_file, profiles_file, licence_profiles_file, recall_file, gender_splits_file, start_date_inflows_det, start_date_recall_rate, forecast_start_date, forecast_end_date, projection_length_months, lever_profiles_det_stretch_factor_min) {
     
   inflows_det <- load_inflows_det(prison_inflows_file, start_date_inflows_det, forecast_start_date, forecast_end_date)
   
   profiles_det <- load_profiles_det(profiles_file, projection_length_months, lever_profiles_det_stretch_factor_min)
   
-  # Load licence profiles from the Prisons Modelling team.
-  profiles_lic <- load_profiles_lic(licence_profiles_file, projection_length_months)
+  # Load licence and recall from the 'recall file'.
+  nomis_out_delius_in_ratio  <- load_nomis_out_delius_in_ratio(recall_file)
+  profiles_lic               <- load_profiles_lic(recall_file, projection_length_months)
+  recall_rate_exclPSS        <- load_recall_rate_exclPSS(recall_file, start_date_recall_rate, forecast_start_date, forecast_end_date)
+  average_time_on_recall     <- load_average_time_on_recall(recall_file)
+  recall_profile_adjustments <- load_recall_profile_adjustments(recall_file)
   
-  # Load ratios from Jordan Carroll
-  recall_parameters <- load_recall_params(recall_file, start_date_recall_rate, forecast_start_date, forecast_end_date)
-
   # Load data on split between male and female prisoners
   gender_splits <- load_gender_splits(gender_splits_file)
   
@@ -97,11 +101,11 @@ load_prison_data <- function(prison_inflows_file, profiles_file, licence_profile
       inflows_det                     = inflows_det,
       profiles_det                    = profiles_det,
       
-      nomis_out_delius_in_ratio       = recall_parameters$nomis_out_delius_in_ratio,
+      nomis_out_delius_in_ratio       = nomis_out_delius_in_ratio,
       profiles_lic                    = profiles_lic,
-      recall_rate_exclPSS             = recall_parameters$recall_rate_exclPSS,
-      average_time_on_recall          = recall_parameters$average_time_on_recall,
-      recall_profile_adjustments      = recall_parameters$recall_profile_adjustments,
+      recall_rate_exclPSS             = recall_rate_exclPSS,
+      average_time_on_recall          = average_time_on_recall,
+      recall_profile_adjustments      = recall_profile_adjustments,
       
       gender_splits                   = gender_splits
     )
