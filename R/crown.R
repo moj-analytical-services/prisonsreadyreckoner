@@ -126,6 +126,12 @@ augment_crown_output <- function(cc_output, ringfenced_lookup) {
                                 n_receipts_delta = 0,
                                 n_disposals_ringfenced_delta = 0)
   
+  # I've added this to capture the situation that arose in September 2023 when
+  # n_disposals was 0 for some smaller case types and hours_per_disposal was
+  # infinite.
+  cc_output$hours_per_disposal[is.nan(cc_output$hours_per_disposal)] <- mean(cc_output$hours_per_disposal[!(is.nan(cc_output$hours_per_disposal) | cc_output$route == "effective")])
+  
+  return(cc_output)
 }
 
 
@@ -139,6 +145,7 @@ augment_crown_output <- function(cc_output, ringfenced_lookup) {
 # where model runs are invoked iteratively, such as in a Shiny app.
 augment_cc_capacity <- function(cc_capacity, cc_output) {
   
+  View(cc_output)
   base_hours <- dplyr::group_by(cc_output, date) %>%
                            dplyr::summarise(hours_ringfenced_base = sum(dur_disposals * ringfenced / 60),
                                             capacity_base = sum(dur_disposals / 60),
