@@ -48,10 +48,8 @@ dev_set_params <- function() {
   # Instructions:
   # 1. Copy and paste from prisonsreadyreckoner sandbox output.
   
-  params$capacity_version <- "May-23"
-  
   params$tot_pop_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/populations_sep23_s2_flat_3m_linear_6m_sep23_central_scenario_dands_231011_081331-s039-OFFICIAL.xlsx"
-  # params$capacity_file <- paste0("s3://alpha-app-prisonsreadyreckonerapp/2023-04B/", params$capacity_version, " Supply Forecasts_V1.5_Shared.xlsx")
+  # params$capacity_file <- paste0("s3://alpha-app-prisonsreadyreckonerapp/2023-04B/May-23 Supply Forecasts_V1.5_Shared.xlsx")
   params$prison_population_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/historical-prison-population-20231016-shiny-v3.0.0-OFFICIAL.csv"
   params$police_charges_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/historical-police-charges-20231016-shiny-v3.0.0-OFFICIAL.csv"
   params$sitting_days_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/sitting_days_actuals.csv"
@@ -101,7 +99,7 @@ dev_set_params <- function() {
   params$start_date$recall_rate        <- NA
   params$start_date$cc_files           <- "2023-04-01"
   
-  params$projection_length_months <- 49         # To March 2027. '20230525 - To Ceri Cooper - Actions from our ready reckoner meeting just now_.msg'
+  params$projection_length_months <- 49         # To September 2027. '20230525 - To Ceri Cooper - Actions from our ready reckoner meeting just now_.msg'
   
   # Sentencing parameters
   # Remand rates.
