@@ -145,7 +145,6 @@ augment_crown_output <- function(cc_output, ringfenced_lookup) {
 # where model runs are invoked iteratively, such as in a Shiny app.
 augment_cc_capacity <- function(cc_capacity, cc_output) {
   
-  View(cc_output)
   base_hours <- dplyr::group_by(cc_output, date) %>%
                            dplyr::summarise(hours_ringfenced_base = sum(dur_disposals * ringfenced / 60),
                                             capacity_base = sum(dur_disposals / 60),
