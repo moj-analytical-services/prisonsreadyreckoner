@@ -1,5 +1,5 @@
 ---
-title: "Sense checking of outputs from Crown Court module. Part II. Comparison with CJST output."
+title: "Sense checking of outputs from Crown Court module. Comparison with CJST output."
 author: "Brian Burton"
 date: "03/05/2023"
 output: html_document
@@ -14,9 +14,9 @@ devtools::load_all()
 
 ## Aim
 
-To test how well prisonflowcast will match the output of a variant scenario when
-fed inputs from a base scenario and the additional sitting days or volumes of
-ring-fenced disposals from the variant scenario.
+To test how well prisonsreadyreckoner will match the output of a variant
+scenario when fed inputs from a base scenario and the additional sitting days or
+volumes of ring-fenced disposals from the variant scenario.
 
 In the following we examine variants from the October 2022 projection, which
 involved changes in sitting days only.

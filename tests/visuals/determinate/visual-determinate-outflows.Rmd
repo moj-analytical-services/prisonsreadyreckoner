@@ -1,214 +1,97 @@
 ---
-title: "Determinate population calculated with new `fullsample`"
-author: "Alex Dickinson"
-date: "27/03/2023"
+title: "Determinate population"
+author: "Brian Burton"
+date: "09/11/2023"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
 devtools::load_all()
+
 ```
+
 ```{r include=FALSE}
 library(magrittr)
 
-#path_target <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-determinate-population.xlsx"   # This file is created from ad hoc data on DOM1.
-
-# Load determinate sentence inflows from Charlotte's projections.
-# load_inflows_det_charlotte_comparison <- function(inflow_file, start_date, impact_date) {
-# 
-#   inflows <- import_s3_file(inflow_file)
-#   names(inflows)[-c(1,2)] <- format(as.Date(as.numeric(names(inflows)[-c(1,2)]),
-#                                             origin = "1899-12-30"), "%Y-%m-%d")
-# 
-#   if (names(inflows)[3] != start_date)
-#     stop("Start date in prison inflow file was ", names(inflows)[3], ". ", start_date, " expected.")
-# 
-#   inflows_det_post  <-
-#     dplyr::filter(inflows, volume == "inflow") %>% dplyr::select(-c("volume")) %>%
-#       dplyr::mutate(phase = "post_impact", .after = 1)
-# 
-#   inflows_det_pre            <- inflows_det_post %>% dplyr::mutate(phase = "pre_impact")
-#   inflows_det                <- rbind(inflows_det_post, inflows_det_pre)
-#   coldates_post              <- c(FALSE, FALSE, as.Date(names(inflows_det[-c(1,2)])) >= as.Date(impact_date))
-#   coldates_pre               <- c(FALSE, FALSE, as.Date(names(inflows_det[-c(1,2)])) < as.Date(impact_date))
-#   inflows_det[coldates_post] <- inflows_det[coldates_post] * c(1,1,1,1,0,0,0,0)
-#   inflows_det[coldates_pre]  <- inflows_det[coldates_pre] * c(0,0,0,0,1,1,1,1)
-# 
-#   return(inflows_det)
-# }
-
-
-load_outflows_det <- function(prison_outflows_file, start_date, forecast_start_date, forecast_end_date) {
-  
-  outflows_det <- import_s3_file(prison_outflows_file, sheet = "determinate_flows") %>%
-                  dplyr::rename(date = Date, senband = Band) %>%
-                  dplyr::filter(DataType == "Forecast") %>%
-                  trim_dates(start_date, forecast_start_date, forecast_end_date) %>%
-                  dplyr::select(date, senband, outflows) %>%
-                  dplyr::mutate(senband = stringr::str_replace_all(senband, c(Band = "senband", EDS = "senband4"))) %>%
-                  dplyr::group_by(date, senband) %>%
-                  dplyr::summarise(outflows = sum(outflows), .groups = "drop") %>%
-                  tidyr::pivot_wider(names_from = date, values_from = outflows, values_fill = 0)
-  
-}
+# File created on DOM1 by pivoting ad hoc prison flow forecasts from Charlotte
+# Wallace.
+path_profiles_det <- paste0("s3://alpha-app-prisonsreadyreckonerapp/2023-09/profiles-det-20231016-shiny-v3.0.0-OFFICIAL.csv")
+path_flows_det <- "s3://alpha-prison-forecasting-data/prison_demand_model/outputs/prisons/prisons-ready-reckoner-input-files/2023-09/detailed_sep23_s2_flat_3m_linear_6m_sep23_central_scenario_dands_231011_081331-s039-OFFICIAL.xlsx"   # '20231025 - Alex Dickinson - Re_ New files for ready reckoner.msg'
+path_flows_det_sheet <- "det_new_recep_discharges_nonAgg"
 
 
 plot_series <- function(series, main, ylab) {
   
-  
-  x <- as.Date(names(dplyr::select(series, -c("senband", "legend_label"))))
-  y <- dplyr::select(series, -c("senband", "legend_label"))
-  
-  
-  matplot(x,
-     t(y),
-     'l',
-     lty = c(rep(1, 4), rep(2, 4)),
-     col = seq(1, 4),
-     xlab = "Date", main = main, ylab = ylab)
-  legend("topleft",
-     inset = 0.02,
-     legend = series$legend_label,
-     lty = c(rep(1, 4), rep(2, 4)),
-     col = seq(1, 4),
-     cex = 0.75
-  )
-}
-
-
-plot_profiles <- function(profiles, main, ylab, phase = "both", xlim = NULL, ylim = NULL) {
-  
-  if (phase == "both") {
-    plotdata <- t(dplyr::select(profiles, -c("senband", "phase", "legend_label")))
-  } else if (phase == "post_impact") {
-    plotdata <- t(dplyr::select(dplyr::filter(profiles, phase == "post_impact"), -c("senband", "phase", "legend_label")))
-  } else if (phase == "pre_impact") {
-    plotdata <- t(dplyr::select(dplyr::filter(profiles, phase == "pre_impact"), -c("senband", "phase", "legend_label")))
-  }
-  
-  matplot(plotdata,
-          type = 'l',
-          lty = c(rep(1, 4), rep(2, 4)),
-          col = seq(1, 4),
-          xlab = "Lag number", main = main, ylab = ylab, xlim = xlim, ylim = ylim)
-  legend("topright",
-          inset = 0.02,
-          legend = profiles$legend_label,
-          lty = c(rep(1, 4), rep(2, 4)),
-          col = seq(1, 4),
-          cex = 0.75
-  )
+   x <- as.Date(names(dplyr::select(series, -c("senband"))))
+   y <- dplyr::select(series, -c("senband"))
+   matplot(x,
+           t(y),
+           'l',
+           lty = c(rep(1, 4), rep(2, 4)),
+           col = seq(1, 4),
+           xlab = "Date", main = main, ylab = ylab)
+   legend("topleft",
+       inset = 0.02,
+       legend = series$senband,
+       lty = c(rep(1, 4), rep(2, 4)),
+       col = seq(1, 4)
+   )
 }
 ```
 
 
 ## Aim
 
-To demonstrate that, when
-
-* our model functions for prison flows are driven with the same inflows as used
-in the December 2022 prison projection and
-
-* we use the latest version of
-[`fullsample`](https://github.com/moj-analytical-services/fullsample) to
-generate our sentence length profiles
-
-we get comparable forecasts of prison population.
+To demonstrate that, when our model functions for prison flows are driven with
+the same inflows as used in an example prison projection, we get comparable
+forecasts of prison population.
 
 
 ## Method
 
-Example determinate data from the December 2022 prison projection were obtained
-from Charlotte Wallace and pivoted to generate time series of inflows, outflows
-and population. See `20230324 - QA - Dec-22 sentencing and receptions
-prepartion.xlsx` on DOM1. In the plot of inflows below, SB = sentence band.
+Example determinate data from the Prisons Team are processed to generate time
+series of inflows, outflows and population.
 
 ```{r echo=FALSE}
+flows <- import_s3_file(path_flows_det, sheet = path_flows_det_sheet) %>%
+  dplyr::mutate(Category = stringr::str_replace_all(.data$Category, c(Band = "senband", EDS = "senband4")))
+    
+inflows <- flows %>%
+  dplyr::select(c("InflowMonth", "Category")) %>%
+  dplyr::rename(date = "InflowMonth", senband = "Category") %>%
+  dplyr::mutate(date = lubridate::floor_date(.data$date, "month"),
+                flow = "inflow") %>%
+  dplyr::group_by(.data$date, .data$senband, .data$flow) %>%
+  dplyr::summarise(volume = dplyr::n(), .groups = "drop")
+    
+max_date <- max(inflows$date)
+outflows <- flows %>%
+  dplyr::select(c("OutflowMonth", "Category")) %>%
+  dplyr::rename(date = "OutflowMonth", senband = "Category") %>%
+  dplyr::mutate(date = lubridate::floor_date(.data$date, "month"),
+                flow = "outflow") %>%
+  dplyr::filter(date <= max_date) %>%
+  dplyr::group_by(.data$date, .data$senband, .data$flow) %>%
+  dplyr::summarise(volume = dplyr::n(), .groups = "drop")
+    
+flows_agg <- rbind(inflows, outflows) %>%
+  tidyr::pivot_wider(names_from = "date", values_from = "volume", values_fill = 0)
+    
+inflows <- dplyr::filter(flows_agg, .data$flow == "inflow") %>%
+  dplyr::select(-c("flow"))
+    
+outflows <- dplyr::filter(flows_agg, .data$flow == "outflow") %>%
+  dplyr::select(-c("flow"))
 
-path_target <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0901/model_outputs/_prison_outputs/_sensitivity/extra_outputs/detailed_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx"
+plot_series(inflows, "Target determinate inflows", expression("Flow [month"^-1*"]"))
 
-inflows_start_date <- as.Date("2023-03-31")
-forecast_start_date <- as.Date("2023-03-01")
-forecast_end_date <- as.Date("2028-02-01")
-
-inflows_det_target <- load_inflows_det(path_target, inflows_start_date, forecast_start_date, forecast_end_date)
-
-outflows_det_target <- load_outflows_det(path_target, inflows_start_date, forecast_start_date, forecast_end_date)
-
-# print("outflows_det_target")
-# print(outflows_det_target)
-
-
-temp_target <- inflows_det_target
-pop_det_target <- temp_target
-
-temp_target[ , -1] <- inflows_det_target[ , -1] - outflows_det_target[ , -1]
-
-for (row in rownames(temp_target)) {
-  
-  pop_det_target[row, -1] <- temp_target[row, -1] %>%
-    unlist(., use.names=FALSE) %>%
-    cumsum() %>%
-    as.list()
-  
-}
-
-
-
-# inflows_det_target <- flows_target %>%
-#   dplyr::filter(DataType == "Forecast") %>%
-#   dplyr::select(-c("DataType", "outflows")) %>%
-#   dplyr::mutate(date = as.Date(Date),
-#                 senband = stringr::str_replace_all(Band, c("Band" = "senband", "EDS" = "senband4")),
-#                 .keep = "unused") %>%
-#   dplyr::group_by(date, senband) %>%
-#   dplyr::summarise(across(c(inflows), sum), .groups = "drop") %>%
-#   tidyr::pivot_wider(names_from = date, values_from = inflows)
-
-
-#pop_target <- import_s3_file(path_target, sheet = "populations")
-
-# pop_det_target <- pop_target %>%
-#   dplyr::filter(DataType == "Forecast") %>%
-#   dplyr::filter(!Age_Group == "U18") %>%
-#   dplyr::filter(Custody_Type == "Band1" | Custody_Type == "Band2" | Custody_Type == "Band3" | Custody_Type == "Band4") %>%
-#   
-# 
-#   
-#   trim_dates(inflows_det, start_date, forecast_start_date, forecast_end_date) %>%
-#   dplyr::group_by(Date, Custody_Type) %>%
-#   dplyr::summarise(across(c(Population), sum), .groups = "drop") %>%
-#   dplyr::mutate(date = as.Date(Date),
-#                 senband = stringr::str_replace_all(Custody_Type, "Band", "senband"),
-#                 population = Population,
-#                 .keep = "unused") %>%
-#   tidyr::pivot_wider(names_from = date, values_from = population)
-
-# print("inflows_det_target")
-# print(inflows_det_target)
-# print("outflows_det_target")
-# print(outflows_det_target)
-# print("pop_det_target")
-# print(pop_det_target)
-
-
-# Add labels for plotting
-inflows_det_target_legend <- inflows_det_target %>%
-  dplyr::mutate(legend_label = stringr::str_replace_all(senband, "senband", "SB "))
-pop_det_target_legend <- pop_det_target %>% 
-  dplyr::mutate(legend_label = stringr::str_replace_all(senband, "senband", "SB ")) %>%
-  dplyr::mutate(legend_label = paste0(legend_label, " (target)"))
-
-
-plot_series(inflows_det_target_legend, "Determinate inflows", expression("Flow [month"^-1*"]"))
-#plot_series(pop_det_target_legend, "Target determinate populations", "Population")
 ```
 
 Equivalent outflows and populations are generated by calling the relevant model
-functions using the inflow data above. In contrast to the December 2022
-projection, which uses the old `fullsample` package, the model uses the new
-`fullsample` package.
+functions using the inflow data above and a FULLSAMPLE version comparable with
+that used for the inflows provided.
 
 
 ## Results
@@ -216,233 +99,21 @@ projection, which uses the old `fullsample` package, the model uses the new
 When driven with the same inputs, our model (solid lines) produces very similar
 populations as the target projection (dashed lines).
 
-<!-- for bands 1-3. For band 4, -->
-<!-- the populations diverge noticeably. We feel that this discrepancy is caused by -->
-<!-- use of the new `fullsample` package in our model. The target projection uses the -->
-<!-- old `fullsample`, which may recount offenders who temporarily leave prison before -->
-<!-- returning. -->
-
-This similarity indicates that our calculations are correct and that the profiles we have
+This indicates that our calculations are correct and the profiles we have
 derived are adequate for forecasting prison population.
 
-```{r echo=FALSE, eval=TRUE}
-#library(fullsample)
+```{r echo=FALSE}
+profiles_det <- import_s3_file(path_profiles_det)
+profiles_det <- dplyr::filter(profiles_det, .data$phase == "pre_impact") %>%
+  dplyr::select(-c("phase"))
+    
+pop_exp <- mojstockr_build_stock(inflows, outflows, c("senband"))
+    
+outflows_mod <- mojstockr_mconv(inflows, profiles_det, c("senband"))
+pop_mod      <- mojstockr_build_stock(inflows, outflows_mod, c("senband"))
 
-# First run functions within make_profiles_det() to generate the profiles file
-
-params <- list()
-
-params$start_date$inflows_det     <- as.Date("2023-03-31")
-params$projection_length_months <- 60
-
-# Add forecast start and end dates based on file start dates and number of
-# months requested.
-params$forecast_start_date     <- lubridate::floor_date(params$start_date$inflows_det, "month")
-params$forecast_end_date       <- lubridate::add_with_rollback(params$forecast_start_date, months(params$projection_length_months - 1), roll_to_first = TRUE)
-
-# Prison and licence parameters
-params$prison_inflows_file  <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0901/model_outputs/_prison_outputs/_sensitivity/extra_outputs/detailed_apr23_s4_apr23_flat_3m_linear_6m_msim_EDS_change_os_adj_DandS_3m_current_6m_avg_longterm_230426_150555.xlsx"   # '20230505 - Charlotte Wallace - Updated prison projections .msg'
-
-params$profiles_file        <- "s3://alpha-app-prisonsreadyreckonerapp/2023-04/profiles-det-20230502-shiny-v0.0.0-OFFICIAL.csv"
-# Add maximum stretch factor. For use, for example, by a Shiny app.
-params$lever_profiles_det_stretch_factor_min   <- 0.5
-params$lever_profiles_det_stretch_factor_max <- 5
-
-#params$start_date              <- "2022-11-01"
-
-# params$profiles_period_start   <- "2019-03-14"
-# params$profiles_period_end     <- "2020-03-13"
-# params$time_served_impact_date <- "2022-04-01"
-
-#params$inflow_file             <- "s3://alpha-prison-forecasting-data/flowcast/test-files/test-determinate-population.xlsx"   # This file is created from ad hoc data on DOM1.
-#params$profiles_file           <- paste0("s3://alpha-prison-forecasting-data/flowcast/test-files/test-determinate-profiles-", params$profiles_period_start, "-to-", params$profiles_period_end, ".csv")
-
-inflows_det_loaded <- load_inflows_det(params$prison_inflows_file, params$start_date$inflows_det, params$forecast_start_date, params$forecast_end_date)
-
-#inflows_det              <- load_inflows_det_charlotte_comparison(params$inflow_file, params$start_date, params$time_served_impact_date)
-#profiles_det             <- load_profiles_det(params$profiles_file)
-
-
-profiles_det_loaded <- load_profiles_det(params$profiles_file, params$projection_length_months, params$lever_profiles_det_stretch_factor_min)
-
-
-prison_det_outputs <- run_prison_determinate_module(inflows_det_loaded, params$forecast_start_date, profiles_det_loaded)
-  outflows_det     <- prison_det_outputs$outflows_det
-  pop_det          <- prison_det_outputs$pop_det
-
-
-# Add labels for plotting
-pop_det_legend <- pop_det %>%
-  dplyr::mutate(legend_label = stringr::str_replace_all(senband, "senband", "SB ")) %>%
-  dplyr::mutate(legend_label = paste0(legend_label, " (model)"))
-
-pop_det_legend_comparison <- dplyr::bind_rows(pop_det_legend, pop_det_target_legend)
-pop_det_legend_comparison <- pop_det_legend_comparison[ , order(names(pop_det_legend_comparison))]
-
-
-plot_series(pop_det_legend_comparison, "Model (solid) and target (dashes) determinate populations", "Population")
-```
-
-
-### Results with changes requested by the user
-
-#### Time in prison
-
-The time that determinate prisoners spend in prison is represented by
-probability distributions based on historical data (these probability
-distributions are referred to as profiles). `prisonflowcast` calculates a
-profile for each of the sentence bands 1 to 4. Users of `prisonflowcast` can
-change the length of these profiles by changing the parameter
-`params$profiles_stretch_factor`. The shape of the profiles remains unchanged.
-
-
-##### Example: Increase sentence lengths by a factor of two
-
-In the plots below, the sentence length for all determinate prisoners is
-increased by a factor of two. (The solid lines labelled `pre_impact` show the
-original profiles; the dashed lines labelled `post_impact` represent the
-adjusted profiles. SB = sentence band.)
-
-```{r echo=FALSE, eval=TRUE}
-# Factors for stretching profiles of time served in prison, broken down by sentence band
-params$lever_profiles_det_stretch_factors      <- c(senband1 = 2, senband2 = 2, senband3 = 2, senband4 = 2)
-params$lever_profiles_det_stretch_impact_date  <- params$forecast_start_date
-
-profiles_det_levered_stretchfactor2 <- stretch_profiles(profiles_det_loaded, params$lever_profiles_det_stretch_factors, params$lever_profiles_det_stretch_factor_min, params$lever_profiles_det_stretch_factor_max, params$projection_length_months)
-
-profiles_det_stretch_impact_date_levered <- params$lever_profiles_det_stretch_impact_date
-
-prison_det_outputs_stretchfactor2 <- run_prison_determinate_module(inflows_det_loaded, profiles_det_stretch_impact_date_levered, profiles_det_levered_stretchfactor2)
-  outflows_det_stretchfactor2     <- prison_det_outputs_stretchfactor2$outflows_det
-  pop_det_stretchfactor2          <- prison_det_outputs_stretchfactor2$pop_det
-
-
-# Add labels for plotting
-profiles_det_levered_stretchfactor2_legend <- profiles_det_levered_stretchfactor2 %>%
-  dplyr::mutate(legend_label = stringr::str_replace_all(senband, "senband", "SB ")) %>%
-  dplyr::mutate(legend_label = paste0(legend_label, " (", phase, ")"))
-
-pop_det_stretchfactor2_legend <- pop_det_stretchfactor2 %>%
-  dplyr::mutate(legend_label = stringr::str_replace_all(senband, "senband", "SB ")) %>%
-  dplyr::mutate(legend_label = paste0(legend_label, " (adjusted model)"))
-
-pop_det_legend <- pop_det %>%
-  dplyr::mutate(legend_label = stringr::str_replace_all(senband, "senband", "SB ")) %>%
-  dplyr::mutate(legend_label = paste0(legend_label, " (original model)")) 
-
-plot_profiles(profiles_det_levered_stretchfactor2_legend, "Profiles", "Probability", xlim = c(0,100))
-plot_series(rbind(pop_det_stretchfactor2_legend, pop_det_legend), "Determinate populations for adjusted (solid) and original (dashes) models", "Population")
-```
-
-
-##### Example: Decrease sentence lengths by a factor of two
-
-In this example, the sentence length for all determinate prisoners is decreased
-by a factor of two.
-
-```{r echo=FALSE, eval=TRUE}
-# Factors for stretching profiles of time served in prison, broken down by sentence band
-params$lever_profiles_det_stretch_factors      <- c(senband1 = 0.5, senband2 = 0.5, senband3 = 0.5, senband4 = 0.5)
-params$lever_profiles_det_stretch_impact_date  <- params$forecast_start_date
-
-profiles_det_levered_stretchfactor0.5 <- stretch_profiles(profiles_det_loaded, params$lever_profiles_det_stretch_factors, params$lever_profiles_det_stretch_factor_min, params$lever_profiles_det_stretch_factor_max, params$projection_length_months)
-
-profiles_det_stretch_impact_date_levered <- params$lever_profiles_det_stretch_impact_date
-
-prison_det_outputs_stretchfactor0.5 <- run_prison_determinate_module(inflows_det_loaded, profiles_det_stretch_impact_date_levered, profiles_det_levered_stretchfactor0.5)
-  outflows_det_stretchfactor0.5     <- prison_det_outputs_stretchfactor0.5$outflows_det
-  pop_det_stretchfactor0.5          <- prison_det_outputs_stretchfactor0.5$pop_det
-
-
-# Add labels for plotting
-profiles_det_levered_stretchfactor0.5_legend <- profiles_det_levered_stretchfactor0.5 %>%
-  dplyr::mutate(legend_label = stringr::str_replace_all(senband, "senband", "SB ")) %>%
-  dplyr::mutate(legend_label = paste0(legend_label, " (", phase, ")"))
-
-pop_det_stretchfactor0.5_legend <- pop_det_stretchfactor0.5 %>%
-  dplyr::mutate(legend_label = stringr::str_replace_all(senband, "senband", "SB ")) %>%
-  dplyr::mutate(legend_label = paste0(legend_label, " (adjusted model)"))
-
-pop_det_legend <- pop_det %>%
-  dplyr::mutate(legend_label = stringr::str_replace_all(senband, "senband", "SB ")) %>%
-  dplyr::mutate(legend_label = paste0(legend_label, " (original model)")) 
-
-plot_profiles(profiles_det_levered_stretchfactor0.5_legend, "Profiles", "Probability", xlim = c(0,100))
-plot_series(rbind(pop_det_stretchfactor0.5_legend, pop_det_legend), "Determinate populations for adjusted (solid) and original (dashes) models", "Population")
-```
-
-
-##### Example: Scale sentence lengths by a factor of one
-
-As expected, if `stretch_factor = 1` for all sentence bands, the profiles and
-projections are unchanged.
-
-```{r echo=FALSE, eval=TRUE}
-# Factors for stretching profiles of time served in prison, broken down by sentence band
-params$lever_profiles_det_stretch_factors      <- c(senband1 = 1, senband2 = 1, senband3 = 1, senband4 = 1)
-params$lever_profiles_det_stretch_impact_date  <- params$forecast_start_date
-
-profiles_det_levered_stretchfactor1 <- stretch_profiles(profiles_det_loaded, params$lever_profiles_det_stretch_factors, params$lever_profiles_det_stretch_factor_min, params$lever_profiles_det_stretch_factor_max, params$projection_length_months)
-
-profiles_det_stretch_impact_date_levered <- params$lever_profiles_det_stretch_impact_date
-
-prison_det_outputs_stretchfactor1 <- run_prison_determinate_module(inflows_det_loaded, profiles_det_stretch_impact_date_levered, profiles_det_levered_stretchfactor1)
-  outflows_det_stretchfactor1     <- prison_det_outputs_stretchfactor1$outflows_det
-  pop_det_stretchfactor1          <- prison_det_outputs_stretchfactor1$pop_det
-
-
-# Add labels for plotting
-profiles_det_levered_stretchfactor1_legend <- profiles_det_levered_stretchfactor1 %>%
-  dplyr::mutate(legend_label = stringr::str_replace_all(senband, "senband", "SB ")) %>%
-  dplyr::mutate(legend_label = paste0(legend_label, " (", phase, ")"))
-
-pop_det_stretchfactor1_legend <- pop_det_stretchfactor1 %>%
-  dplyr::mutate(legend_label = stringr::str_replace_all(senband, "senband", "SB ")) %>%
-  dplyr::mutate(legend_label = paste0(legend_label, " (adjusted model)"))
-
-pop_det_legend <- pop_det %>%
-  dplyr::mutate(legend_label = stringr::str_replace_all(senband, "senband", "SB ")) %>%
-  dplyr::mutate(legend_label = paste0(legend_label, " (original model)")) 
-
-plot_profiles(profiles_det_levered_stretchfactor1_legend, "Profiles", "Probability", xlim = c(0,100))
-plot_series(rbind(pop_det_stretchfactor1_legend, pop_det_legend), "Determinate populations for adjusted (solid) and original (dashes) models", "Population")
+plot_series(rbind(pop_mod, pop_exp), "Model (solid) and target (dashes) determinate populations", "Population")
 ```
 
 
 
-##### Example: Scale sentence lengths by different factors for different sentence bands
-
-In this example, the sentence lengths are increased by a factor of 5 for
-sentence band 1, increased by a factor of 2 for sentence band 2, kept the same
-for sentence band 3, and reduced by a factor of 2 for sentence band 4.
-
-```{r echo=FALSE, eval=TRUE}
-# Factors for stretching profiles of time served in prison, broken down by sentence band
-params$lever_profiles_det_stretch_factors      <- c(senband1 = 5, senband2 = 2, senband3 = 1, senband4 = 0.5)
-params$lever_profiles_det_stretch_impact_date  <- params$forecast_start_date
-
-profiles_det_levered_stretchfactor_variable <- stretch_profiles(profiles_det_loaded, params$lever_profiles_det_stretch_factors, params$lever_profiles_det_stretch_factor_min, params$lever_profiles_det_stretch_factor_max, params$projection_length_months)
-
-profiles_det_stretch_impact_date_levered <- params$lever_profiles_det_stretch_impact_date
-
-prison_det_outputs_stretchfactor_variable <- run_prison_determinate_module(inflows_det_loaded, profiles_det_stretch_impact_date_levered, profiles_det_levered_stretchfactor_variable)
-  outflows_det_stretchfactor_variable     <- prison_det_outputs_stretchfactor_variable$outflows_det
-  pop_det_stretchfactor_variable          <- prison_det_outputs_stretchfactor_variable$pop_det
-
-
-# Add labels for plotting
-profiles_det_levered_stretchfactor_variable_legend <- profiles_det_levered_stretchfactor_variable %>%
-  dplyr::mutate(legend_label = stringr::str_replace_all(senband, "senband", "SB ")) %>%
-  dplyr::mutate(legend_label = paste0(legend_label, " (", phase, ")"))
-
-pop_det_stretchfactor_variable_legend <- pop_det_stretchfactor_variable %>%
-  dplyr::mutate(legend_label = stringr::str_replace_all(senband, "senband", "SB ")) %>%
-  dplyr::mutate(legend_label = paste0(legend_label, " (adjusted model)"))
-
-pop_det_legend <- pop_det %>%
-  dplyr::mutate(legend_label = stringr::str_replace_all(senband, "senband", "SB ")) %>%
-  dplyr::mutate(legend_label = paste0(legend_label, " (original model)")) 
-
-plot_profiles(profiles_det_levered_stretchfactor_variable_legend, "Profiles", "Probability", xlim = c(0,100))
-plot_series(rbind(pop_det_stretchfactor_variable_legend, pop_det_legend), "Determinate populations for adjusted (solid) and original (dashes) models", "Population")
-```

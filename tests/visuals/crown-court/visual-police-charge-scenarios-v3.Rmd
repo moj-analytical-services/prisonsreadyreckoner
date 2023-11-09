@@ -1,7 +1,7 @@
 ---
 title: "Police charge comparison. Crown Court disposals."
 author: "Brian Burton"
-date: "11/08/2023"
+date: "09/11/2023"
 output: html_document
 ---
 
@@ -9,12 +9,16 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 devtools::load_all()
+
+library(magrittr)
+source("../../sandbox/dev-params.R")
+
 ```
 
 ## Aim
 
 To demonstrate that, when package functions are applied to police charge
-scenario files, as provided by the Court team, the forecast Crown Court
+scenario files, as provided by the Courts Team, the forecast Crown Court
 disposals are similar to those predicted by the CJST.
 
 A close match would confirm that our calculations of disposal volumes by
@@ -25,16 +29,15 @@ between police charge scenarios and court disposals.
 
 * This test is closely related to visual-crown-court-module-v3.Rmd, which
 examined performance of our Crown Court disposals forecasts when sitting days
-were increased, as in the December 2022 prison projection. The current test
-differs in that we are changing Crown Court receipts, not sitting days and our
-benchmark is the April 2023 forecast.
+were increased. The current test differs in that we are changing Crown Court
+receipts, not sitting days.
 
-* This test is also closely related to visual-police-charge-scenarios-v2.Rmd,
-which examined performance of our Crown Court receipts calculations when
-provided with the the same police scenario files used here. Our benchmark here,
-however, includes the impacts of various adjustments to Court receipts made by
-the Courts team so deviations exhibited here indicate how much 'accuracy' is
-lost in forecasts, which do not have any of these adjustments.
+<!-- * This test is also closely related to visual-police-charge-scenarios-v2.Rmd, -->
+<!-- which examined performance of our Crown Court receipts calculations when -->
+<!-- provided with the the same police scenario files used here. Our benchmark here, -->
+<!-- however, includes the impacts of various adjustments to Court receipts made by -->
+<!-- the Courts team so deviations exhibited here indicate how much 'accuracy' is -->
+<!-- lost in forecasts, which do not have any of these adjustments. -->
 
 
 ## Method
@@ -52,6 +55,51 @@ lost in forecasts, which do not have any of these adjustments.
   
 
 ```{r include = FALSE}
+
+run_courts_module_lite <- function(cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, scenario, params) {
+
+  cc_receipts_delta <- cc_receipts_delta_loaded_list[[scenario]]
+
+  cc_capacity_levered  <- add_cc_sitting_days(cc_capacity_loaded, 0, params$forecast_start_date)
+
+  cc_output_adj <- add_cc_receipts_delta(cc_output_loaded, cc_receipts_delta)
+  
+  cc_capacity_adj <- calculate_hours_ringfenced_delta(cc_output_adj, cc_capacity_levered)
+  check_cc_capacity(cc_capacity_adj)
+  
+  cc_disposals_delta_actual <- calculate_cc_disposals_delta(cc_output_adj, cc_capacity_adj)
+  
+  # Create a 'disposal type', as generated in the package, for plotting
+  cc_disposals_delta_actual <- dplyr::mutate(cc_disposals_delta_actual, disposal_type = paste0("cc_", route)) %>%
+                                 dplyr::group_by(date, disposal_type) %>%
+                                 dplyr::summarise(n_disposals_delta = sum(n_disposals_delta, na.rm = TRUE), .groups = "drop")
+  
+}
+
+
+compare_disposals <- function(cc_disposals_delta_actual, target_central, path_target_scenario, params) {
+
+  target_scenario <- import_s3_file(path_target_scenario) %>%
+    dplyr::rename(route = "actual_route") %>%
+    dplyr::filter(remand == "not remand") %>%
+    dplyr::select(c("date", "receipt_type_desc", "route", "n_disposals")) %>%
+    trim_dates(params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date)
+  
+  cc_disposals_delta_expected <- dplyr::left_join(target_central, target_scenario, by = c("date", "receipt_type_desc", "route")) %>%
+    dplyr::mutate(n_disposals_delta = n_disposals.y - n_disposals.x, .keep = "unused")
+
+  cc_disposals_delta_expected <- dplyr::mutate(cc_disposals_delta_expected, disposal_type = paste0("cc_", route)) %>%
+                                 dplyr::group_by(date, disposal_type) %>%
+                                 dplyr::summarise(n_disposals_delta = sum(n_disposals_delta, na.rm = TRUE), .groups = "drop")
+
+  disposal_types <- unique(cc_disposals_delta_expected$disposal_type)
+  for (disposal_type in disposal_types)
+    plot_disposals_delta(dplyr::filter(cc_disposals_delta_actual, disposal_type == !!disposal_type),
+                         dplyr::filter(cc_disposals_delta_expected, disposal_type == !!disposal_type),
+                         disposal_type)
+
+}
+
 
 plot_disposals_delta <- function(cc_disposals_delta_actual, cc_disposals_delta_expected, disposal_type) {
   
@@ -74,7 +122,6 @@ plot_disposals_delta <- function(cc_disposals_delta_actual, cc_disposals_delta_e
                                    )
 
 
-  #cc_disposals_plot <- rbind(cc_disposals_delta_actual, cc_disposals_delta_expected)
   cc_disposals_plot <- dplyr::bind_rows(cc_disposals_delta_actual, cc_disposals_delta_expected)
 
   x <- as.Date(names(cc_disposals_plot))
@@ -100,113 +147,58 @@ plot_disposals_delta <- function(cc_disposals_delta_actual, cc_disposals_delta_e
 
 ```
 
+
 ```{r include = FALSE}
 
-  params <- list()
+params <- dev_set_params()
+params <- format_params(params)
 
-  params$start_date$police_charges_cc <- as.Date("2022-11-01")    # First month of the forecast. Used for verifying inputs.
-  params$forecast_start_date          <- as.Date("2022-11-01")
-  params$forecast_end_date            <- as.Date("2030-03-01")
-  
-  # Paths to parameter tables
-  params$ringfenced_lookup_file <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup-2.0.0.csv"
-
-
-  # Example receipts by receipt_type_desc and offence from police charge scenarios.
-  params$police_charges_central_scenario <- "apr23_central"
-  params$police_charges_cc_files <- c("s3://alpha-app-prisonsreadyreckonerapp/2023-04B/police-charges-cc001-20230825-shiny-v2.0.0-OFFICIAL.csv",
-                                      "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/police-charges-cc002-20230825-shiny-v2.0.0-OFFICIAL.csv")   # Created with prisonsreadyreckonerupdater, v2.0.0. Source: '20230525 - David Verry - RE_ Next steps on the CJS ready reckoner.eml'
-
-  # Table from Chun-Yee for converting police charge tables to Court disposals
-  # by court_route_desc and route.
-  params$police_charges_cc_route_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/crown_court_modelling/ccs_snapshot_20230125_jan23version/routes.csv"   # '20230518 - Chun-yee Cheng - cjst pre-covid route distribution.msg'  
-
-  
-  params$cc_output_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/crown-output-apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
-  params$cc_capacity_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sd_htpsd_adjusted_apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
-  
-  
-  # Crown Court disposals generated by CJST when supplied with the same
-  # inflows as above.
-  path_target_central <- params$cc_output_file   # '20230606 - Chun-yee Cheng - RE_ QA of ready reckoner Crown receipt calculations.msg'
-  path_target_apr23_central_12m <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_RR_receipts_ramp_12m_230531_1101/crown-output-apr23_s4.csv"   # '20230606 - Chun-yee Cheng - RE_ QA of ready reckoner Crown receipt calculations.msg'
-  path_target_apr23_central_48m <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_RR_receipts_ramp_48m_230531_1101/crown-output-apr23_s4.csv"   # '20230606 - Chun-yee Cheng - RE_ QA of ready reckoner Crown receipt calculations.msg'
+path_target_central <- params$cc_output_file
+path_target_high <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-sep23_s1.csv"   # '20231031 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
+path_target_low <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-sep23_s3.csv"   # '20231031 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
 
  
-  
-  # Read parameter tables for police charge and Crown modules
-  ringfenced_lookup <- load_ringfenced_lookup(params$ringfenced_lookup_file)
+# Load necessary input data
+loaded_datasets_list <- load_datasets(params)
+  cc_receipts_delta_loaded_list    <- loaded_datasets_list$cc_receipts_delta_loaded_list
+  #mc_disposals_delta_loaded_list   <- loaded_datasets_list$mc_disposals_delta_loaded_list
+  cc_output_loaded                 <- loaded_datasets_list$cc_output
+  cc_capacity_loaded               <- loaded_datasets_list$cc_capacity
+  #sentencing_rates_loaded          <- loaded_datasets_list$sentencing_rates
+  #inflows_det_loaded               <- loaded_datasets_list$inflows_det
+  #profiles_det_loaded              <- loaded_datasets_list$profiles_det
+  #nomis_out_delius_in_ratio        <- loaded_datasets_list$nomis_out_delius_in_ratio
+  #profiles_lic                     <- loaded_datasets_list$profiles_lic
+  #recall_rate_exclPSS              <- loaded_datasets_list$recall_rate_exclPSS
+  #average_time_on_recall           <- loaded_datasets_list$average_time_on_recall
+  #recall_profile_adjustments       <- loaded_datasets_list$recall_profile_adjustments
+  #gender_splits                    <- loaded_datasets_list$gender_splits
 
-  # Create model disposals using package functions.
-  cc_receipts_delta_loaded_list <- load_police_charges_cc_data(params$police_charges_cc_files, params$police_charges_central_scenario, params$police_charges_cc_route_file, ringfenced_lookup, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
+target_central <- import_s3_file(path_target_central) %>%
+    dplyr::rename(route = "actual_route") %>%
+    dplyr::filter(remand == "not remand") %>%
+    dplyr::select(c("date", "receipt_type_desc", "route", "n_disposals")) %>%
+    trim_dates(params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date)
 
-    cc_receipts_delta <- cc_receipts_delta_loaded_list$apr23_central_48m
-    #cc_receipts_delta <- cc_receipts_delta_loaded_list$apr23_central_12m
-    
-  cc_data <- load_crown_data(params$cc_output_file, params$cc_capacity_file, ringfenced_lookup, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
-    cc_output_loaded   <- cc_data$cc_output
-    cc_capacity_loaded <- cc_data$cc_capacity
-
-  cc_capacity_levered  <- add_cc_sitting_days(cc_capacity_loaded, 0, params$forecast_start_date)
-
-  cc_output_adj <- add_cc_receipts_delta(cc_output_loaded, cc_receipts_delta)
-  
-  cc_capacity_adj <- calculate_hours_ringfenced_delta(cc_output_adj, cc_capacity_levered)
-  check_cc_capacity(cc_capacity_adj)
-  
-  cc_disposals_delta_actual <- calculate_cc_disposals_delta(cc_output_adj, cc_capacity_adj)
-    
-    
-  # Create expected disposals from files read in.
-  target_central <- import_s3_file(path_target_central) %>%
-    dplyr::rename(route = actual_route) %>%
-    dplyr::select(date, receipt_type_desc, route, n_disposals) %>%
-    trim_dates(params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
-  target_apr23_central_12m <- import_s3_file(path_target_apr23_central_12m) %>%
-    dplyr::rename(route = actual_route) %>%
-    dplyr::select(date, receipt_type_desc, route, n_disposals) %>%
-    trim_dates(params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
-  target_apr23_central_48m <- import_s3_file(path_target_apr23_central_48m) %>%
-    dplyr::rename(route = actual_route) %>%
-    dplyr::select(date, receipt_type_desc, route, n_disposals) %>%
-    trim_dates(params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
-  cc_disposals_delta_expected <- dplyr::left_join(target_central, target_apr23_central_48m, by = c("date", "receipt_type_desc", "route")) %>%
-    dplyr::mutate(n_disposals_delta = n_disposals.y - n_disposals.x, .keep = "unused")
-  # cc_disposals_delta_expected <- dplyr::left_join(target_central, target_apr23_central_12m, by = c("date", "receipt_type_desc", "route")) %>%
-  #   dplyr::mutate(n_disposals_delta = n_disposals.y - n_disposals.x, .keep = "unused")
-
-  
-  # Create a 'disposal type', as generated in the package, for plotting
-  cc_disposals_delta_actual <- dplyr::mutate(cc_disposals_delta_actual, disposal_type = paste0("cc_", route)) %>%
-                                 dplyr::group_by(date, disposal_type) %>%
-                                 dplyr::summarise(n_disposals_delta = sum(n_disposals_delta, na.rm = TRUE), .groups = "drop")
-
-  cc_disposals_delta_expected <- dplyr::mutate(cc_disposals_delta_expected, disposal_type = paste0("cc_", route)) %>%
-                                 dplyr::group_by(date, disposal_type) %>%
-                                 dplyr::summarise(n_disposals_delta = sum(n_disposals_delta, na.rm = TRUE), .groups = "drop")
-  
 
 ```
 
 
-<!--```{r}
-
-print(min(cc_disposals_delta_actual$date))
-print(min(cc_disposals_delta_expected$date))
-print(max(cc_disposals_delta_actual$date))
-print(max(cc_disposals_delta_expected$date))
-
-``` -->
-
 ## Results
+
+### The 'High' scenario.
 
 ```{r echo = FALSE}
 
-disposal_types <- unique(cc_disposals_delta_expected$disposal_type)
-for (disposal_type in disposal_types)
-  plot_disposals_delta(dplyr::filter(cc_disposals_delta_actual, disposal_type == !!disposal_type),
-                       dplyr::filter(cc_disposals_delta_expected, disposal_type == !!disposal_type),
-                       disposal_type)
+  cc_disposals_delta_actual_high <- run_courts_module_lite(cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, "sep23_high", params)
+  compare_disposals(cc_disposals_delta_actual_high, target_central, path_target_high, params)
+```
 
+
+### The 'Low' scenario
+
+```{r echo = FALSE}
+  cc_disposals_delta_actual_low <- run_courts_module_lite(cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, "sep23_low", params)
+  compare_disposals(cc_disposals_delta_actual_low, target_central, path_target_low, params)
 ```
 
