@@ -1,7 +1,7 @@
 ---
 title: "Sense checking of backlog clearance under typical input parameters"
 author: "Brian Burton"
-date: "10/11/2023"
+date: "26/07/2023"
 output: html_document
 ---
 
@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)#, dpi = 50, fig.width = 15, fig.height = 10)
 
 devtools::load_all()
 
-source("../../sandbox/dev-params.R")
+source("../../dev/dev-params.R")
 
 
 # Files and parameters for the original April 2023 analysis.
@@ -22,11 +22,11 @@ set_crown_params <- function() {
   params <- format_params(params)
 
   # Number of extra police charges
-  params$lever_police_charges_scenario           <- "central"
+  params$lever_police_charges_scenario           <- "apr23_central" #"ramp_48m"
   
   # Number of extra court sitting days per month
   params$lever_extra_cc_sitting_days             <- 20000 / 12             # [month^-1]
-  params$lever_extra_cc_sitting_days_impact_date <- "2024-01-01"
+  params$lever_extra_cc_sitting_days_impact_date <- "2023-03-01"
 
   return(params)
 }
@@ -42,11 +42,6 @@ the model has become out of bounds and the relevant parameters should not be
 offered to a Shiny app user. Alternatively, a notice should be issued when
 bounds are exceeded.
 
-This script makes use of the latest version of `load_crown_output()`, which
-reads in the backlog from a provided `cc_output` table. This feature was added
-after initial exploration of the backlog issue. The following is a retrospective
-demonstration that monitoring the backlog is important for setting realistic
-parameter values.
 
 ## Method
 
@@ -54,7 +49,66 @@ parameter values.
 2. Accumulate additional non-ringfenced disposals.
 3. Plot backlog by case type with accumulated additional disposals.
 
+
 ```{r include = FALSE}
+
+# Same as equivalent package function but adding n_backlog to the output.
+# NOTE: THIS FUNCTIONALITY WAS LATER ADDED TO THE PACKAGE FUNCTION BUT IS LEFT
+# HERE FOR CONVENIENCE.
+load_crown_data_test <- function(cc_output_file, cc_capacity_file, ringfenced_lookup, start_date, forecast_start_date, forecast_end_date) {
+    
+  # Read baseline inputs, which are disposals for ring-fenced cases and time
+  # series for sitting days and hours available per sitting day.
+  cc_output   <- load_crown_output_with_backlog(cc_output_file, start_date, forecast_start_date, forecast_end_date)
+  cc_capacity <- load_cc_capacity(cc_capacity_file, start_date, forecast_start_date, forecast_end_date)
+  #check_cc_inputs(cc_output, cc_capacity)
+  
+  # Add ring-fenced status. Calculate backlog case rate and hours per disposal.
+  cc_output <- augment_crown_output(cc_output, ringfenced_lookup)
+  
+  # Make capacity monitor
+  cc_capacity  <- augment_cc_capacity(cc_capacity, cc_output)
+  
+  return(list(cc_output = cc_output, cc_capacity = cc_capacity))
+}
+
+
+# Same as package function but adding n_backlog to the output.
+# NOTE: THIS FUNCTIONALITY WAS LATER ADDED TO THE PACKAGE FUNCTION BUT IS LEFT
+# HERE FOR CONVENIENCE.
+load_crown_output_with_backlog <- function(cc_output_file, start_date, forecast_start_date, forecast_end_date) {
+  
+  col_types <-
+    readr::cols(
+      Time = readr::col_integer(),
+      date = readr::col_date(format = '%Y-%m-%d'),
+      FY = readr::col_character(),
+      receipt_type_desc = readr::col_character(),
+      region = readr::col_character(),
+      actual_route = readr::col_character(),
+      n_backlog = readr::col_integer(),
+      n_receipts = readr::col_integer(),
+      n_disposals = readr::col_integer(),
+      dur_backlog = readr::col_double(),
+      dur_receipts = readr::col_double(),
+      dur_disposals = readr::col_double(),
+      scenario = readr::col_character(),
+      dev = readr::col_character(),
+      scenario_dev = readr::col_character()
+    )
+  
+  cc_output <- import_s3_file(cc_output_file, col_types = col_types) %>%
+                 dplyr::rename(route = actual_route)
+  
+  cc_output <- trim_dates(cc_output, start_date, forecast_start_date, forecast_end_date) %>%
+                 dplyr::select(date, receipt_type_desc, route,
+                               n_backlog,                                 # Read n_backlog so we may sense-check backlog depletion.
+                               n_disposals, dur_disposals)
+
+  return(cc_output)
+}
+
+
 plot_backlog <- function(cc_disposals_delta, cc_backlog, disposal_type, colour) {
   
   main <- paste0("Additional disposals vs baseline backlog, ", disposal_type)
@@ -110,13 +164,14 @@ params <- set_crown_params()
 ringfenced_lookup    <- load_ringfenced_lookup(params$ringfenced_lookup_file)
   
 # Load data for police charges module
+# cc_receipts_delta_loaded_list  <- load_police_charges_cc_data_list(params$police_charges_cc_route_file, params$police_charges_cc_files, ringfenced_lookup, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
+# mc_disposals_delta_loaded_list <- load_police_charges_mc_data(params$police_charges_mc_file, params$police_charges_mc_scenarios, params$police_charges_mc_sheet, params$mc_remand_lookup, params$start_date$police_charges_mc, params$forecast_start_date, params$forecast_end_date)
   cc_receipts_delta_loaded_list <- load_police_charges_cc_data(params$police_charges_cc_files, params$police_charges_central_scenario, params$police_charges_cc_route_file, ringfenced_lookup, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
   mc_disposals_delta_loaded_list <- load_police_charges_mc_data(params$police_charges_mc_files, params$police_charges_central_scenario, params$mc_remand_lookup, params$start_date$police_charges_mc, params$forecast_start_date, params$forecast_end_date)
 
-    
+  
 # Load data for Crown Court module
-# cc_data <- load_crown_data_test(params$cc_output_file, params$cc_capacity_file, ringfenced_lookup, params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date)
-cc_data <- load_crown_data(params$cc_output_file, params$cc_capacity_file, ringfenced_lookup, params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date)
+cc_data <- load_crown_data_test(params$cc_output_file, params$cc_capacity_file, ringfenced_lookup, params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date)
   cc_output_loaded   <- cc_data$cc_output
   cc_capacity_loaded <- cc_data$cc_capacity
 
@@ -159,11 +214,32 @@ the `r params$lever_police_charges_scenario` police charge scenario and assuming
 additional sitting days of `r params$lever_extra_cc_sitting_days` start on
 `r params$lever_extra_cc_sitting_days_impact_date`.
 
-Only outstanding caseload for non-ring-fenced cases will be depleted by
-additional sitting days.
+For reference, our ringfenced cases are as follows:
 
-As can be seen, the backlog may be breached under reasonable conditions so a
-warning message has been added to the package code.
+
+`receipt_type_desc`    `route`             `ringfenced`                     
+---------------------  ------------------  -------------------------------------
+`app`                  `app`               `TRUE`
+`ind`                  `e_other`           `TRUE`
+`ind`                  `effective`         `FALSE`
+`ind`                  `egp`               `TRUE`
+`ind`                  `gp_cracked`        `FALSE`
+`ind`                  `l_other`           `TRUE`
+`ind`                  `lgp`               `TRUE`
+`ind`                  `other_cracked`     `TRUE`
+`sent`                 `sent`              `TRUE`
+`tew`                  `e_other`           `TRUE`
+`tew`                  `effective`         `FALSE`
+`tew`                  `egp`               `TRUE`
+`tew`                  `gp_cracked`        `FALSE`
+`tew`                  `l_other`           `TRUE`
+`tew`                  `lgp`               `TRUE`
+`tew`                  `other_cracked`     `TRUE`
+---------------------  ------------------  -------------------------------------
+
+As can be seen, the backlog is breached so a warning message should be added to
+the package code.
+
 
 ```{r echo = FALSE}
 

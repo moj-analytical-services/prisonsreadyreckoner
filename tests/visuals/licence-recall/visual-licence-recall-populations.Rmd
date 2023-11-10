@@ -1,7 +1,7 @@
 ---
-title: "Testing the licence and recall populations calculated by `prisonflowcast`. Version 2. Smooth lag licence profiles."
-author: "Alex Dickinson, Brian Burton"
-date: "02/06/2023"
+title: "Testing the licence and recall populations"
+author: "Brian Burton, Alex Dickinson"
+date: "09/11/2023"
 output: html_document
 ---
 
@@ -11,29 +11,15 @@ knitr::opts_chunk$set(echo = TRUE)
 devtools::load_all()
 
 library(magrittr)
-source("../../dev/dev-params.R")
-
-
-# Files and parameters for the original April 2023 analysis.
-set_recall_params <- function() {
-  
-  params <- dev_set_params()
-  params <- format_params(params)
-
-  params$licence_profiles_file <- "s3://alpha-prison-forecasting-data/JC_test/recall/adjusted_license_profile.csv"
-  params$projection_length_months <- 100
-
-  return(params)
-}
+source("../../sandbox/dev-params.R")
 
 ```
 
 ```{r include=FALSE}
 
-params <- set_recall_params()
+params <- dev_set_params()
+params <- format_params(params)
 
-licence_recall_target_file <- params$recall_file
-prison_inflows_file <- params$prison_inflows_file
 
 date_steady_start <- "2028-01-01"
 date_steady_end   <- "2029-12-01"
@@ -62,35 +48,30 @@ plot_series <- function(series, title = NULL, subtitle = NULL, xlab = "Date", yl
 
 ## Aim
 
-To demonstrate that, when
-
-* the licence and recall functions of `prisonflowcast` are driven with the same
-inflows and parameters as used in the April 2023 central prison projection
-
-we get comparable forecasts of licence and recall populations.
-
+To demonstrate that, when the licence and recall functions of `prisonflowcast`
+are driven with the same inflows and parameters as used in a central prison
+projection, we get comparable forecasts of licence and recall populations.
 
 
 ## Data
 
-Data from the April 2023 central prison projection were
-obtained from Jordan Carroll and Charlotte Wallace. Two files are used:
+Data from the a central prison projection are used:
 
 * A summary of determinate prisoner population, inflows and outflows (henceforth
-**File P**; see `r prison_inflows_file`).
+**File P**; see `r params$prison_inflows_file`).
 
 * A summary of licence and recall parameters and populations (henceforth **File
-LR**; see `r licence_recall_target_file`).
+LR**; see `r params$recall_file`).
 This workbook presents the following relevant sheets (see email "20230427 -
 Charlotte Wallace - RE_ Prison population central projection for ready
 reckoner"):
 
-    + `license_basepop_exclPSS`. This sheet records individuals who are already
+    + `licence_basepop_exclPSS`. This sheet records individuals who are already
     in the licence population before the model starts running. It records how
     this existing population is expected to decay over time.
-    + `license_forecast_exclPSS`. This sheet records the full projected licence
+    + `licence_forecast_exclPSS`. This sheet records the full projected licence
     population, which includes individuals who are in the model before it starts
-    running (i.e. individuals recorded in `license_basepop_exclPSS`) and
+    running (i.e. individuals recorded in `licence_basepop_exclPSS`) and
     individuals who are put on licence after the model starts running.
     + `recall_pop_basepop_exclPSS`. This sheet records individuals who are
     already in the recall population before the model starts running. It records
@@ -116,7 +97,7 @@ shows prison outflows in the forecast by band.
 ```{r echo=FALSE}
 
 # Load determinate sentence outflows from the central projection
-outflows_det <- import_s3_file(prison_inflows_file, sheet = "determinate_flows") %>%
+outflows_det <- import_s3_file(params$prison_inflows_file, sheet = "determinate_flows") %>%
                  dplyr::rename(date = Date, senband = Band)
 
 outflows_det <- dplyr::filter(outflows_det, DataType == "Forecast") %>%
@@ -166,56 +147,56 @@ Sentence band  Steady state determinate outflow [month$^{-1}$]
 
 ### Target licence populations
 
-**File LR** does not explicitly record the population of individuals who are put
+**File R** does not explicitly record the population of individuals who are put
 on licence after the model starts running. However, this population can be
-calculated as `license_forecast_exclPSS - license_basepop_exclPSS`.
+calculated as `licence_forecast_exclPSS - licence_basepop_exclPSS`.
 
-The values of `license_basepop_exclPSS` are plotted below. In the legend labels,
+The values of `licence_basepop_exclPSS` are plotted below. In the legend labels,
 SB = sentence band.
 
 ```{r echo=FALSE}
-license_basepop_exclPSS <- import_s3_file(licence_recall_target_file, sheet = "license_basepop_exclPSS") %>%
+licence_basepop_exclPSS <- import_s3_file(params$recall_file, sheet = "licence_basepop_exclPSS") %>%
   dplyr::mutate(date = as.Date(caseload_date), .keep = "unused") %>%
   dplyr::mutate(legend_label = paste0("SB ", SenBand, " (target)")) %>%
   dplyr::mutate(senband = paste0("senband", SenBand), .keep = "unused") %>%
   dplyr::mutate(pop = caseload, .keep = "unused") %>%
   dplyr::arrange(senband)
 
-#print(license_basepop_exclPSS, n = 1000)
+#print(licence_basepop_exclPSS, n = 1000)
 
-plot_series(license_basepop_exclPSS, title = "Central projection", subtitle = "`license_basepop_exclPSS`")
+plot_series(licence_basepop_exclPSS, title = "Central projection", subtitle = "`licence_basepop_exclPSS`")
 
 ```
 
 
-The values of `license_forecast_exclPSS` are plotted below. In the legend
+The values of `licence_forecast_exclPSS` are plotted below. In the legend
 labels, SB = sentence band.
 
 ```{r echo=FALSE}
-license_forecast_exclPSS <- import_s3_file(licence_recall_target_file, sheet = "license_forecast_exclPSS") %>%
+licence_forecast_exclPSS <- import_s3_file(params$recall_file, sheet = "licence_forecast_exclPSS") %>%
   dplyr::mutate(date = as.Date(caseload_date), .keep = "unused") %>%
   dplyr::mutate(legend_label = paste0("SB ", SenBand, " (target)")) %>%
   dplyr::mutate(senband = paste0("senband", SenBand), .keep = "unused") %>%
   dplyr::mutate(pop = caseload, .keep = "unused") %>%
   dplyr::arrange(senband)
 
-# print(license_forecast_exclPSS)
+# print(licence_forecast_exclPSS)
 
-plot_series(license_forecast_exclPSS, title = "Central projection", subtitle = "`license_forecast_exclPSS`")
+plot_series(licence_forecast_exclPSS, title = "Central projection", subtitle = "`licence_forecast_exclPSS`")
 ```
 
 
 
-### Prisonflowcast performance
+### Model performance
 
 To recover the future licence population, we can subtract
-`license_basepop_exclPSS` from `license_forecast_exclPSS`.
+`licence_basepop_exclPSS` from `licence_forecast_exclPSS`.
 
 ```{r echo=FALSE}
 
-#print(license_basepop_exclPSS, n = 1000)
+#print(licence_basepop_exclPSS, n = 1000)
 
-licence_pop_future_exclPSS <- dplyr::left_join(license_forecast_exclPSS, license_basepop_exclPSS, by = c("senband", "date")) %>%
+licence_pop_future_exclPSS <- dplyr::left_join(licence_forecast_exclPSS, licence_basepop_exclPSS, by = c("senband", "date")) %>%
   dplyr::mutate(pop.y = ifelse(is.na(pop.y), 0, pop.y)) %>%
   dplyr::mutate(pop = pop.x - pop.y) %>%
   dplyr::select(c("senband", "date", "pop")) %>%
@@ -226,10 +207,7 @@ licence_pop_future_exclPSS_steady <- dplyr::filter(licence_pop_future_exclPSS, d
   dplyr::group_by(senband) %>%
   dplyr::summarise(pop = round(mean(pop)), .groups = "drop")
 
-#print(licence_pop_future_exclPSS, n = 1000)
-#print(licence_pop_future_exclPSS_steady)
-
-plot_series(licence_pop_future_exclPSS, title = "Central projection", subtitle = "`license_forecast_exclPSS` - `license_basepop_exclPSS`")
+plot_series(licence_pop_future_exclPSS, title = "Central projection", subtitle = "`licence_forecast_exclPSS` - `licence_basepop_exclPSS`")
 ```
 
 To compare `prisonflowcast` to the central projection, we take determinate
@@ -266,15 +244,15 @@ run_prison_recall_module <- function(pop_lic, recall_rate_exclPSS, lever_recall_
 
 # Load necessary input data
 loaded_datasets_list <- load_datasets(params)
-  #court_receipts_delta_loaded_list <- loaded_datasets_list$court_receipts_delta_loaded_list
+  #cc_receipts_delta_loaded_list    <- loaded_datasets_list$cc_receipts_delta_loaded_list
+  #mc_disposals_delta_loaded_list   <- loaded_datasets_list$mc_disposals_delta_loaded_list
   #cc_output_loaded                 <- loaded_datasets_list$cc_output
   #cc_capacity_loaded               <- loaded_datasets_list$cc_capacity
   #sentencing_rates_loaded          <- loaded_datasets_list$sentencing_rates
   #inflows_det_loaded               <- loaded_datasets_list$inflows_det
   #profiles_det_loaded              <- loaded_datasets_list$profiles_det
   nomis_out_delius_in_ratio        <- loaded_datasets_list$nomis_out_delius_in_ratio
-  #average_time_on_licence_excl_ps  <- loaded_datasets_list$average_time_on_licence_excl_ps
-  licence_profile_adjustments_exc  <- loaded_datasets_list$licence_profile_adjustments_exc
+  profiles_lic                     <- loaded_datasets_list$profiles_lic
   recall_rate_exclPSS              <- loaded_datasets_list$recall_rate_exclPSS
   average_time_on_recall           <- loaded_datasets_list$average_time_on_recall
   recall_profile_adjustments       <- loaded_datasets_list$recall_profile_adjustments
@@ -285,10 +263,6 @@ loaded_datasets_list <- load_datasets(params)
 lever_recall_rate <- recall_rate_exclPSS
 lever_recall_rate_impact_date <- as.Date("2060-01-01")
 
-# Calculate profiles of time spent on licence and in recall
-# licence_time <- multiply_two_named_vectors(average_time_on_licence_excl_ps, licence_profile_adjustments_exc, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
-# profiles_lic             <- make_lag_filters(licence_time)
-profiles_lic <- load_profiles_lic(params$licence_profiles_file, params$projection_length_months)
 
 recall_time <- multiply_two_named_vectors(average_time_on_recall, recall_profile_adjustments, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
 profiles_recall          <- make_lag_filters(recall_time)
@@ -318,7 +292,7 @@ plot_series(pop_lic_plot, title = "prisonflowcast", subtitle = "`prisonflowcast_
 
 
 The following table compares the steady state values of prisonflowcast with the
-equivalents from `license_forecast_exclPSS` - `license_basepop_exclPSS`.
+equivalents from `licence_forecast_exclPSS` - `licence_basepop_exclPSS`.
 
 ```{r echo = FALSE}
 
@@ -350,11 +324,11 @@ Sentence band  Steady state licence pop.,        Steady state licence pop.,
 
 
 The following graphs the difference between our forecast and the target,
-`license_forecast_exclPSS` - `license_basepop_exclPSS`
+`licence_forecast_exclPSS` - `licence_basepop_exclPSS`
 
 ```{r echo=FALSE}
 
-#print(license_basepop_exclPSS)
+#print(licence_basepop_exclPSS)
 
 pop_lic_diff <- merge(pop_lic_plot, licence_pop_future_exclPSS, c("senband", "date")) %>%
  dplyr::mutate(pop = pop.x - pop.y) %>%
@@ -364,7 +338,7 @@ pop_lic_diff <- merge(pop_lic_plot, licence_pop_future_exclPSS, c("senband", "da
 
 #print(pop_lic_diff)
 
-plot_series(pop_lic_diff, title = "Difference between `prisonflowcast` and central projection", subtitle = "`prisonflowcast_licence_future` - (`license_forecast_exclPSS` - `license_basepop_exclPSS`)", ymin = -2500, ymax = 7500)
+plot_series(pop_lic_diff, title = "Difference between `prisonflowcast` and central projection", subtitle = "`prisonflowcast_licence_future` - (`licence_forecast_exclPSS` - `licence_basepop_exclPSS`)", ymin = -2500, ymax = 7500)
 
 ```
 
@@ -377,7 +351,7 @@ the simulation.
 
 ```{r echo=FALSE}
 
-recall_pop_future_calib_exclPSS <- import_s3_file(licence_recall_target_file, sheet = "recall_pop_future_calib_exclPSS") %>%
+recall_pop_future_calib_exclPSS <- import_s3_file(params$recall_file, sheet = "recall_pop_future_calib_exclPSS") %>%
   dplyr::mutate(date = as.Date(date)) %>%
   dplyr::mutate(date = lubridate::floor_date(date, "month")) %>%
   dplyr::mutate(legend_label = paste0("SB ", SenBand, " (target)")) %>%
@@ -396,7 +370,7 @@ plot_series(recall_pop_future_calib_exclPSS, title = "Central projection", subti
 
 
 To compare `prisonflowcast` to the central projection, we pass
-`license_forecast_exclPSS` to the `prisonflowcast` function
+`licence_forecast_exclPSS` to the `prisonflowcast` function
 `run_prison_licence_module()` to generate a prediction of the future recall
 population. This predicted population includes only individuals who are
 recalled after `prisonflowcast` begins running. It does not include individuals
@@ -406,7 +380,7 @@ referred to as `prisonflowcast_recall_future`, is plotted below.
 ```{r echo=FALSE}
 
 
-pop_lic2 <- dplyr::select(license_forecast_exclPSS, date, senband, pop) %>%
+pop_lic2 <- dplyr::select(licence_forecast_exclPSS, date, senband, pop) %>%
               tidyr::pivot_wider(names_from = date, values_from = pop, values_fill = 0)
 
 # Recalled determinate offenders

@@ -62,14 +62,14 @@ load_cc_capacity <- function(cc_capacity_file, start_date, forecast_start_date, 
       date_value = readr::col_date(format = '%Y-%m-%d'),
       raw_sd = readr::col_double(),
       raw_seasonal_sd = readr::col_double()
-  )
+    )
   
   cc_capacity <- import_s3_file(cc_capacity_file, col_types = col_types) %>%
-                   dplyr::rename(date = date_value, sitting_days = monthly_sd, hours_per_day = htpsd_adj)
+    dplyr::rename(date = date_value, sitting_days = monthly_sd, hours_per_day = htpsd_adj)
   
   cc_capacity <- trim_dates(cc_capacity, start_date, forecast_start_date, forecast_end_date) %>%
-                   dplyr::select(date, sitting_days, hours_per_day) %>%
-                   dplyr::arrange(date)   # IMPORTANT: Do not remove this arrange as it is relied upon by calculate_hours_ringfenced_delta().
+    dplyr::select(date, sitting_days, hours_per_day) %>%
+    dplyr::arrange(date)   # IMPORTANT: Do not remove this arrange as it is relied upon by calculate_hours_ringfenced_delta().
   
   return(cc_capacity)
 }

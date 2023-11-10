@@ -17,17 +17,13 @@ source("../../sandbox/dev-params.R")
 
 ## Aim
 
-To demonstrate that, when package functions are applied to police charge
-scenario files, as provided by the Courts Team, the forecast Crown Court
-disposals are similar to those predicted by the CJST.
-
-A close match would confirm that our calculations of disposal volumes by
-`receipt_type_desc` and `actual_route` correctly capture the relationship
-between police charge scenarios and court disposals.
+Exactly as in v3, except to show that, when disposal rates from scenario files
+are used instead of those from the central scenario, outputs that are much
+closer to the scenario disposal volumes may be obtained.
 
 ### Related tests
 
-* This test is closely related to visual-crown-court-module-v3.Rmd, which
+* This test is also closely related to visual-crown-court-module-v3.Rmd, which
 examined performance of our Crown Court disposals forecasts when sitting days
 were increased. The current test differs in that we are changing Crown Court
 receipts, not sitting days.
@@ -48,10 +44,12 @@ receipts, not sitting days.
   `receipt_type_desc` and offence group to one split by `receipt_type_desc` and
   `route`.
 
-* Call further package functions to generate Crown Court disposals.
+* Call further package functions to generate Crown Court disposals. When
+forecasting disposals, make sure to use `n_disposals` and `dur_disposals` from
+the relevant scenario cc_output file rather than simply these fields from the
+central scenario.
   
-* Read in the equivalent disposals provided by the same team, join to the
-  disposals table, above, and compare.
+* Compare disposals of the model with the disposals in the scenario files.
   
 
 ```{r include = FALSE}
@@ -81,7 +79,7 @@ compare_disposals <- function(cc_disposals_delta_actual, target_central, path_ta
 
   target_scenario <- import_s3_file(path_target_scenario) %>%
     dplyr::rename(route = "actual_route") %>%
-    #dplyr::filter(remand == "not remand") %>%
+    dplyr::filter(remand == "not remand") %>%
     dplyr::select(c("date", "receipt_type_desc", "route", "n_disposals")) %>%
     trim_dates(params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date)
   
@@ -155,10 +153,10 @@ params <- format_params(params)
 
 
 path_target_central <- params$cc_output_file
-# path_target_high <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-sep23_s1.csv"   # '20231031 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
-# path_target_low <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-sep23_s3.csv"   # '20231031 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
-path_target_high <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-os_adj_hmcts-sep23_s1.csv"   # '20231110 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
-path_target_low <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-os_adj_hmcts-sep23_s3.csv"   # '20231110 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
+path_target_high <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-sep23_s1.csv"   # '20231031 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
+path_target_low <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-sep23_s3.csv"   # '20231031 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
+# path_target_high <- ""   # '20231110 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
+# path_target_low <- ""   # '20231110 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
 
 # Load necessary input data
 loaded_datasets_list <- load_datasets(params)
@@ -178,7 +176,7 @@ loaded_datasets_list <- load_datasets(params)
 
 target_central <- import_s3_file(path_target_central) %>%
     dplyr::rename(route = "actual_route") %>%
-    #dplyr::filter(remand == "not remand") %>%
+    dplyr::filter(remand == "not remand") %>%
     dplyr::select(c("date", "receipt_type_desc", "route", "n_disposals")) %>%
     trim_dates(params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date)
 
