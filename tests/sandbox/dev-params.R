@@ -79,8 +79,7 @@ dev_set_params <- function() {
   params$cc_capacity_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/sitting-days-output-sep23_s2.csv"
   params$sentencing_rates_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/sentencing-rates-20231016-shiny-v3.0.0-OFFICIAL.csv"
   params$prison_inflows_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/detailed_sep23_s2_flat_3m_linear_6m_sep23_central_scenario_dands_231011_081331-s039-OFFICIAL.xlsx"
-  #params$profiles_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/profiles-det-20231016-shiny-v3.0.0-OFFICIAL.csv"
-  params$profiles_file <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-determinate-profiles-old-2022-01-01-to-2022-12-31.csv"
+  params$profiles_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/profiles-det-20231016-shiny-v3.0.0-OFFICIAL.csv"
   params$recall_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/recall_excl_pss_output_sep23_s2_flat_3m_linear_6m_sep23_central_scenario_dands_231011_081331-s039-OFFICIAL.xlsx"
   params$gender_splits_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/gender-splits-20231016-shiny-v3.0.0-OFFICIAL.csv"
 

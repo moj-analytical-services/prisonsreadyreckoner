@@ -151,14 +151,37 @@ plot_disposals_delta <- function(cc_disposals_delta_actual, cc_disposals_delta_e
 ```{r include = FALSE}
 
 params <- dev_set_params()
+
+# Reset to match Chun-yee's set.
+params$start_date$police_charges_mc  <- "2022-12-01"    # First month of the forecast. Used for verifying inputs.
+params$start_date$police_charges_cc  <- "2022-11-01"
+params$start_date$inflows_det        <- "2023-03-31"
+params$start_date$recall_rate        <- "2023-03-01"
+params$start_date$cc_files           <- "2022-11-01"
+
+params$ringfenced_lookup_file <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup-2.0.0.csv"
+params$police_charges_central_scenario <- "apr23_central"
+params$police_charges_cc_files <- c("s3://alpha-app-prisonsreadyreckonerapp/2023-04B/police-charges-cc001-20230825-shiny-v2.0.0-OFFICIAL.csv",
+                                      "s3://alpha-app-prisonsreadyreckonerapp/2023-04B/police-charges-cc002-20230825-shiny-v2.0.0-OFFICIAL.csv")   # Created with prisonsreadyreckonerupdater, v2.0.0. Source: '20230525 - David Verry - RE_ Next steps on the CJS ready reckoner.eml'
+params$police_charges_cc_route_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/crown_court_modelling/ccs_snapshot_20230125_jan23version/routes.csv"   # '20230518 - Chun-yee Cheng - cjst pre-covid route distribution.msg'  
+params$cc_output_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/crown-output-apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
+params$cc_capacity_file <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sd_htpsd_adjusted_apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
+  
 params <- format_params(params)
+
+params$forecast_start_date          <- as.Date("2022-11-01")
+params$forecast_end_date            <- as.Date("2030-03-01")
 
 
 path_target_central <- params$cc_output_file
 # path_target_high <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-sep23_s1.csv"   # '20231031 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
 # path_target_low <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-sep23_s3.csv"   # '20231031 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
-path_target_high <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-os_adj_hmcts-sep23_s1.csv"   # '20231110 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
-path_target_low <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-os_adj_hmcts-sep23_s3.csv"   # '20231110 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
+# path_target_high <- ""   # '20231110 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
+# path_target_low <- ""   # '20231110 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
+
+path_target_high <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_RR_receipts_ramp_12m_230531_1101/crown-output-apr23_s4.csv"   # '20230606 - Chun-yee Cheng - RE_ QA of ready reckoner Crown receipt calculations.msg'
+path_target_low <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_RR_receipts_ramp_48m_230531_1101/crown-output-apr23_s4.csv"   # '20230606 - Chun-yee Cheng - RE_ QA of ready reckoner Crown receipt calculations.msg'
+
 
 # Load necessary input data
 loaded_datasets_list <- load_datasets(params)
@@ -192,7 +215,8 @@ target_central <- import_s3_file(path_target_central) %>%
 
 ```{r echo = FALSE}
 
-  cc_disposals_delta_actual_high <- run_courts_module_lite(cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, "sep23_high", params)
+  #cc_disposals_delta_actual_high <- run_courts_module_lite(cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, "sep23_high", params)
+  cc_disposals_delta_actual_high <- run_courts_module_lite(cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, "apr23_central_12m", params)
   compare_disposals(cc_disposals_delta_actual_high, target_central, path_target_high, params)
 ```
 
@@ -200,7 +224,8 @@ target_central <- import_s3_file(path_target_central) %>%
 ### The 'Low' scenario
 
 ```{r echo = FALSE}
-  cc_disposals_delta_actual_low <- run_courts_module_lite(cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, "sep23_low", params)
+  #cc_disposals_delta_actual_low <- run_courts_module_lite(cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, "sep23_low", params)
+  cc_disposals_delta_actual_low <- run_courts_module_lite(cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, "apr23_central_48m", params)
   compare_disposals(cc_disposals_delta_actual_low, target_central, path_target_low, params)
 ```
 

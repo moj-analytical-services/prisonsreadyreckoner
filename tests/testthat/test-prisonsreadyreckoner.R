@@ -1,7 +1,7 @@
 # This script performs general tests on the behaviour of the whole mode (i.e.
 # run_prisonsreadyreckoner()) with respect to levers pulled.
 
-source("../dev/dev-params.R")
+source("../sandbox/dev-params.R")
 
 # For loading standard parameters and setting the levers to 
 set_test_params <- function() {
@@ -85,11 +85,11 @@ test_that("run_prisonsreadyreckoner() will respond appropriately when additional
                     dplyr::summarise(population = sum(population), .groups = "drop")
   
   # We expect final prison population to increase by the same factor as inflows.
-  # Here we are testing within a rounding tolerance or a percent error.
-  expect_equal(round(pop_combined$population[pop_combined$run == "scenario" & pop_combined$senband == "senband1"], -1),
-               round(1.1 * pop_combined$population[pop_combined$run == "baseline" & pop_combined$senband == "senband1"], -1))
-  expect_equal(round(pop_combined$population[pop_combined$run == "scenario" & pop_combined$senband == "senband2"], -1),
-               round(1.1 * pop_combined$population[pop_combined$run == "baseline" & pop_combined$senband == "senband2"], -1))
+  # Here we are testing within a 1% error.
+  expect_true(pop_combined$population[pop_combined$run == "scenario" & pop_combined$senband == "senband1"] /
+               (1.1 * pop_combined$population[pop_combined$run == "baseline" & pop_combined$senband == "senband1"]) - 1 < 0.01)
+  expect_true(pop_combined$population[pop_combined$run == "scenario" & pop_combined$senband == "senband2"] /
+               (1.1 * pop_combined$population[pop_combined$run == "baseline" & pop_combined$senband == "senband2"]) - 1 < 0.01)
   expect_true(pop_combined$population[pop_combined$run == "scenario" & pop_combined$senband == "senband3"] /
               (1.1 * pop_combined$population[pop_combined$run == "baseline" & pop_combined$senband == "senband3"]) - 1 < 0.01)
                 

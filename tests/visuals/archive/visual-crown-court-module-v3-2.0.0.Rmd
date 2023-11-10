@@ -1,7 +1,7 @@
 ---
 title: "Sense checking of outputs from Crown Court module. Comparison with CJST output."
 author: "Brian Burton"
-date: "10/11/2023"
+date: "03/05/2023"
 output: html_document
 ---
 
@@ -47,6 +47,8 @@ load_crown_scenario_data_oct22 <- function() {
   forecast_end_date       <- lubridate::add_with_rollback(start_date, months(7*12 - 1), roll_to_first = TRUE) 
   
   # File names
+  ringfenced_lookup_file  <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup.csv"
+
   cc_output_file_base <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0804/model_outputs/_latest2/sensitivity_baseline_221122_1226/crown-output-disposals-oct22_s4b.csv"   # '20230518 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
   cc_output_file_high <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0804/model_outputs/_latest2/sensitivity_sd_oct22_1013_104_104_221128_1631/crown-output-disposals-oct22_s4b.csv"   # '20230518 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
   cc_output_file_low  <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_0804/model_outputs/_latest2/sensitivity_sd_oct22_97_99_99_221128_1631/crown-output-disposals-oct22_s4b.csv"   # '20230518 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg'
@@ -57,12 +59,7 @@ load_crown_scenario_data_oct22 <- function() {
 
   
   # Reading
-  ringfenced_lookup <- tibble::tibble(receipt_type_desc = c("app", "ind", "ind", "ind", "ind", "ind", "ind", "ind", "sent", "tew", "tew", "tew", "tew", "tew", "tew", "tew"),
-                                      route = c(
-                                        "app", "e_other", "effective", "egp", "gp_cracked", "l_other", "lgp", "other_cracked", "sent", "e_other", "effective", "egp", "gp_cracked", "l_other", "lgp", "other_cracked"),
-                                      ringfenced = c(TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE)
-  )
-
+  ringfenced_lookup <- load_ringfenced_lookup(ringfenced_lookup_file)
 
   cc_scenario_base <- load_crown_data_oct22(cc_output_file_base, cc_capacity_file_base, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup)
   cc_scenario_high <- load_crown_data_oct22(cc_output_file_high, cc_capacity_file_high, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup)
@@ -92,7 +89,7 @@ load_crown_data_oct22 <- function(cc_output_file, cc_capacity_file, start_date, 
                  dplyr::group_by(date, receipt_type_desc, route) %>%
                  dplyr::summarise(n_disposals = sum(n_disposals), dur_disposals = sum(dur_disposals), .groups = "drop")
   
-  cc_capacity <- load_cc_capacity_test(cc_capacity_file, start_date, forecast_start_date, forecast_end_date)
+  cc_capacity <- load_cc_capacity(cc_capacity_file, start_date, forecast_start_date, forecast_end_date)
   #check_cc_inputs(cc_output, cc_capacity)
 
   
@@ -104,32 +101,64 @@ load_crown_data_oct22 <- function(cc_output_file, cc_capacity_file, start_date, 
   
   return(list(cc_output = cc_output, cc_capacity = cc_capacity))
 }
-
-
-# Same as the deployed function but accounting for the different date format and
-# smaller field list of the October 2022 forecasts.
-load_cc_capacity_test <- function(cc_capacity_file, start_date, forecast_start_date, forecast_end_date) {
-
-  col_types <-
-    readr::cols(
-      TimePeriod = readr::col_integer(),
-      monthly_ht = readr::col_double(),
-      monthly_sd = readr::col_double(),
-      htpsd_adj = readr::col_double(),
-      date_value = readr::col_date(format = '%d/%m/%Y'),
-      raw_sd = readr::col_double()
-    )
-
-  cc_capacity <- import_s3_file(cc_capacity_file, col_types = col_types) %>%
-    dplyr::rename(date = date_value, sitting_days = monthly_sd, hours_per_day = htpsd_adj)
-
-  cc_capacity <- trim_dates(cc_capacity, start_date, forecast_start_date, forecast_end_date) %>%
-    dplyr::select(date, sitting_days, hours_per_day) %>%
-    dplyr::arrange(date)   # IMPORTANT: Do not remove this arrange as it is relied upon by calculate_hours_ringfenced_delta().
-
-  return(cc_capacity)
-}
 ```
+
+
+<!-- ```{r include = FALSE} -->
+<!-- # Files for the original April 2023 analysis. -->
+<!-- load_crown_scenario_data_apr23 <- function() { -->
+
+<!--   start_date <- as.Date("2022-11-01")    # cc_output start date -->
+<!--   forecast_start_date     <- start_date -->
+<!--   forecast_end_date       <- lubridate::add_with_rollback(start_date, months(7*12 - 1), roll_to_first = TRUE)  -->
+
+<!--   # File names -->
+<!--   ringfenced_lookup_file  <- "s3://alpha-prison-forecasting-data/prisons-ready-reckoner/prisonsreadyreckoner/test-files/test-ringfenced-lookup.csv" -->
+
+<!--   cc_output_file_base <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/crown-output-apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg' -->
+<!--   cc_output_file_high <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/crown-output-apr23_s1.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg' -->
+<!--   cc_output_file_low <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/crown-output-apr23_s3.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg' -->
+
+<!--   cc_capacity_file_base <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_apr23_v1/model_outputs/sensitivity_baseline_230412_0819/sd_htpsd_adjusted_apr23_s4.csv"   # '20230502 - Chun-yee Cheng - RE_ Testing our assumptions with a second Crown Court scenario_.msg' -->
+
+
+<!--   # Reading -->
+<!--   ringfenced_lookup <- load_ringfenced_lookup(ringfenced_lookup_file) -->
+
+<!--   cc_scenario_base <- load_crown_data_apr23(cc_output_file_base, cc_capacity_file_base, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup) -->
+<!--   cc_scenario_high <- load_crown_data_apr23(cc_output_file_high, cc_capacity_file_base, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup) -->
+<!--   cc_scenario_low  <- load_crown_data_apr23(cc_output_file_low, cc_capacity_file_base, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup) -->
+
+<!--   return(list(cc_output_base = cc_scenario_base$cc_output, -->
+<!--               cc_output_high = cc_scenario_high$cc_output, -->
+<!--               cc_output_low = cc_scenario_low$cc_output, -->
+<!--               cc_capacity_base = cc_scenario_base$cc_capacity, -->
+<!--               cc_capacity_high = cc_scenario_high$cc_capacity, -->
+<!--               cc_capacity_low = cc_scenario_low$cc_capacity)) -->
+<!-- } -->
+
+
+<!-- # The equivalent of load_crown_data() but for April 2023 data. -->
+<!-- load_crown_data_apr23 <- function(cc_output_file, cc_capacity_file, start_date, forecast_start_date, forecast_end_date, ringfenced_lookup) { -->
+
+<!--   # Read baseline inputs, which are disposals for ring-fenced cases and time -->
+<!--   # series for sitting days and hours available per sitting day. -->
+<!--   cc_output   <- load_crown_output(cc_output_file, start_date, forecast_start_date, forecast_end_date) -->
+<!--   cc_capacity <- load_cc_capacity(cc_capacity_file, start_date, forecast_start_date, forecast_end_date) -->
+<!--   #check_cc_inputs(cc_output, cc_capacity) -->
+
+
+<!--   # Add ring-fenced status. Calculate backlog case rate and hours per disposal. -->
+<!--   cc_output <- augment_crown_output(cc_output, ringfenced_lookup) -->
+
+<!--   # Make capacity monitor -->
+<!--   cc_capacity  <- augment_cc_capacity(cc_capacity, cc_output) -->
+
+<!--   return(list(cc_output = cc_output, cc_capacity = cc_capacity)) -->
+<!-- } -->
+
+<!-- ``` -->
+
 
 
 ```{r include = FALSE}
@@ -312,6 +341,7 @@ Below shows sitting days and changes in sitting days from the original
 scenarios.
 
 ```{r echo = FALSE}
+#scenario_data <- load_crown_scenario_data_apr23()
 scenario_data <- load_crown_scenario_data_oct22()
 
 # x <- as.Date(scenario_data$cc_capacity_base$date)
@@ -357,6 +387,8 @@ cc_capacity_diff_high <- dplyr::left_join(scenario_data$cc_capacity_base, scenar
                          dplyr::select(date, sitting_days_delta)
 cc_capacity_diff_high[is.na(cc_capacity_diff_high)] <- 0
 
+
+# Find differences in capacities between scenarios.
 cc_capacity_diff_low <- dplyr::left_join(scenario_data$cc_capacity_base, scenario_data$cc_capacity_low, by = c("date"), unmatched = "error") %>%
                          dplyr::mutate(sitting_days_delta = sitting_days.y - sitting_days.x) %>%
                          dplyr::select(date, sitting_days_delta)
