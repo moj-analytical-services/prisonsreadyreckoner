@@ -33,7 +33,7 @@ Suggests:
     graphics,
     knitr,
     mojflowchart (>= 0.0.0.9000),
-    prisonsreadyreckonerupdater (>= 2.0.0),
+    prisonsreadyreckonerupdater (>= 3.0.0),
     rmarkdown,
     testthat (>= 3.0.0)
 Roxygen: list(markdown = TRUE)
