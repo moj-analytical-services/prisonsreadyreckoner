@@ -14,7 +14,7 @@ e.g. (#2, @bgburton)
 -->
 
 
-# prisonsreadyreckoner 3.0.0.9000
+# prisonsreadyreckoner 3.0.0
 
 Minor changes to accommodate new inputs in which licence profiles are supplied
 as part of the 'recall file'.

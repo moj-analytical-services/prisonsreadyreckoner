@@ -22,6 +22,7 @@ load_crown_output <- function(cc_output_file, start_date, forecast_start_date, f
   
   col_types <-
     readr::cols(
+      remand = readr::col_character(),
       Time = readr::col_integer(),
       date = readr::col_date(format = '%Y-%m-%d'),
       FY = readr::col_character(),
@@ -42,11 +43,16 @@ load_crown_output <- function(cc_output_file, start_date, forecast_start_date, f
   cc_output <- import_s3_file(cc_output_file, col_types = col_types) %>%
                  dplyr::rename(route = actual_route)
   
+  # Sum over the remand column.
+  # Read n_backlog so we may sense-check backlog depletion.
   cc_output <- trim_dates(cc_output, start_date, forecast_start_date, forecast_end_date) %>%
-                 dplyr::select(date, receipt_type_desc, route,
-                               n_backlog,                                 # Read n_backlog so we may sense-check backlog depletion.
-                               n_disposals, dur_disposals)
-
+    dplyr::group_by(.data$date, .data$receipt_type_desc, .data$route) %>%
+    dplyr::summarise(n_backlog = sum(.data$n_backlog), n_disposals = sum(.data$n_disposals), dur_disposals = sum(dur_disposals), .groups = "drop")
+  # cc_output <- trim_dates(cc_output, start_date, forecast_start_date, forecast_end_date) %>%
+  #   dplyr::select(date, receipt_type_desc, route,
+  #                 n_backlog,                                 # Read n_backlog so we may sense-check backlog depletion.
+  #                 n_disposals, dur_disposals)
+  
   return(cc_output)
 }
 
