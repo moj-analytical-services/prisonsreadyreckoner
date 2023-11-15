@@ -47,7 +47,7 @@ dev_set_params <- function() {
   
   # Instructions:
   # 1. Copy and paste from prisonsreadyreckoner sandbox output.
-  
+
   params$tot_pop_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/populations_sep23_s2_flat_3m_linear_6m_sep23_central_scenario_dands_231011_081331-s039-OFFICIAL.xlsx"
   # params$capacity_file <- paste0("s3://alpha-app-prisonsreadyreckonerapp/2023-04B/May-23 Supply Forecasts_V1.5_Shared.xlsx")
   params$prison_population_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/historical-prison-population-20231016-shiny-v3.0.0-OFFICIAL.csv"
@@ -59,8 +59,7 @@ dev_set_params <- function() {
   params$time_served_recall_hist_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/historical-recall-time-served-20231016-shiny-v3.0.0-OFFICIAL.csv"
   params$police_charges_mc_central_plot_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/src/201023_mags_sensitivity_output.csv"
   params$police_charges_mc_central_plot_scenario <- "sep23_central"
-  
-  
+
   ################################################################################
   # General parameters.
   # General parameters are intended for use by a package user and the Shiny app.

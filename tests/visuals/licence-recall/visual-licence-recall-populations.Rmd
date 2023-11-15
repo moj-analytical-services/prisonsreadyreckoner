@@ -19,6 +19,7 @@ source("../../sandbox/dev-params.R")
 
 params <- dev_set_params()
 params <- format_params(params)
+params$projection_length_months <- 79   # Extended to 79 to cover full prison outflow time series.
 
 
 date_steady_start <- "2028-01-01"
@@ -48,7 +49,7 @@ plot_series <- function(series, title = NULL, subtitle = NULL, xlab = "Date", yl
 
 ## Aim
 
-To demonstrate that, when the licence and recall functions of `prisonflowcast`
+To demonstrate that, when the licence and recall functions of `prisonsreadyreckoner`
 are driven with the same inflows and parameters as used in a central prison
 projection, we get comparable forecasts of licence and recall populations.
 
@@ -210,13 +211,13 @@ licence_pop_future_exclPSS_steady <- dplyr::filter(licence_pop_future_exclPSS, d
 plot_series(licence_pop_future_exclPSS, title = "Central projection", subtitle = "`licence_forecast_exclPSS` - `licence_basepop_exclPSS`")
 ```
 
-To compare `prisonflowcast` to the central projection, we take determinate
+To compare `prisonsreadyreckoner` to the central projection, we take determinate
 prisoner outflows from **File P**. These outflows are then passed to the
-`prisonflowcast` functions responsible for licence and recall to generate a
+`prisonsreadyreckoner` functions responsible for licence and recall to generate a
 prediction of the future licence population. This predicted population includes
-only individuals who are put on licence after `prisonflowcast` begins running.
+only individuals who are put on licence after `prisonsreadyreckoner` begins running.
 It does not include individuals within the existing licence population. This
-predicted population, henceforth referred to as `prisonflowcast_licence_future`,
+predicted population, henceforth referred to as `prisonsreadyreckoner_licence_future`,
 is plotted below.
 
 
@@ -258,7 +259,6 @@ loaded_datasets_list <- load_datasets(params)
   recall_profile_adjustments       <- loaded_datasets_list$recall_profile_adjustments
   #gender_splits                    <- loaded_datasets_list$gender_splits
 
-
 # Set lever to be equal to default value
 lever_recall_rate <- recall_rate_exclPSS
 lever_recall_rate_impact_date <- as.Date("2060-01-01")
@@ -286,12 +286,12 @@ pop_lic_plot <- pop_lic %>%
 
 #print(pop_lic_plot)
 
-plot_series(pop_lic_plot, title = "prisonflowcast", subtitle = "`prisonflowcast_licence_future`")
+plot_series(pop_lic_plot, title = "prisonsreadyreckoner", subtitle = "`prisonsreadyreckoner_licence_future`")
 
 ```
 
 
-The following table compares the steady state values of prisonflowcast with the
+The following table compares the steady state values of prisonsreadyreckoner with the
 equivalents from `licence_forecast_exclPSS` - `licence_basepop_exclPSS`.
 
 ```{r echo = FALSE}
@@ -310,7 +310,7 @@ actual <- c(sprintf("%d", pop_lic_steady$pop[1]),
 
 -----------------------------------------------------------------------------
 Sentence band  Steady state licence pop.,        Steady state licence pop.,
-               target                            prisonflowcast
+               target                            prisonsreadyreckoner
 -------------- --------------------------------- ----------------------------
 1              `r target[1]`                                    `r actual[1]`
 
@@ -338,7 +338,7 @@ pop_lic_diff <- merge(pop_lic_plot, licence_pop_future_exclPSS, c("senband", "da
 
 #print(pop_lic_diff)
 
-plot_series(pop_lic_diff, title = "Difference between `prisonflowcast` and central projection", subtitle = "`prisonflowcast_licence_future` - (`licence_forecast_exclPSS` - `licence_basepop_exclPSS`)", ymin = -2500, ymax = 7500)
+plot_series(pop_lic_diff, title = "Difference between `prisonsreadyreckoner` and central projection", subtitle = "`prisonsreadyreckoner_licence_future` - (`licence_forecast_exclPSS` - `licence_basepop_exclPSS`)", ymin = -2500, ymax = 7500)
 
 ```
 
@@ -369,13 +369,13 @@ plot_series(recall_pop_future_calib_exclPSS, title = "Central projection", subti
 ```
 
 
-To compare `prisonflowcast` to the central projection, we pass
-`licence_forecast_exclPSS` to the `prisonflowcast` function
+To compare `prisonsreadyreckoner` to the central projection, we pass
+`licence_forecast_exclPSS` to the `prisonsreadyreckoner` function
 `run_prison_licence_module()` to generate a prediction of the future recall
 population. This predicted population includes only individuals who are
-recalled after `prisonflowcast` begins running. It does not include individuals
+recalled after `prisonsreadyreckoner` begins running. It does not include individuals
 within the existing recall population.  This predicted population, henceforth
-referred to as `prisonflowcast_recall_future`, is plotted below.
+referred to as `prisonsreadyreckoner_recall_future`, is plotted below.
 
 ```{r echo=FALSE}
 
@@ -404,10 +404,10 @@ pop_recall_plot <- pop_recall %>%
 
 #print(pop_recall_plot)
 
-plot_series(pop_recall_plot, title = "prisonflowcast", subtitle = "`prisonflowcast_recall_future`")
+plot_series(pop_recall_plot, title = "prisonsreadyreckoner", subtitle = "`prisonsreadyreckoner_recall_future`")
 ```
 
-The following table compares the steady state values of prisonflowcast with the
+The following table compares the steady state values of prisonsreadyreckoner with the
 equivalents from `recall_pop_future_calib_exclPSS`.
 
 ```{r echo = FALSE}
@@ -426,7 +426,7 @@ actual <- c(sprintf("%d", pop_recall_steady$pop[1]),
 
 -----------------------------------------------------------------------------
 Sentence band  Steady state recall pop.,         Steady state recall pop.,
-               target                            prisonflowcast
+               target                            prisonsreadyreckoner
 -------------- --------------------------------- ----------------------------
 1              `r target[1]`                                    `r actual[1]`
 
@@ -456,7 +456,7 @@ pop_recall_diff <- merge(pop_recall_plot, recall_pop_future_calib_exclPSS, c("se
 
 #print(pop_recall_diff, n = 1000)
 
-plot_series(pop_recall_diff, title = "Difference between `prisonflowcast` and central projection", subtitle = "`prisonflowcast_recall_future` - `recall_pop_future_calib_exclPSS`")
+plot_series(pop_recall_diff, title = "Difference between `prisonsreadyreckoner` and central projection", subtitle = "`prisonsreadyreckoner_recall_future` - `recall_pop_future_calib_exclPSS`")
 
 ```
 
