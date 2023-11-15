@@ -81,9 +81,14 @@ compare_disposals <- function(cc_disposals_delta_actual, target_central, path_ta
 
   target_scenario <- import_s3_file(path_target_scenario) %>%
     dplyr::rename(route = "actual_route") %>%
-    #dplyr::filter(remand == "not remand") %>%
-    dplyr::select(c("date", "receipt_type_desc", "route", "n_disposals")) %>%
-    trim_dates(params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date)
+    trim_dates(params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date) %>%
+    dplyr::group_by(.data$date, .data$receipt_type_desc, .data$route) %>%
+    dplyr::summarise(n_disposals = sum(.data$n_disposals), .groups = "drop")
+  # target_scenario <- import_s3_file(path_target_scenario) %>%
+  #   dplyr::rename(route = "actual_route") %>%
+  #   #dplyr::filter(remand == "not remand") %>%
+  #   dplyr::select(c("date", "receipt_type_desc", "route", "n_disposals")) %>%
+  #   trim_dates(params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date)
   
   cc_disposals_delta_expected <- dplyr::left_join(target_central, target_scenario, by = c("date", "receipt_type_desc", "route")) %>%
     dplyr::mutate(n_disposals_delta = n_disposals.y - n_disposals.x, .keep = "unused")
@@ -155,10 +160,10 @@ params <- format_params(params)
 
 
 path_target_central <- params$cc_output_file
-# path_target_high <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-sep23_s1.csv"   # '20231031 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
-# path_target_low <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-sep23_s3.csv"   # '20231031 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
-path_target_high <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-os_adj_hmcts-sep23_s1.csv"   # '20231110 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
-path_target_low <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-os_adj_hmcts-sep23_s3.csv"   # '20231110 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
+path_target_high <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-sep23_s1.csv"   # '20231113 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
+path_target_low <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-sep23_s3.csv"   # '20231113 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
+# path_target_high <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-os_adj_hmcts-sep23_s1.csv"   # '20231110 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
+# path_target_low <- "s3://alpha-app-criminal-scenario-tool/developmentFolder/Dev_sep23_v1/model_outputs/adjustments/sensitivity_sd_scaled_v2_231006_0932/crown-output-os_adj_hmcts-sep23_s3.csv"   # '20231110 - Bayley Cartmell - Re_ Alternative cc_output tables_.msg'
 
 # Load necessary input data
 loaded_datasets_list <- load_datasets(params)
@@ -177,10 +182,14 @@ loaded_datasets_list <- load_datasets(params)
   #gender_splits                    <- loaded_datasets_list$gender_splits
 
 target_central <- import_s3_file(path_target_central) %>%
-    dplyr::rename(route = "actual_route") %>%
-    #dplyr::filter(remand == "not remand") %>%
-    dplyr::select(c("date", "receipt_type_desc", "route", "n_disposals")) %>%
-    trim_dates(params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date)
+  dplyr::rename(route = "actual_route") %>%
+  trim_dates(params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date) %>%
+  dplyr::group_by(.data$date, .data$receipt_type_desc, .data$route) %>%
+  dplyr::summarise(n_disposals = sum(.data$n_disposals), .groups = "drop")
+# target_central <- import_s3_file(path_target_central) %>%
+#     dplyr::rename(route = "actual_route") %>%
+#     dplyr::select(c("date", "receipt_type_desc", "route", "n_disposals")) %>%
+#     trim_dates(params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date)
 
 
 ```
