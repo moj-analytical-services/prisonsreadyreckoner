@@ -464,12 +464,12 @@
     },
     "fullsample": {
       "Package": "fullsample",
-      "Version": "2.0.1",
+      "Version": "2.4.0",
       "Source": "git",
       "RemoteType": "git",
       "RemoteUrl": "git@github.com:moj-analytical-services/fullsample.git",
-      "RemoteRef": "",
-      "Hash": "89f2e73f5b6809534798eb2c64b86f32",
+      "RemoteRef": "v2.4.0",
+      "Hash": "5fd3dca2439a723eeb472bfc87e9b734",
       "Requirements": [
         "Rdbtools",
         "dplyr",
@@ -1136,13 +1136,13 @@
     },
     "prisonsreadyreckonerupdater": {
       "Package": "prisonsreadyreckonerupdater",
-      "Version": "2.0.0",
+      "Version": "3.0.0",
       "Source": "git",
       "RemoteType": "git",
       "RemoteUrl": "git@github.com:moj-analytical-services/prisonsreadyreckonerupdater.git",
-      "RemoteRef": "v2.0.0",
+      "RemoteRef": "v3.0.0",
       "Remotes": "git::git@github.com:moj-analytical-services/fullsample.git,\n    git::git@github.com:moj-analytical-services/mojmetr.git,\n    git::git@github.com:moj-analytical-services/Rdbtools.git",
-      "Hash": "791d03b8aa9c7b882a47fd791405b7d6",
+      "Hash": "981e4743e562c4647cd237a57581f461",
       "Requirements": [
         "Rdbtools",
         "dplyr",

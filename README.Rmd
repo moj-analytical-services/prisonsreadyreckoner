@@ -110,7 +110,7 @@ Assuming you are using `prisonsreadyreckoner` as a stand-alone package, call the
 model with
 
 ```r
-impact <- prisonsreadyreckoner::run_prisonflowcast(params)
+impact <- prisonsreadyreckoner::run_prisonsreadyreckoner(params)
 ```
 
 where `params` is a vector of parameter values conforming with current
