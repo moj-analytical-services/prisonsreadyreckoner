@@ -1,0 +1,192 @@
+---
+title: "Total scenario population"
+author: "Brian Burton"
+date: "15/11/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+devtools::load_all()
+
+library(magrittr)
+source("../sandbox/dev-params.R")
+
+```
+
+```{r include=FALSE}
+
+params <- dev_set_params()
+params <- format_params(params)
+
+# Paths to scenario population forecasts from the Prisons Team
+path_pop_target <- list()
+path_pop_target[['central']] <- params$tot_pop_file
+path_pop_target[['sep23_high']] <- "s3://alpha-prison-forecasting-data/prison_demand_model/outputs/prisons/populations/sep23/populations_sep23_s1_flat_3m_linear_6m_sep23_high_scenario_dands_hybrid_231023_154604-s046-OFFICIAL.xlsx"
+path_pop_target[['sep23_low']] <- "s3://alpha-prison-forecasting-data/prison_demand_model/outputs/prisons/populations/sep23/populations_sep23_s3_flat_3m_linear_6m_sep23_low_scenario_dands_231011_093033-s041-OFFICIAL.xlsx"
+
+
+read_population_file <- function(path_target, scenario_name) {
+  
+  pop_target <- import_s3_file(path_target, sheet = "Sheet 1") %>%
+    dplyr::filter(#.data$Custody_Type != "Remand",
+                  .data$DataType == "Forecast", .data$Age_Group != "U18") %>%
+    dplyr::mutate(date = lubridate::floor_date(.data$Date, unit = "months"),
+                  scenario = scenario_name) %>%
+    dplyr::group_by(.data$scenario, .data$date, .data$Custody_Type) %>%
+    dplyr::summarise(population = sum(.data$Population), .groups = "drop")
+  
+}
+
+
+get_population_model <- function(params, scenario_name, pop_target_central) {
+  
+  pop_model <- run_prisonsreadyreckoner(params)
+  
+  pop_model_baseline <- dplyr::filter(pop_model, #.data$casetype != "remand",
+                                      .data$run == "baseline")
+  pop_model_scenario <- dplyr::filter(pop_model, #.data$casetype != "remand",
+                                      .data$run == "scenario")
+  
+  pop_model <- dplyr::left_join(pop_model_scenario, pop_model_baseline, by = c("date", "casetype", "senband", "sex"), suffix = c(".scen",".base")) %>%
+    dplyr::mutate(scenario = paste0(scenario_name, ".rr")) %>%
+    dplyr::group_by(.data$scenario, .data$date, .data$casetype, .data$senband) %>%
+    dplyr::summarise(impact = sum(.data$population.scen) - sum(.data$population.base), .groups = "drop")
+
+}
+
+
+plot_populations <- function(pop_target_central, pop_target, pop_model, scenario_name) {
+  
+  # Convert each table to a common currency of case types.
+  lookup_model <- tibble::tibble(casetype = c("determinate", "determinate", "determinate", "determinate", "indeterminate", "recall", "recall", "recall", "recall", "remand"),
+                                 senband = c("senband1", "senband2", "senband3", "senband4", NA, "senband1", "senband2", "senband3", "senband4", NA),
+                                 group = c("senband1", "senband2", "senband3", "senband4", "indeterminate", "recall", "recall", "recall", "recall", "remand"))
+  
+  lookup_target <- tibble::tibble(Custody_Type = c("Band1", "Band2", "Band3", "Band4", "Fines", "IPP", "Life", "Non_criminal", "Recall", "Remand"),
+                                  group = c("senband1", "senband2", "senband3", "senband4", "other", "indeterminate", "indeterminate", "other", "recall", "remand"))
+  
+  pop_target_central <- dplyr::left_join(pop_target_central, lookup_target, by = "Custody_Type") %>%
+    dplyr::group_by(.data$scenario, .data$date, .data$group) %>%
+    dplyr::summarise(population = sum(population), .groups = "drop")
+  pop_target <- dplyr::left_join(pop_target, lookup_target, by = "Custody_Type") %>%
+    dplyr::group_by(.data$scenario, .data$date, .data$group) %>%
+    dplyr::summarise(population = sum(population), .groups = "drop")
+  pop_model <- dplyr::left_join(pop_model, lookup_model, by = c("casetype", "senband")) %>%
+    dplyr::group_by(.data$scenario, .data$date, .data$group) %>%
+    dplyr::summarise(impact = sum(impact), .groups = "drop")
+  
+  # Create a total population.
+  pop_target_central <- dplyr::group_by(pop_target_central, .data$scenario, .data$date) %>%
+    dplyr::summarise(group = "All", population = sum(.data$population), .groups = "drop") %>%
+    rbind(pop_target_central)
+  pop_target <- dplyr::group_by(pop_target, .data$scenario, .data$date) %>%
+    dplyr::summarise(group = "All", population = sum(.data$population), .groups = "drop") %>%
+    rbind(pop_target)
+  pop_model <- dplyr::group_by(pop_model, .data$scenario, .data$date) %>%
+    dplyr::summarise(group = "All", impact = sum(.data$impact), .groups = "drop") %>%
+    rbind(pop_model)
+  
+  # Trim dates to match the model.
+  mindate <- min(pop_model$date)
+  maxdate <- max(pop_model$date)
+  pop_target_central <- dplyr::filter(pop_target_central, .data$date >= mindate, .data$date <= maxdate)
+  pop_target <- dplyr::filter(pop_target, .data$date >= mindate, .data$date <= maxdate)
+  
+  # Convert model impacts to absolute forecasts.
+  pop_model <- dplyr::left_join(pop_model, pop_target_central, by = c("date", "group"), suffix = c("",".target")) %>%
+    dplyr::mutate(population = .data$population + .data$impact) %>%
+    dplyr::select(c("scenario", "date", "group", "population"))
+  
+  # Stack and pivot.
+  pop_plot <- rbind(pop_target_central, pop_target, pop_model) %>%
+    tidyr::pivot_wider(names_from = "scenario", values_from = "population", values_fill = 0)
+  
+  # Plot each population separately.
+  for (group in unique(pop_plot$group))
+    plot_population(pop_plot, group, scenario_name)
+
+}
+
+
+plot_population <- function(pop_plot, group, scenario_name) {
+  
+  pop_plot <- dplyr::filter(pop_plot, group == !!group)
+
+  x <- pop_plot$date
+  y <- dplyr::select(pop_plot, -c("date", "group"))
+  
+   matplot(x,
+           y,
+           'l',
+           lty = c(1, 2, 2),
+           col = c(1, 1, 2),
+           xlab = "Date", main = group, ylab = "Population")
+   legend("topleft",
+       inset = 0.02,
+       legend = colnames(y),
+       lty = c(1, 2, 2),
+       col = c(1, 1, 2)
+   )
+  
+}
+
+```
+
+
+## Aim
+
+To demonstrate that, when our model is run with receipts from current police
+charge scenarios without any further levers active, we get prison population
+forecasts that are similar to those provided by the Prisons Team for the same
+scnarios.
+
+
+## Method
+
+1. Load central and other scenario forecasts from the Prisons Team.
+2. Run prisonsreadyreckoner with all levers set to ground except for the
+lever_police_charges_scenario, which is set to each of the forecasts from the
+prisons team in turn.
+3. Construct the reckoner's prison population forecast by adding its output to
+the central scenario.
+4. Compare prisonsreadyreckoner forecasts for each non-central scenario with the
+forecasts from the Prisons Team.
+
+A good match will indicate that the model is able to produce forecasts that are
+reasonable proxies for what the main Prisons Model would produce.
+
+
+
+## Results by case type
+
+<!-- When driven with the same inputs, our model (solid lines) produces similar -->
+<!-- populations as the target projection (dashed lines). -->
+
+<!-- This indicates that our calculations are correct across all stages of the model. -->
+
+### High scenario
+
+```{r echo=FALSE}
+pop_target_central <- read_population_file(path_pop_target[['central']], 'central')
+
+params$lever_police_charges_scenario <- "sep23_high"
+pop_model_high <- get_population_model(params, "sep23_high", pop_target_central)
+pop_target_high <- read_population_file(path_pop_target[['sep23_high']], "sep23_high")
+plot_populations(pop_target_central, pop_target_high, pop_model_high, "sep23_high")
+
+```
+
+### Low scenario
+
+```{r echo=FALSE}
+params$lever_police_charges_scenario <- "sep23_low"
+pop_model_low <- get_population_model(params, "sep23_low", pop_target_central)
+pop_target_low <- read_population_file(path_pop_target[['sep23_low']], 'sep23_low')
+plot_populations(pop_target_central, pop_target_low, pop_model_low, "sep23_low")
+
+```
+
+
+
