@@ -148,7 +148,7 @@ run_prisonsreadyreckoner <- function(params) {
   # Add splits by gender
   pop_combined <- split_populations_by_gender(pop_combined, gender_splits)
   
-  print(paste0("pop_scenario and gender split took ", Sys.time() - t0, " seconds"))
+  #print(paste0("pop_scenario and gender split took ", Sys.time() - t0, " seconds"))
   
   # # Plotting routines to be used in development to assess model output.
   # dev_plot_population(pop_combined, "remand", "Remand delta")

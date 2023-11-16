@@ -15,8 +15,6 @@ devtools::load_all()
 ```{r include=FALSE}
 library(magrittr)
 
-# File created on DOM1 by pivoting ad hoc prison flow forecasts from Charlotte
-# Wallace.
 path_profiles_det <- paste0("s3://alpha-app-prisonsreadyreckonerapp/2023-09/profiles-det-20231016-shiny-v3.0.0-OFFICIAL.csv")
 path_flows_det <- "s3://alpha-prison-forecasting-data/prison_demand_model/outputs/prisons/prisons-ready-reckoner-input-files/2023-09/detailed_sep23_s2_flat_3m_linear_6m_sep23_central_scenario_dands_231011_081331-s039-OFFICIAL.xlsx"   # '20231025 - Alex Dickinson - Re_ New files for ready reckoner.msg'
 path_flows_det_sheet <- "det_new_recep_discharges_nonAgg"

@@ -102,8 +102,9 @@ dev_set_params <- function() {
   # Sentencing parameters
   # Remand rates.
   params$published_remand_pop <- 14815 + 1255                    # OMSQ Apr-Jun 2023, Table 1.1, Adults + 18-20 year olds, 30 September 2023. For QA purposes only.
-  params$remand_rates <- c(receipts = 0.187429985453694, 
-                           disposals = 0.475353729743915)  # '20230712 - To Jordan Carroll - RE_ Remand model comparison.msg'
+  params$remand_rates <- c(receipts = 0.1082386,
+                           disposals = 0.5956064)  # '20231115 - Jordan Carroll - RE_ QA of total population and remand modelling in the Ready Reckoner_.msg'
+
   params$no_bail_rate <- 0.2                               # '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
   params$ctl          <- 6                                 # [months] '20230705 - Jordan Carroll - RE_ Sitting Day Remand Impact Method.msg'
   params$mc_remand_lookup <- tibble::tribble(
