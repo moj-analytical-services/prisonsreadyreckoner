@@ -122,10 +122,6 @@ run_prisonsreadyreckoner <- function(params) {
   
   
   # ### Calculate variables that are fixed throughout the model ###
-  # Make filters for remand population impacts.
-  profiles_remand_in  <- make_remand_filter_in(params$remand_rates[['receipts']], params$no_bail_rate, params$ctl, params$projection_length_months)
-  profiles_remand_out <- make_remand_filter_out(params$remand_rates[['disposals']], params$no_bail_rate, params$ctl, params$projection_length_months)
-  
   # Calculate properties of recall outflows.
   recall_time     <- multiply_two_named_vectors(average_time_on_recall, recall_profile_adjustments, arguments_to_keep = c("senband1", "senband2", "senband3", "senband4"))
   
@@ -138,7 +134,7 @@ run_prisonsreadyreckoner <- function(params) {
   t0 <- Sys.time()
   
   # Run scenario and find overall population changes.
-  pop_scenario <- run_scenario(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, profiles_remand_in, profiles_remand_out, sentencing_rates_loaded, inflows_det_loaded, profiles_det_loaded, nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, recall_time)
+  pop_scenario <- run_scenario(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, mc_receipts_delta_loaded_list, sentencing_rates_loaded, inflows_det_loaded, profiles_det_loaded, nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, recall_time)
   
   # Combine with the baseline and pivot for ease of splitting by gender.
   pop_combined <- rbind(pop_baseline, pop_scenario) %>%
@@ -212,7 +208,7 @@ run_baseline <- function(params, inflows_det_loaded, profiles_det_loaded,
 
 # A scenario run to be compared with the baseline.
 run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list,
-                         profiles_remand_in, profiles_remand_out,
+                         mc_receipts_delta_loaded_list,
                          sentencing_rates_loaded,
                          inflows_det_loaded, profiles_det_loaded,
                          nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, recall_time) {
@@ -228,8 +224,8 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
   # remaining capacity. Do what you want when a warning occurs. Here we are just
   # echoing it.
   # withCallingHandlers(warning = function(msg) {warning("Outputs will not be meaningful.")},
-  #                     {courts_outputs <- run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, profiles_remand_in, profiles_remand_out, sentencing_rates_loaded, inflows_det_loaded)})
-  courts_outputs     <- run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, profiles_remand_in, profiles_remand_out, params$published_remand_pop, sentencing_rates_loaded, inflows_det_loaded)
+  #                     {courts_outputs <- run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, mc_receipts_delta, sentencing_rates_loaded, inflows_det_loaded)})
+  courts_outputs     <- run_courts_module(cc_output_loaded, cc_capacity_levered, cc_receipts_delta, mc_disposals_delta, mc_receipts_delta, params$published_remand_pop, sentencing_rates_loaded, inflows_det_loaded)
     pop_remand_delta <- courts_outputs$pop_remand_delta
     inflows_det_adj  <- courts_outputs$inflows_det_adj
   
@@ -285,10 +281,9 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
 #'   to disposal.
 #' @param mc_disposals_delta A table of deviations in magistrates' court
 #'   disposal volumes under a single police charge scenario.
-#' @param profiles_remand_in The remand population impact profile per individual
-#'   received in the magistrates' court.
-#' @param profiles_remand_out The remand population impact profile per individual
-#'   disposal in the Crown Court.
+#' @param mc_receipts_delta A table of deviations in magistrates' court 
+#'   receipt volumes under a single police charge scenario, lagged suitably 
+#'   to account for lag to disposal.
 #' @param published_remand_pop The published remand population for use in error
 #'   checking.
 #' @param sentencing_rates A table of linear regression co-efficients for
@@ -300,7 +295,7 @@ run_scenario <- function(params, cc_receipts_delta_loaded_list, cc_output_loaded
 #'   original volumes supplied by the Prisons Team
 #' @export
 run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disposals_delta,
-                              profiles_remand_in, profiles_remand_out, published_remand_pop,
+                              mc_receipts_delta, published_remand_pop,
                               sentencing_rates, inflows_det) {
   
   # NA signals the default condition, in which cases there are no extra receipts
@@ -321,8 +316,8 @@ run_courts_module <- function(cc_output, cc_capacity, cc_receipts_delta, mc_disp
   cc_disposals_delta <- calculate_cc_disposals_delta(cc_output, cc_capacity)
   check_cc_disposals_delta(cc_output, cc_disposals_delta)
   
-  # Calculate remand population from court disposals.
-  pop_remand_delta  <- calculate_pop_remand_delta(mc_disposals_delta, cc_disposals_delta, profiles_remand_in, profiles_remand_out)
+  # Calculate remand population from court disposals and receipts.
+  pop_remand_delta  <- calculate_pop_remand_delta(mc_disposals_delta, cc_disposals_delta, mc_receipts_delta, cc_receipts_delta) ## might be cc_output or cc_capacity (see above in this function)
   check_pop_remand(pop_remand_delta, published_remand_pop)
   
   # Calculate determinate inflows from court disposals.
