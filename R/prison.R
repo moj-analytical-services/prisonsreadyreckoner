@@ -61,10 +61,12 @@ calculate_pop_remand_delta <- function(cc_base_backlog, mc_base_backlog, remand_
   # 4: Subtract the baseline remanded from the scenario amount to get the remand pop delta
   pop_remand_delta <- scenario_remand %>%
   #  dplyr::select(date, base_pop_remanded, scenario_pop_remanded) %>% # remove unneeded columns for QA'ing
-    dplyr::mutate(pop_remand_delta = scenario_pop_remanded - base_pop_remanded) %>%
-    dplyr::select(date, pop_remand_delta) %>%
-    tidyr::replace_na(pop_remand_delta = 0) # fill NAs with 0, if still present
-  
+    dplyr::mutate(remand_delta = scenario_pop_remanded - base_pop_remanded,
+                  date_string = base::format(date, format = "%Y-%m-%d"),
+                  casetype = "remand") %>%   # this column and the date as a string are needed to setup the output table correctly
+    dplyr::select(casetype, date_string, remand_delta) %>%  # keep the required columns
+    tidyr::pivot_wider(names_from = "date_string", values_from = "remand_delta") # swap from long to wide table
+
   return(pop_remand_delta)
 }
 
