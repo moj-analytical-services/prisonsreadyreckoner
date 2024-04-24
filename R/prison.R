@@ -6,7 +6,24 @@
 # Remand prisoners
 ################################################################################
 
-calculate_pop_remand_delta <- function(mc_disposals, cc_disposals, mc_receipts, cc_receipts) {
+calculate_pop_remand_delta <- function(cc_base_backlog, mc_base_backlog, remand_coeff) {  #mc_disposals, cc_disposals
+  
+  # Combine backlog data and use regression coefficients on the 'baseline backlog' to get 
+  # the total baseline remand pop. Then add the backlog delta from the scenario and re-do
+  # the regression calculations to get the total scenario remand pop. Subtract the baseline 
+  # from the scenario to get the remand population delta. Return this from the function.
+  
+  baseline_remand <- cc_base_backlog %>%
+    dplyr::left_join(mc_base_backlog, by = 'date') %>% # Combine the Crown Court and magistrates' court backlogs
+    dplyr::mutate(december_coeff = dplyr::case_when(         # Add a December coefficient
+      lubridate::month(date) == 12 ~ remand_coeff$christmas, # if December, use the 'Christmas' value
+      T ~ 0)) %>%                                            # ...otherwise, use 0
+    dplyr::mutate(base_tot_remanded =    # use the remand coefficients to calculate baseline remand amounts
+                    tew * remand_coeff$tew_multiplier +
+                    ind * remand_coeff$ind_multiplier +
+                    SNM * remand_coefficients$SNM_multiplier +
+                    december_coeff +     # (use the December value determined above instead of 'Christmas' value)
+                    remand_coefficients$intercept)
   
   # Find Crown Court disposals relevant for remand.
   disposals_remand_delta <- dplyr::group_by(cc_disposals, .data$date) %>%
