@@ -22,9 +22,9 @@ calculate_pop_remand_delta <- function(cc_base_backlog, mc_base_backlog, remand_
     dplyr::mutate(base_pop_remanded =    # use the remand coefficients to calculate baseline remand amounts
                     tew * remand_coeff$tew_multiplier +
                     ind * remand_coeff$ind_multiplier +
-                    SNM * remand_coefficients$SNM_multiplier +
+                    SNM * remand_coeff$SNM_multiplier +
                     december_coeff +     # (use the December value determined above instead of 'Christmas' value)
-                    remand_coefficients$intercept)
+                    remand_coeff$intercept)
   
   # 2: Determine the backlog deltas for the scenario being run  
   backlog_deltas <- cc_scenario_delta %>%
@@ -54,9 +54,9 @@ calculate_pop_remand_delta <- function(cc_base_backlog, mc_base_backlog, remand_
     dplyr::mutate(scenario_pop_remanded =    # use the remand coefficients to calculate scenario remand amounts
                     scenario_tew * remand_coeff$tew_multiplier +
                     scenario_ind * remand_coeff$ind_multiplier +
-                    scenario_SNM * remand_coefficients$SNM_multiplier +
+                    scenario_SNM * remand_coeff$SNM_multiplier +
                     december_coeff +     # (use the December value determined above instead of 'Christmas' value)
-                    remand_coefficients$intercept)
+                    remand_coeff$intercept)
 
   # 4: Subtract the baseline remanded from the scenario amount to get the remand pop delta
   pop_remand_delta <- scenario_remand %>%
