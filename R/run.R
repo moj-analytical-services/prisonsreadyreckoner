@@ -104,6 +104,9 @@ run_prisonsreadyreckoner <- function(params) {
   
   cc_receipts_delta_loaded_list    <- loaded_datasets_list$cc_receipts_delta_loaded_list
   mc_disposals_delta_loaded_list   <- loaded_datasets_list$mc_disposals_delta_loaded_list
+  cc_backlog_loaded                <- loaded_datasets_list$cc_backlog_loaded
+  mc_backlog_loaded                <- loaded_datasets_list$mc_backlog_loaded
+  remand_coefficients              <- loaded_datasets_list$remand_coefficients
   cc_output_loaded                 <- loaded_datasets_list$cc_output
   cc_capacity_loaded               <- loaded_datasets_list$cc_capacity
   sentencing_rates_loaded          <- loaded_datasets_list$sentencing_rates
