@@ -39,8 +39,8 @@ calculate_pop_remand_delta <- function(cc_base_backlog, mc_base_backlog, remand_
     dplyr::mutate(backlog_delta_SNM = 0) # !! ASSUMPTION !! - Assuming that levers have NO EFFECT on the SNM backlog
   
   # 3: Combine the backlog deltas with the baseline backlog values and calculate the scenario remand
-  scenario_remand <- baseline_remand %>%
-    dplyr::left_join(backlog_deltas, by = 'date') %>%
+  scenario_remand <- backlog_deltas %>%
+    dplyr::left_join(baseline_remand, by = 'date') %>%
     tidyr::replace_na(list(    # fill in any NAs from different date lengths with 0
       backlog_delta_ind = 0,
       backlog_delta_tew = 0,
