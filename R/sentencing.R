@@ -41,7 +41,10 @@ calculate_inflows_det_delta <- function(cc_disposals, mc_disposals, sentencing_r
 calculate_inflows_det_delta_SUB <- function(disposals, sentencing_rates) {
 
   inflows <-
-    dplyr::inner_join(disposals, sentencing_rates, by = "disposal_type") %>%
+    dplyr::inner_join(disposals, sentencing_rates, by = c("date", "disposal_type")) %>%
+    tidyr::pivot_wider(names_prefix = "senband", 
+                       names_from = "band", 
+                       values_from = "coefficients") %>%
     dplyr::mutate(
       senband1 = n_disposals_delta * senband1,
       senband2 = n_disposals_delta * senband2,
@@ -53,6 +56,7 @@ calculate_inflows_det_delta_SUB <- function(disposals, sentencing_rates) {
                         names_to = "senband",
                         values_to = "inflows_delta"
     ) %>%
+    dplyr::mutate(inflows_delta = tidyr::replace_na(inflows_delta, 0)) %>% # replace NAs with 0 (e.g. where 'mc_' and 'senband4')
     dplyr::group_by(date, senband) %>%
     dplyr::summarise(inflows_delta = sum(inflows_delta), .groups = 'drop') %>%
     tidyr::pivot_wider(names_from = date,
