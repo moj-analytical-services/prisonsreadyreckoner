@@ -82,6 +82,10 @@
 #'   required to generate output of a \code{prisonsreadyreckoner} scenario run.
 #'   See the list of parameter descriptions provided in the
 #'   parameters vignette for further details.
+#' @param baseline_only This is a TRUE/FALSE switch, so that you can return either
+#'   a table of results containing the baseline and the scenario (FALSE, default
+#'   setting), or a table with just the baseline results (TRUE). This optional
+#'   parameter is to make coding the prisons-ready-reckoner-app more robust.
 #' @return A tibble with fields, \code{run}, \code{date}, \code{casetype},
 #'   \code{senband}, \code{sex} and \code{population}, representing a forecast
 #'   of prison population by case type (remand, determinate, indeterminate and
