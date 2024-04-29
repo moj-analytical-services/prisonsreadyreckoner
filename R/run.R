@@ -141,17 +141,18 @@ run_prisonsreadyreckoner <- function(params, baseline_only = FALSE) {
   
   t0 <- Sys.time()
   
-  # Run scenario and find overall population changes.
-  pop_scenario <- run_scenario(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, profiles_remand_in, profiles_remand_out, sentencing_rates_loaded, inflows_det_loaded, profiles_det_loaded, nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, recall_time)
-  
   # Check if baseline_only is TRUE, and if so then don't bind with the scenario outputs
   if(baseline_only == TRUE){
     pop_selected <- pop_baseline
   }else{
+    # Run scenario and find overall population changes.
+    pop_scenario <- run_scenario(params, cc_receipts_delta_loaded_list, cc_output_loaded, cc_capacity_loaded, mc_disposals_delta_loaded_list, profiles_remand_in, profiles_remand_out, sentencing_rates_loaded, inflows_det_loaded, profiles_det_loaded, nomis_out_delius_in_ratio, profiles_lic, recall_rate_exclPSS, recall_time)
+  
+    # Then combine with the baseline
     pop_selected <- rbind(pop_baseline, pop_scenario)
   }
   
-  # Combine with the baseline and pivot for ease of splitting by gender.
+  # Pivot data for ease of splitting by gender.
   pop_combined <- pop_selected %>%
     tidyr::pivot_longer(-c("run", "casetype", "senband"), names_to = "date", values_to = "population") %>%
     dplyr::mutate(date = as.Date(date))
