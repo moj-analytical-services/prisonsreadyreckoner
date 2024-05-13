@@ -76,7 +76,7 @@ dev_set_params <- function() {
   params$police_charges_cc_route_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/routes.csv"
   params$cc_output_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/crown-output-sep23_s2.csv"
   params$cc_capacity_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/sitting-days-output-sep23_s2.csv"
-  params$sentencing_rates_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/sentencing-rates-20231016-shiny-v3.0.0-OFFICIAL.csv"
+  params$sentencing_rates_file <- "s3://alpha-app-prisonsreadyreckonerapp/2024-05/dec23_disposal_to_reception_ratios.csv"
   params$prison_inflows_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/detailed_sep23_s2_flat_3m_linear_6m_sep23_central_scenario_dands_231011_081331-s039-OFFICIAL.xlsx"
   params$profiles_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/profiles-det-20231016-shiny-v3.0.0-OFFICIAL.csv"
   params$recall_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/recall_excl_pss_output_sep23_s2_flat_3m_linear_6m_sep23_central_scenario_dands_231011_081331-s039-OFFICIAL.xlsx"
