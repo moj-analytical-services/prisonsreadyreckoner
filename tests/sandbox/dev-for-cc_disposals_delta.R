@@ -48,7 +48,7 @@ if (is.data.frame(cc_receipts_delta)) {
   cc_output <- add_cc_receipts_delta(cc_output_loaded, cc_receipts_delta)
   cc_capacity <- calculate_hours_ringfenced_delta(cc_output, cc_capacity_levered)
 }else{
-  cc_output <- cc_ouput_loaded
+  cc_output <- cc_output_loaded
   cc_capacity <- cc_capacity_levered
 }
 
