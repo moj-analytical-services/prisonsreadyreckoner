@@ -67,11 +67,14 @@ Assuming you are using `renv` for package management, install
 `prisonsreadyreckoner` by typing the following in the RStudio console:
 
 ``` r
-renv::install("git@github.com:moj-analytical-services/prisonsreadyreckoner.git@v3.0.0")
+renv::install("git@github.com:moj-analytical-services/prisonsreadyreckoner.git")
 ```
 
-where `v3.0.0` is the latest release. You may wish to double-check there
-is not a more recent release available on Github.
+To select a specific version, use:
+```r
+renv::install("git@github.com:moj-analytical-services/prisonsreadyreckoner.git@v4.0.0")
+```
+where `v4.0.0` is the desired release.
 
 `prisonsreadyreckoner` relies on the `botor` package, which relies on
 the `boto3` Python package. To install `boto3`, run the following:
@@ -122,13 +125,13 @@ adding this difference to the relevant prison population forecast.
 For full details, see the accompanying vignette:
 
 ``` r
-remotes::install_git("git@github.com:moj-analytical-services/prisonsreadyreckoner.git@<packageversion>",
+remotes::install_git("git@github.com:moj-analytical-services/prisonsreadyreckoner.git@v4.0.0",
                      force = TRUE,
                      build_vignettes = TRUE)
 vignette('mojmodel')
 ```
 
-where `<packageversion>` is the latest package version (e.g. `v3.0.0`).
+where `v4.0.0` is the desired package version.
 
 Also available at [our
 website](https://model-redevelopment-website.apps.live.cloud-platform.service.justice.gov.uk/).

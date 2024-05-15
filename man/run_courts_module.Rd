@@ -10,8 +10,9 @@ run_courts_module(
   cc_capacity,
   cc_receipts_delta,
   mc_disposals_delta,
-  profiles_remand_in,
-  profiles_remand_out,
+  cc_backlog_loaded,
+  mc_backlog_loaded,
+  remand_coefficients,
   published_remand_pop,
   sentencing_rates,
   inflows_det
@@ -31,11 +32,15 @@ to disposal.}
 \item{mc_disposals_delta}{A table of deviations in magistrates' court
 disposal volumes under a single police charge scenario.}
 
-\item{profiles_remand_in}{The remand population impact profile per individual
-received in the magistrates' court.}
+\item{cc_backlog_loaded}{A table of court backlogs for each receipt type
+in the Crown Court.}
 
-\item{profiles_remand_out}{The remand population impact profile per individual
-disposal in the Crown Court.}
+\item{mc_backlog_loaded}{A table of the court backlogs for SNM cases in the
+magistrates' courts each month.}
+
+\item{remand_coefficients}{A one-row table of the five coefficients from the
+linear regression in the prisons model that are used to calculate remand from
+court backlogs.}
 
 \item{published_remand_pop}{The published remand population for use in error
 checking.}
