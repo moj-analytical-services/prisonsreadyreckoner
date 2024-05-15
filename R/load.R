@@ -37,7 +37,17 @@ load_datasets <- function(params) {
   cc_data     <- load_crown_data(params$cc_output_file, params$cc_capacity_file, ringfenced_lookup, params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date)
   
   # Load data for sentencing module
-  sentencing_rates <- load_sentencing_rates(params$sentencing_rates_file)
+  sentencing_rates_imported <- import_s3_file(params$sentencing_rates_file)
+  
+  # Clean sentencing rates data
+  sentencing_rates <- sentencing_rates_imported %>%
+    dplyr::mutate(disposal_type = dplyr::case_when( # create a single disposal type column, matching other inputs
+      top_level_court_route == "cc"   ~ paste0("cc_", receipt_type_desc, "_", route),
+      top_level_court_route == "sent" ~ paste0("cc_", receipt_type_desc, "_", route),
+      top_level_court_route == "mc"   ~ paste0("mc_", receipt_type_desc),
+      T ~ "??")) %>%
+    dplyr::mutate(date = lubridate::dmy(date_value_som)) %>%  # convert date_value_som from character to date format
+    dplyr::select(date, disposal_type, band, coefficients) # remove unneeded columns
   
   # Load data for prisons module
   prison_data  <- load_prison_data(params$prison_inflows_file, params$profiles_file, params$licence_profiles_file, params$recall_file, params$gender_splits_file, params$start_date$inflows_det, params$start_date$recall_rate, params$forecast_start_date, params$forecast_end_date, params$projection_length_months, params$lever_profiles_det_stretch_factor_min)
@@ -88,13 +98,6 @@ load_crown_data <- function(cc_output_file, cc_capacity_file, ringfenced_lookup,
   
   return(list(cc_output = cc_output, cc_capacity = cc_capacity))
 }
-
-
-# DEVELOPMENT NOTE: Is there any need for this function? Consider placing
-# contents in load_datasets().
-load_sentencing_rates <- function(sentencing_rates_file)
-  sentencing_rates <- import_s3_file(sentencing_rates_file)
-
 
 # DEVELOPMENT NOTE: Is there any need for this function? Consider placing
 # contents in load_datasets().
