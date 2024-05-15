@@ -13,6 +13,22 @@ e.g. (#2, @bgburton)
 
 -->
 
+# prisonsreadyreckoner 4.0.0
+
+Updated remand and sentencing methodology, added a parameter to the main function and updated dependencies list.
+
+* The remand methodology has been updated to use a linear regression model developed by the Prison Demand team and used in their remand modelling. This change aligns those two models to the same approach.
+
+*The sentencing methodology has been updated to use a table of ratios to convert the number of people sentenced into the number of people sent to prison. This table is supplied by the Prison Demand team and used in their modelling. This replaces the previous approach where the prisons ready reckoner calculated broader ratios from the input data. This change aligns those two models to the same approach.
+
+*An additional parameter called `baseline_only` has been added to the `run_prisonsreadyreckoner()` function so that the user can request a table of results for the baseline and scenario, or just the baseline (if set to `TRUE`). This was added primarily for use by the Rshiny app. If a value for this parameter isn't supplied, the default is `FALSE`.
+
+*The packages used (and their versions) that the prisons ready reckoner is dependant on has been updated.
+
+## Breaking changes
+The remand and sentencing changes require different input files and so are not backwards compatible.
+
+
 
 # prisonsreadyreckoner 3.0.0
 
