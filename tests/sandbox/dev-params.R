@@ -76,12 +76,15 @@ dev_set_params <- function() {
   params$police_charges_cc_route_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/routes.csv"
   params$cc_output_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/crown-output-sep23_s2.csv"
   params$cc_capacity_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/sitting-days-output-sep23_s2.csv"
-  params$sentencing_rates_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/sentencing-rates-20231016-shiny-v3.0.0-OFFICIAL.csv"
+  params$sentencing_rates_file <- "s3://alpha-app-prisonsreadyreckonerapp/2024-05/dec23_disposal_to_reception_ratios.csv"
   params$prison_inflows_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/detailed_sep23_s2_flat_3m_linear_6m_sep23_central_scenario_dands_231011_081331-s039-OFFICIAL.xlsx"
   params$profiles_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/profiles-det-20231016-shiny-v3.0.0-OFFICIAL.csv"
   params$recall_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/recall_excl_pss_output_sep23_s2_flat_3m_linear_6m_sep23_central_scenario_dands_231011_081331-s039-OFFICIAL.xlsx"
   params$gender_splits_file <- "s3://alpha-app-prisonsreadyreckonerapp/2023-09/gender-splits-20231016-shiny-v3.0.0-OFFICIAL.csv"
-
+  params$remand_coefficients <- "s3://alpha-app-prisonsreadyreckonerapp/2024-05/dec23_remand_regression_coefficients.csv"
+  params$mags_SNM_backlog_forecast_file <- "s3://alpha-app-prisonsreadyreckonerapp/2024-05/sep23_output_mags_med_SNMbacklog.csv"
+  params$remand_regression_coefficients_file <- "s3://alpha-app-prisonsreadyreckonerapp/2024-05/dec23_remand_regression_coefficients.csv"
+  
   # Expected initial dates in various data files. The forecast will start from the
   # last consistent date.
   # DEVELOPMENT NOTE: The first dates in relevant files are currently tested on

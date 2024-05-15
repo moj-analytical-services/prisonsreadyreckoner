@@ -16,8 +16,8 @@
 #' @return A table of prison inflows, split by sentence band.
 calculate_inflows_det_delta <- function(cc_disposals, mc_disposals, sentencing_rates) {
   
-  # Sum over receipt_type_desc as our linear model is based on route only.
-  cc_disposals <- dplyr::mutate(cc_disposals, disposal_type = paste0("cc_", route)) %>%
+  # Sum over receipt_type_desc and route, by date.
+  cc_disposals_cleaned <- dplyr::mutate(cc_disposals, disposal_type = paste0("cc_", receipt_type_desc, "_", route)) %>%
                     dplyr::group_by(date, disposal_type) %>%
                     dplyr::summarise(n_disposals_delta = sum(n_disposals_delta, na.rm = TRUE), .groups = "drop")
   
@@ -26,11 +26,11 @@ calculate_inflows_det_delta <- function(cc_disposals, mc_disposals, sentencing_r
   if (is.data.frame(mc_disposals)) {
    
     # Combine Crown Court disposals with magistrates' court disposals.
-    mc_disposals <- dplyr::select(mc_disposals, -tidyselect::any_of(c("remanded")))
-    disposals <- dplyr::bind_rows(cc_disposals, mc_disposals)
+    mc_disposals_cleaned <- dplyr::select(mc_disposals, -tidyselect::any_of(c("remanded")))
+    disposals <- dplyr::bind_rows(cc_disposals_cleaned, mc_disposals_cleaned)
     
   } else {
-    disposals <- cc_disposals
+    disposals <- cc_disposals_cleaned
   }
   
   inflows <- calculate_inflows_det_delta_SUB(disposals, sentencing_rates)
@@ -41,7 +41,10 @@ calculate_inflows_det_delta <- function(cc_disposals, mc_disposals, sentencing_r
 calculate_inflows_det_delta_SUB <- function(disposals, sentencing_rates) {
 
   inflows <-
-    dplyr::inner_join(disposals, sentencing_rates, by = "disposal_type") %>%
+    dplyr::inner_join(disposals, sentencing_rates, by = c("date", "disposal_type")) %>%
+    tidyr::pivot_wider(names_prefix = "senband", 
+                       names_from = "band", 
+                       values_from = "coefficients") %>%
     dplyr::mutate(
       senband1 = n_disposals_delta * senband1,
       senband2 = n_disposals_delta * senband2,
@@ -53,6 +56,7 @@ calculate_inflows_det_delta_SUB <- function(disposals, sentencing_rates) {
                         names_to = "senband",
                         values_to = "inflows_delta"
     ) %>%
+    dplyr::mutate(inflows_delta = tidyr::replace_na(inflows_delta, 0)) %>% # replace NAs with 0 (e.g. where 'mc_' and 'senband4')
     dplyr::group_by(date, senband) %>%
     dplyr::summarise(inflows_delta = sum(inflows_delta), .groups = 'drop') %>%
     tidyr::pivot_wider(names_from = date,
