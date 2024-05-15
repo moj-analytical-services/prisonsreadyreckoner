@@ -6,123 +6,67 @@
 # Remand prisoners
 ################################################################################
 
+calculate_pop_remand_delta <- function(cc_base_backlog, mc_base_backlog, remand_coeff, cc_scenario_delta) {
+  
+  # (1) Combine backlog data and use regression coefficients on the 'baseline backlog' to get 
+  # the total baseline remand pop. (2) Then add the backlog delta from the scenario and 
+  # (3) re-do the regression calculations to get the total scenario remand pop. (4) Subtract
+  # the baseline from the scenario to get the remand population delta..
+  
+  # 1: Calculate the baseline remand using the regression coefficients
+  baseline_remand <- cc_base_backlog %>%
+    dplyr::left_join(mc_base_backlog, by = 'date') %>% # Combine the Crown Court and magistrates' court backlogs
+    dplyr::mutate(december_coeff = dplyr::case_when(         # Add a December coefficient
+      lubridate::month(date) == 12 ~ remand_coeff$christmas, # if December, use the 'Christmas' value
+      T ~ 0)) %>%                                            # ...otherwise, use 0
+    dplyr::mutate(base_pop_remanded =    # use the remand coefficients to calculate baseline remand amounts
+                    tew * remand_coeff$tew_multiplier +
+                    ind * remand_coeff$ind_multiplier +
+                    SNM * remand_coeff$SNM_multiplier +
+                    december_coeff +     # (use the December value determined above instead of 'Christmas' value)
+                    remand_coeff$intercept)
+  
+  # 2: Determine the backlog deltas for the scenario being run  
+  backlog_deltas <- cc_scenario_delta %>%
+    dplyr::mutate(n_outstanding_delta = n_receipts_delta - n_disposals_delta) %>% # get the overall difference to outstanding cases
+    dplyr::filter(receipt_type_desc %in% c('ind', 'tew')) %>% # filter for only the TEW and IO cases
+    dplyr::group_by(date, receipt_type_desc) %>%              # group by the receipt type and date (month)...
+    dplyr::summarise(total_backlog_delta = base::sum(n_outstanding_delta)) %>% #...then sum the totals
+    dplyr::ungroup() %>%                                                       # (un-grouping afterwards)
+    tidyr::pivot_wider(names_from = "receipt_type_desc",      # splitting into separate receipt type columns
+                       names_prefix = "backlog_delta_", 
+                       values_from = "total_backlog_delta") %>%
+    dplyr::mutate(backlog_delta_SNM = 0) # !! ASSUMPTION !! - Assuming that levers have NO EFFECT on the SNM backlog
+  
+  # 3: Combine the backlog deltas with the baseline backlog values and calculate the scenario remand
+  scenario_remand <- backlog_deltas %>%
+    dplyr::left_join(baseline_remand, by = 'date') %>%
+    tidyr::replace_na(list(    # fill in any NAs from different date lengths with 0
+      backlog_delta_ind = 0,
+      backlog_delta_tew = 0,
+      backlog_delta_SNM = 0)) %>%
+    dplyr::mutate(cumulative_delta_ind = base::cumsum(backlog_delta_ind),  ### is this correct??
+                  cumulative_delta_tew = base::cumsum(backlog_delta_tew),
+                  cumulative_delta_SNM = base::cumsum(backlog_delta_SNM)) %>% 
+    dplyr::mutate(scenario_ind = ind + cumulative_delta_ind,  # add the scenario backlog deltas to the baseline backlog
+                  scenario_tew = tew + cumulative_delta_tew,
+                  scenario_SNM = SNM + cumulative_delta_ind) %>%
+    dplyr::mutate(scenario_pop_remanded =    # use the remand coefficients to calculate scenario remand amounts
+                    scenario_tew * remand_coeff$tew_multiplier +
+                    scenario_ind * remand_coeff$ind_multiplier +
+                    scenario_SNM * remand_coeff$SNM_multiplier +
+                    december_coeff +     # (use the December value determined above instead of 'Christmas' value)
+                    remand_coeff$intercept)
 
-#' Build population impact filters for use in remand modelling. Inflow impacts.
-#' 
-#' Exported only for use by the Shiny app. Not to be used by a user of the
-#' package.
-#' 
-#' Function to generate a linear response function (filter) representing the  
-#' unit population impact of a receipt in the magistrates' court on remand
-#' population. It is assumed that only a fraction of relevant receipts will
-#' be associated with remand and that some proportion of these will leave remand
-#' after the custody time limit (CTL).
-#' 
-#' @param remand_rate The fraction of receipts, to which this filter will be
-#'   applied, being remanded in custody.
-#' @param no_bail_rate The fraction of those remanded in custody who will be
-#'   kept in prison after their CTL has exceeded.
-#' @param ctl The custody time limit in months.
-#' @param projection_length_months The number of months in the forecast period.
-#' @return A tibble representing, for lags starting from zero, the unit remand
-#'   population impact of a magistrates' court receipt.
-#' @export
-make_remand_filter_in <- function(remand_rate, no_bail_rate, ctl, projection_length_months) {
-  
-  ctl <- min(ctl, projection_length_months)
-  
-  filter_remand <- tibble::tibble(casetype = "remand",
-                                  lag = seq(0, projection_length_months-1), 
-                                  impact = remand_rate * c(rep(1, ctl), rep(no_bail_rate, projection_length_months - ctl)))
-  
-  filter_remand <- tidyr::pivot_wider(filter_remand, names_from = "lag", names_prefix = "lag", values_from = "impact")
-  
-}
+  # 4: Subtract the baseline remanded from the scenario amount to get the remand pop delta
+  pop_remand_delta <- scenario_remand %>%
+  #  dplyr::select(date, base_pop_remanded, scenario_pop_remanded) %>% # remove unneeded columns for QA'ing
+    dplyr::mutate(remand_delta = scenario_pop_remanded - base_pop_remanded,
+                  date_string = base::format(date, format = "%Y-%m-%d"),
+                  casetype = "remand") %>%   # this column and the date as a string are needed to setup the output table correctly
+    dplyr::select(casetype, date_string, remand_delta) %>%  # keep the required columns
+    tidyr::pivot_wider(names_from = "date_string", values_from = "remand_delta") # swap from long to wide table
 
-
-#' Build population impact filters for use in remand modelling. Outflow impacts.
-#' 
-#' Exported only for use by the Shiny app. Not to be used by a user of the
-#' package.
-#' 
-#' Function to generate a linear response function (filter) representing the
-#' unit population impact of a disposal in the Crown court on remand population.
-#' It is assumed that only a fraction of relevant disposals will be associated
-#' with remand and that some proportion of these will have left remand after the
-#' custody time limit (CTL) anyway. Additionally assuming that the disposal can
-#' occur any time within the individual's CTL, the filter is most negative at a
-#' lag of zero and declines linearly throughout a period equivalent to the CTL.
-#' A steady state is reached, representing the probability that the individual's
-#' circumstances do not warrant release on bail.
-#' 
-#' @param remand_rate The fraction of disposals, to which this filter will be
-#'   applied, having been remanded in custody at disposal.
-#' @param no_bail_rate The fraction of those remanded in custody who will be
-#'   kept in prison after their CTL has exceeded.
-#' @param ctl The custody time limit in months.
-#' @param projection_length_months The number of months in the forecast period.
-#' @return A tibble representing, for lags starting from zero, the unit remand
-#'   population impact of a Crown Court disposal.
-#' @export
-make_remand_filter_out <- function(remand_rate, no_bail_rate, ctl, projection_length_months) {
-  
-  bail_rate <- 1 - no_bail_rate
-  #min_step <- max(1, ctl - projection_length_months + 1)
-  min_step <- max(1, (ctl - 1) - projection_length_months + 1)
-  
-  # Calculations chosen to match Jordan's.
-  filter_remand <- tibble::tibble(casetype = "remand",
-                                  lag = seq(0, projection_length_months-1), 
-                                  #impact = -remand_rate * c(no_bail_rate + bail_rate * seq(ctl, min_step, -1) / ctl, rep(no_bail_rate, max(0, projection_length_months - ctl))))
-                                  impact = -remand_rate * c(no_bail_rate + bail_rate * seq((ctl - 1), min_step, -1) / ctl, rep(no_bail_rate, max(0, projection_length_months - (ctl - 1)))))
-  
-  filter_remand <- tidyr::pivot_wider(filter_remand, names_from = "lag", names_prefix = "lag", values_from = "impact")
-  
-}
-
-
-calculate_pop_remand_delta <- function(mc_disposals, cc_disposals, profiles_remand_in, profiles_remand_out) {
-  
-  # Find Crown Court disposals relevant for remand.
-  disposals_remand_delta <- dplyr::group_by(cc_disposals, .data$date) %>%
-    dplyr::summarise(n_disposals_delta = sum(.data$n_disposals_delta), .groups = "drop") %>%
-    tidyr::pivot_wider(names_from = "date",
-                       values_from = "n_disposals_delta",
-                       values_fill = 0,
-                       names_sort = TRUE) %>%
-    dplyr::mutate(casetype = "remand", .before = 1)
-  
-  # Convert Crown Court disposals to population impact.
-  pop_remand_delta_out <- mojstockr_mconv(disposals_remand_delta, profiles_remand_out, c("casetype"))
-  
-  
-  # NA signals the default condition, in which cases there are no extra receipts
-  # to add and no extra magistrates' court disposals.
-  if (is.data.frame(mc_disposals)) {
-    
-    # Find change in receipts relevant for remand.
-    # As magistrates' court disposals are generated from receipts without
-    # adjustment, it is acceptable to use disposals as a proxy for receipts.
-    receipts_remand_delta <- dplyr::filter(mc_disposals, .data$remanded == TRUE) %>%
-      dplyr::group_by(.data$date) %>%
-      dplyr::summarise(n_disposals_delta = sum(.data$n_disposals_delta), .groups = "drop") %>%
-      tidyr::pivot_wider(names_from = "date",
-                         values_from = "n_disposals_delta",
-                         values_fill = 0,
-                         names_sort = TRUE) %>%
-      dplyr::mutate(casetype = "remand", .before = 1)
-    
-    # Convert change in receipts to population impact.
-    pop_remand_delta_in <- mojstockr_mconv(receipts_remand_delta, profiles_remand_in, c("casetype"))
-    
-    pop_remand_delta <- rbind(pop_remand_delta_out, pop_remand_delta_in) %>%
-      dplyr::group_by(.data$casetype) %>%
-      dplyr::summarise((dplyr::across(tidyselect::where(is.numeric), sum)), .groups = 'drop')
-    
-  } else {
-    pop_remand_delta <- pop_remand_delta_out
-  }
-  
   return(pop_remand_delta)
 }
 

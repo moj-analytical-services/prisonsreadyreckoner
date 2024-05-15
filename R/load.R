@@ -18,6 +18,20 @@ load_datasets <- function(params) {
   cc_receipts_delta_loaded_list <- load_police_charges_cc_data(params$police_charges_cc_files, params$police_charges_central_scenario, params$police_charges_cc_route_file, ringfenced_lookup, params$start_date$police_charges_cc, params$forecast_start_date, params$forecast_end_date)
   mc_disposals_delta_loaded_list <- load_police_charges_mc_data(params$police_charges_mc_files, params$police_charges_central_scenario, params$mc_remand_lookup, params$start_date$police_charges_mc, params$forecast_start_date, params$forecast_end_date)
 
+  # Load data for remand calculations
+  cc_backlog_loaded <- import_s3_file(params$cc_output_file) %>%
+    dplyr::select(date, receipt_type_desc, n_backlog) %>%        # keep the number of backlog cases
+    dplyr::filter(receipt_type_desc %in% c('ind', 'tew')) %>%    # keep only the TEW and IO cases
+    dplyr::group_by(date, receipt_type_desc) %>%                 # group by the receipt type and date (month)...
+    dplyr::summarise(n_total_backlog = base::sum(n_backlog)) %>% # ...then sum to get total backlog values
+    dplyr::ungroup() %>%                                         # (and un-group afterwards)
+    tidyr::pivot_wider(names_from = "receipt_type_desc", values_from = "n_total_backlog") # pivot to separate columns
+  
+  mc_backlog_loaded <- import_s3_file(params$mags_SNM_backlog_forecast_file) %>%
+    dplyr::mutate(date = lubridate::dmy(os_date)) %>%  # change the os_date column from character to date
+    dplyr::select(-os_date)                            # then remove the original column
+  
+  remand_coefficients <- import_s3_file(params$remand_regression_coefficients_file)
 
   # Load data for Crown Court module
   cc_data     <- load_crown_data(params$cc_output_file, params$cc_capacity_file, ringfenced_lookup, params$start_date$cc_files, params$forecast_start_date, params$forecast_end_date)
@@ -34,6 +48,10 @@ load_datasets <- function(params) {
       cc_receipts_delta_loaded_list   = cc_receipts_delta_loaded_list,
       mc_disposals_delta_loaded_list  = mc_disposals_delta_loaded_list,
       
+      cc_backlog_loaded               = cc_backlog_loaded,
+      mc_backlog_loaded               = mc_backlog_loaded,
+      remand_coefficients             = remand_coefficients,
+            
       cc_output                       = cc_data$cc_output,
       cc_capacity                     = cc_data$cc_capacity,
       
