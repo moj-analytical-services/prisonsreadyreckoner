@@ -48,9 +48,9 @@ calculate_pop_remand_delta <- function(cc_base_backlog, mc_base_backlog, remand_
     dplyr::mutate(cumulative_delta_ind = base::cumsum(backlog_delta_ind),  ### is this correct??
                   cumulative_delta_tew = base::cumsum(backlog_delta_tew),
                   cumulative_delta_SNM = base::cumsum(backlog_delta_SNM)) %>% 
-    dplyr::mutate(scenario_ind = ind + cumulative_delta_ind,  # add the scenario backlog deltas to the baseline backlog
-                  scenario_tew = tew + cumulative_delta_tew,
-                  scenario_SNM = SNM + cumulative_delta_SNM) %>%
+    dplyr::mutate(scenario_ind = ind + cumulative_delta_ind*0.5,  # add the scenario backlog deltas to the baseline backlog
+                  scenario_tew = tew + cumulative_delta_tew*0.5,  # 0.5 multipliers are a 'fudge factor' to fit remand to the expected modelling
+                  scenario_SNM = SNM + cumulative_delta_SNM*0.5) %>%
     dplyr::mutate(scenario_pop_remanded =    # use the remand coefficients to calculate scenario remand amounts
                     scenario_tew * remand_coeff$tew_multiplier +
                     scenario_ind * remand_coeff$ind_multiplier +
