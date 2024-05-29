@@ -100,14 +100,29 @@ profiles_det <- import_s3_file(path_profiles_det)
 profiles_det <- dplyr::filter(profiles_det, .data$phase == "pre_impact") %>%
   dplyr::select(-c("phase"))
     
-pop_exp <- mojstockr_build_stock(inflows, outflows, c("senband"))
+# pop_exp <- mojstockr_build_stock(inflows, outflows, c("senband"))
     
-outflows_mod <- mojstockr_mconv(inflows, profiles_det, c("senband"))
-pop_mod      <- mojstockr_build_stock(inflows, outflows_mod, c("senband"))
+# outflows_mod <- mojstockr_mconv(inflows, profiles_det, c("senband"))
+# pop_mod      <- mojstockr_build_stock(inflows, outflows_mod, c("senband"))
 
-model_outputs_grouped <- run_prisonsreadyreckoner(params) %>% dplyr::filter(sex == 'All', casetype == 'determinate', run == 'scenario') %>% dplyr::group_by(run, date, senband) %>% dplyr::summarise(total_pop = sum(population)) %>% dplyr::ungroup() %>% dplyr::select(-run) %>% tidyr::pivot_wider(names_from = 'date', values_from = 'total_pop')
+# As mojstockr no longer used, commented out lines above. However, need to bring in the
+# results when running the model. This creates an equivalent table starting with the 
+# main prisonsreadyreckoner output, getting determinate populations by senband and pivoting
+# so that it is in the correct format for the plot_series step below.
+model_outputs_grouped <- run_prisonsreadyreckoner(params) %>% 
+  dplyr::filter(sex == 'All', casetype == 'determinate', run == 'scenario') %>% 
+  dplyr::group_by(run, date, senband) %>% 
+  dplyr::summarise(total_pop = sum(population)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::select(-run) %>% 
+  tidyr::pivot_wider(names_from = 'date', values_from = 'total_pop')
 
-pop_exp_filtered <- pop_exp %>% tidyr::pivot_longer(cols=tidyr::starts_with("20"), names_to = 'date', values_to = 'total_pop') %>% dplyr::filter(date > lubridate::ymd('2023-08-02'), date < lubridate::ymd('2027-09-02')) %>% tidyr::pivot_wider(names_from = 'date', values_from = 'total_pop')
+# filtering by date, but because the dates are the column headings, need to pivot into the
+# data-frame, filter, then put back to column headings with pivot_wider
+pop_exp_filtered <- pop_exp %>%
+  tidyr::pivot_longer(cols=tidyr::starts_with("20"), names_to = 'date', values_to = 'total_pop') %>%
+  dplyr::filter(date > lubridate::ymd('2023-08-02'), date < lubridate::ymd('2027-09-02')) %>%
+  tidyr::pivot_wider(names_from = 'date', values_from = 'total_pop')
 
 plot_series(rbind(model_outputs_grouped, pop_exp_filtered), "Model (solid) and target (dashes) determinate populations", "Population")
 ```
